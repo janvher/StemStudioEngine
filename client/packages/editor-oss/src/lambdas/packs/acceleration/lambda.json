@@ -1,0 +1,73 @@
+{
+    "id": "acceleration",
+    "name": "Acceleration",
+    "description": "Applies acceleration to velocity, then velocity to position each frame",
+    "author": "stemstudio",
+    "version": "1.0.0",
+    "main": "AccelerationLambda.ts",
+    "tags": [
+        "physics"
+    ],
+    "attributes": {},
+    "readComponents": [
+        "ax",
+        "ay",
+        "az",
+        "vx",
+        "vy",
+        "vz",
+        "damping",
+        "maxSpeed"
+    ],
+    "writeComponents": [
+        "vx",
+        "vy",
+        "vz"
+    ],
+    "componentSchema": {
+        "ax": {
+            "name": "Acceleration X",
+            "type": "number",
+            "default": 0
+        },
+        "ay": {
+            "name": "Acceleration Y",
+            "type": "number",
+            "default": 0
+        },
+        "az": {
+            "name": "Acceleration Z",
+            "type": "number",
+            "default": 0
+        },
+        "vx": {
+            "name": "Velocity X",
+            "type": "number",
+            "default": 0
+        },
+        "vy": {
+            "name": "Velocity Y",
+            "type": "number",
+            "default": 0
+        },
+        "vz": {
+            "name": "Velocity Z",
+            "type": "number",
+            "default": 0
+        },
+        "damping": {
+            "name": "Damping",
+            "type": "number",
+            "default": 0,
+            "min": 0,
+            "max": 1
+        },
+        "maxSpeed": {
+            "name": "Max Speed",
+            "type": "number",
+            "default": 100,
+            "min": 0
+        }
+    },
+    "documentation": "## Acceleration\n\nApplies acceleration to velocity, then velocity to position each frame\n\n### Runtime Notes\n- Attach this lambda to objects via Lambda Components.\n- If Auto Apply is enabled, it runs every frame.\n- If Auto Apply is disabled, call `lambdaInstance.apply(deltaTime)` from behavior/lambda code.\n\n### Component Parameters\n| Key | Label | Type | Default | Options |\n| --- | --- | --- | --- | --- |\n| `ax` | Acceleration X | `number` | `0` | - |\n| `ay` | Acceleration Y | `number` | `0` | - |\n| `az` | Acceleration Z | `number` | `0` | - |\n| `vx` | Velocity X | `number` | `0` | - |\n| `vy` | Velocity Y | `number` | `0` | - |\n| `vz` | Velocity Z | `number` | `0` | - |\n| `damping` | Damping | `number` | `0` | - |\n| `maxSpeed` | Max Speed | `number` | `100` | - |"
+}

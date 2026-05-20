@@ -1,0 +1,40 @@
+{
+    "id": "postFx",
+    "name": "Post-FX Flash",
+    "isScript": false,
+    "description": "Triggers a time-limited post-processing flash (film grain, chromatic aberration, or LUT intensity) in response to EventBus events. Useful for gameplay feedback like damage flashes, warp/teleport effects, and ability activations.",
+    "author": "stemstudio",
+    "tags": [
+        "postfx",
+        "vfx",
+        "feedback",
+        "screen-effect"
+    ],
+    "main": "PostFxBehavior.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "attributes": {
+        "triggerEvent": {
+            "type": "string",
+            "default": "game.health.dec",
+            "description": "EventBus topic that triggers the flash (e.g. game.health.dec, enemy.got.hit, custom.warp.activated)."
+        },
+        "pass": {
+            "type": "string",
+            "default": "chromaticAberration",
+            "options": ["film", "chromaticAberration", "lut"],
+            "description": "Which post-processing pass to flash. The pass must be enabled in Project Settings > Post-Processing for the flash to be visible."
+        },
+        "duration": {
+            "type": "number",
+            "default": 0.3,
+            "description": "Total flash duration in seconds (attack + hold + decay)."
+        },
+        "peakIntensity": {
+            "type": "number",
+            "default": 0.03,
+            "description": "Maximum uniform value the pass reaches at peak. Typical ranges: film/lut 0.5-1.0, chromaticAberration 0.02-0.05."
+        }
+    },
+    "documentation": "## Post-FX Flash\n\nBridges EventBus gameplay events to time-limited post-processing flashes. Each time the configured `triggerEvent` fires, the behavior kicks a short flash on the selected pass — landing the uniform back on whatever baseline value the user has set in Project Settings.\n\n### How It Works\n1. On behavior add, subscribes to `attributes.triggerEvent` on the global EventBus.\n2. When the event fires, calls `effectRenderer.flashPass(pass, duration, peakIntensity)`.\n3. The renderer drives the uniform through a linear attack/hold/decay envelope over `duration` seconds, then restores the baseline.\n4. Overlapping flashes on the same pass replace the previous one (do not stack).\n\n### Gameplay Use Cases\n- **Damage feedback**: subscribe to `game.health.dec` → chromatic aberration spike.\n- **Teleport/warp**: custom event from ability behavior → film grain flash + CA.\n- **Power-up activation**: custom event → LUT intensity momentarily boosted for a stylistic shift.\n- **Enemy hit feedback** (when playing as the enemy): subscribe to `enemy.got.hit`.\n\n### Requirements\n- The target pass MUST be enabled in Project Settings > Rendering > Post-Processing. The behavior does NOT force-enable a disabled pass (that would cause a pipeline rebuild mid-gameplay, which is visually jarring).\n- Works on WebGPU renderer. On WebGL fallback, the underlying TSL passes may not be available and flashes will be no-ops.\n\n### Manual Trigger\nGameplay code can call `.flash()` directly instead of firing an EventBus event:\n```ts\nconst postFx = this.game.getBehavior(target, 'postFx');\npostFx?.flash();                              // use attribute-configured defaults\npostFx?.flash('film', 0.5, 0.8);              // override\n```\n\n### Attributes\n- `triggerEvent`: EventBus topic to subscribe to (e.g. `game.health.dec`).\n- `pass`: one of `film`, `chromaticAberration`, `lut`.\n- `duration`: total flash time in seconds.\n- `peakIntensity`: maximum uniform value reached at peak.\n\n### Best Practices\n- Short durations (0.15–0.4s) for hit feedback — long flashes feel laggy.\n- Subtle peak intensities for chromatic aberration (0.02–0.05); above 0.1 becomes distracting.\n- For continuous ambient effects (always-on film grain, ambient LUT), use Project Settings directly — flashing is for moment-to-moment feedback.\n- Attach to a persistent object (scene root, player) so the subscription survives object lifecycle."
+}

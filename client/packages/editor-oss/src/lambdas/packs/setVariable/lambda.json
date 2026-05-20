@@ -1,0 +1,68 @@
+{
+    "id": "setVariable",
+    "name": "Set Variable",
+    "description": "Sets a variable value on scene, target object, or player data.",
+    "author": "stemstudio",
+    "version": "1.0.0",
+    "main": "SetVariableLambda.ts",
+    "tags": [
+        "common",
+        "state",
+        "trigger"
+    ],
+    "attributes": {},
+    "readComponents": [
+        "scope",
+        "path",
+        "value",
+        "mode"
+    ],
+    "writeComponents": [],
+    "componentSchema": {
+        "scope": {
+            "name": "Scope",
+            "type": "enum",
+            "default": "scene",
+            "options": [
+                {
+                    "label": "Scene",
+                    "value": "scene"
+                },
+                {
+                    "label": "Object",
+                    "value": "object"
+                },
+                {
+                    "label": "Player",
+                    "value": "player"
+                }
+            ]
+        },
+        "path": {
+            "name": "Path",
+            "type": "string",
+            "default": ""
+        },
+        "mode": {
+            "name": "Mode",
+            "type": "enum",
+            "default": "set",
+            "options": [
+                {
+                    "label": "Set",
+                    "value": "set"
+                },
+                {
+                    "label": "Increment",
+                    "value": "inc"
+                }
+            ]
+        },
+        "value": {
+            "name": "Value",
+            "type": "string",
+            "default": ""
+        }
+    },
+    "documentation": "## Set Variable\n\nSets a variable value on scene, target object, or player data.\n\n### Runtime Notes\n- Attach this lambda to objects via Lambda Components.\n- If Auto Apply is enabled, it runs every frame.\n- If Auto Apply is disabled, call `lambdaInstance.apply(deltaTime)` from behavior/lambda code.\n\n### Component Parameters\n| Key | Label | Type | Default | Options |\n| --- | --- | --- | --- | --- |\n| `scope` | Scope | `enum` | `scene` | `Scene` (`scene`), `Object` (`object`), `Player` (`player`) |\n| `path` | Path | `string` | `` | - |\n| `mode` | Mode | `enum` | `set` | `Set` (`set`), `Increment` (`inc`) |\n| `value` | Value | `string` | `` | - |"
+}

@@ -1,0 +1,208 @@
+{
+    "id": "tween",
+    "name": "Tween Animation",
+    "isScript": false,
+    "description": "A powerful tween animation system for smoothly interpolating object transforms (position, rotation, scale) over time. Supports 20+ easing functions, three loop modes, and trigger-based or automatic playback. Uses @tweenjs/tween.js for high-quality animation curves. Perfect for creating polished motion without keyframe animation.",
+    "documentation": "## Tween Animation\nAnimate object position, rotation, and scale using easing functions.\n\n### Transform\n- **Move** - Translation offset (X, Y, Z)\n- **Rotate** - Rotation in degrees (X, Y, Z)\n- **Scale** - Scale change (X, Y, Z)\n\n### Timing\n- **Speed** - Animation speed (0-100)\n- **Ease Type** - Easing curve (Linear, Quad, Cubic, Bounce, Elastic, etc.)\n- **Loop Mode** - None (play once), Repeat, or Mirror (ping-pong)\n\n### Tips\n- Use **Start on Trigger** with a Trigger behavior for interactive animations\n- Mirror loop mode creates smooth back-and-forth motion\n- Combine with Platform for custom moving objects\n- Supports 28 different easing functions for varied motion styles",
+    "author": "stemstudio",
+    "tags": ["motion"],
+    "main": "TweenAnimationBehavior.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "throttleConfig": {
+        "throttlePriority": "MEDIUM",
+        "enableFrustumCulling": true,
+        "enableDistanceThrottling": true,
+        "requiresConsistentUpdates": false
+    },
+    "attributes": {
+        "customName": {
+            "name": "Custom Name",
+            "type": "string"
+        },
+        "startOnTrigger": {
+            "name": "Start on trigger",
+            "type": "boolean",
+            "default": false,
+            "description": "When enabled, the tween only plays when activated by a Trigger behavior instead of starting automatically."
+        },
+        "move": {
+            "name": "Move",
+            "type": "vector3",
+            "default": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "description": "Translation offset applied to the object over the tween duration along each axis (X, Y, Z)."
+        },
+        "rotate": {
+            "name": "Rotate",
+            "type": "vector3",
+            "default": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "description": "Rotation offset in degrees applied to the object over the tween duration along each axis (X, Y, Z)."
+        },
+        "scale": {
+            "name": "Scale",
+            "type": "vector3",
+            "default": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "description": "Scale change applied to the object over the tween duration along each axis (X, Y, Z)."
+        },
+        "speed": {
+            "name": "Speed",
+            "type": "number",
+            "min": 0,
+            "max": 100,
+            "default": 1,
+            "description": "Controls how fast the tween animation plays. Higher values result in faster animation."
+        },
+        "easing": {
+            "name": "Ease Type",
+            "type": "enum",
+            "options": [
+                {
+                    "label": "Linear",
+                    "value": "linear"
+                },
+                {
+                    "label": "Quad In",
+                    "value": "quadIn"
+                },
+                {
+                    "label": "Quad Out",
+                    "value": "quadOut"
+                },
+                {
+                    "label": "Quad In Out",
+                    "value": "quadInOut"
+                },
+                {
+                    "label": "Cubic In",
+                    "value": "cubicIn"
+                },
+                {
+                    "label": "Cubic Out",
+                    "value": "cubicOut"
+                },
+                {
+                    "label": "Cubic In Out",
+                    "value": "cubicInOut"
+                },
+                {
+                    "label": "Quart In",
+                    "value": "quartIn"
+                },
+                {
+                    "label": "Quart Out",
+                    "value": "quartOut"
+                },
+                {
+                    "label": "Quart In Out",
+                    "value": "quartInOut"
+                },
+                {
+                    "label": "Quint In",
+                    "value": "quintIn"
+                },
+                {
+                    "label": "Quint Out",
+                    "value": "quintOut"
+                },
+                {
+                    "label": "Quint In Out",
+                    "value": "quintInOut"
+                },
+                {
+                    "label": "Sine In",
+                    "value": "sineIn"
+                },
+                {
+                    "label": "Sine Out",
+                    "value": "sineOut"
+                },
+                {
+                    "label": "Sine In Out",
+                    "value": "sineInOut"
+                },
+                {
+                    "label": "Back In",
+                    "value": "backIn"
+                },
+                {
+                    "label": "Back Out",
+                    "value": "backOut"
+                },
+                {
+                    "label": "Back In Out",
+                    "value": "backInOut"
+                },
+                {
+                    "label": "Circ In",
+                    "value": "circIn"
+                },
+                {
+                    "label": "Circ Out",
+                    "value": "circOut"
+                },
+                {
+                    "label": "Circ In Out",
+                    "value": "circInOut"
+                },
+                {
+                    "label": "Bounce In",
+                    "value": "bounceIn"
+                },
+                {
+                    "label": "Bounce Out",
+                    "value": "bounceOut"
+                },
+                {
+                    "label": "Bounce In Out",
+                    "value": "bounceInOut"
+                },
+                {
+                    "label": "Elastic In",
+                    "value": "elasticIn"
+                },
+                {
+                    "label": "Elastic Out",
+                    "value": "elasticOut"
+                },
+                {
+                    "label": "Elastic In Out",
+                    "value": "elasticInOut"
+                }
+            ],
+            "default": "linear",
+            "description": "The easing curve that controls acceleration and deceleration of the animation over time."
+        },
+        "loopMode": {
+            "name": "Loop Mode",
+            "type": "enum",
+            "options": [
+                {
+                    "label": "None",
+                    "value": "Play Once"
+                },
+                {
+                    "label": "Repeat",
+                    "value": "Repeat"
+                },
+                {
+                    "label": "Mirror",
+                    "value": "Loop"
+                }
+            ],
+            "default": "Loop",
+            "description": "Determines how the animation repeats: None plays once, Repeat restarts from the beginning, and Mirror plays forward then backward."
+        }
+    }
+}

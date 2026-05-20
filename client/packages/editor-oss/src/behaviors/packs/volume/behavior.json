@@ -1,0 +1,156 @@
+{
+    "id": "volume",
+    "name": "Volume",
+    "isScript": false,
+    "description": "A collision volume system that triggers game events when players enter trigger zones. Supports kill volumes, win/lose conditions, damage zones, blocking volumes, and custom effects. Integrates with game state (lives, score, time) and broadcasts volume activation events. Features collision cooldown, physics removal, and preset configurations.",
+    "documentation": "## Volume\nCreate invisible zones that trigger game events on player collision.\n\n### Presets\n- **Blocking** - Blocks characters, enemies, and throwables\n- **Kill** - Instantly kills the player (9999 damage)\n- **Dialogue** - Triggers dialogue events\n- **Loose** - Deducts points and time\n- **Win** - Triggers win condition\n- **Custom** - Configure all options manually\n\n### Volume Options\n- **Block Enemies/Throwables/Characters** - What the volume blocks\n- **Damage Amount** - Damage dealt on contact\n- **Loose Points/Time** - Points and time penalties\n\n### Tips\n- Use **Start On Trigger** for conditional activation\n- Place invisible volumes as death zones below platforms\n- Combine Kill preset with respawn for fall-off-map mechanics",
+    "author": "stemstudio",
+    "tags": ["object"],
+    "main": "VolumeBehavior.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "throttleConfig": {
+        "throttlePriority": "HIGH",
+        "enableFrustumCulling": false,
+        "enableDistanceThrottling": false,
+        "requiresConsistentUpdates": true
+    },
+    "attributes": {
+        "customName": {
+            "name": "Custom Name",
+            "type": "string"
+        },
+        "startOnTrigger": {
+            "name": "Start On Trigger",
+            "type": "boolean",
+            "default": false,
+            "description": "When enabled, the volume only becomes active when triggered by a Trigger behavior instead of being always active."
+        },
+        "volumeOptions": {
+            "name": "Volume Options",
+            "type": "group",
+            "presets": [
+                {
+                    "name": "Blocking",
+                    "values": {
+                        "volumeType": "Blocking",
+                        "blockEnemies": true,
+                        "blockThrowables": true,
+                        "blockCharacters": true,
+                        "damageAmount": 0,
+                        "loosePoints": 0,
+                        "looseTime": 0
+                    },
+                    "objectOptions": {
+                        "TODO": "implement this",
+                        "physics": {
+                            "enabled": true,
+                            "type": "kinematic",
+                            "mass": 0
+                        }
+                    }
+                },
+                {
+                    "name": "Kill",
+                    "values": {
+                        "volumeType": "Kill Volume",
+                        "blockEnemies": false,
+                        "blockThrowables": false,
+                        "blockCharacters": false,
+                        "damageAmount": 9999,
+                        "loosePoints": 0,
+                        "looseTime": 0
+                    }
+                },
+                {
+                    "name": "Dialogue",
+                    "values": {
+                        "volumeType": "Dialogue Volume",
+                        "blockEnemies": false,
+                        "blockThrowables": false,
+                        "blockCharacters": false,
+                        "damageAmount": 0,
+                        "loosePoints": 0,
+                        "looseTime": 0
+                    }
+                },
+                {
+                    "name": "Loose",
+                    "values": {
+                        "volumeType": "Lose Volume",
+                        "blockEnemies": false,
+                        "blockThrowables": false,
+                        "blockCharacters": false,
+                        "damageAmount": 0,
+                        "loosePoints": 1,
+                        "looseTime": 1
+                    }
+                },
+                {
+                    "name": "Win",
+                    "values": {
+                        "volumeType": "Win Volume",
+                        "blockEnemies": false,
+                        "blockThrowables": false,
+                        "blockCharacters": false,
+                        "damageAmount": 0,
+                        "loosePoints": 0,
+                        "looseTime": 0
+                    }
+                },
+                {
+                    "name": "Custom",
+                    "values": {
+                        "volumeType": "Custom"
+                    }
+                }
+            ],
+            "attributes": {
+                "volumeType": {
+                    "type": "string",
+                    "invisible": true,
+                    "default": "Blocking"
+                },
+                "blockEnemies": {
+                    "name": "Block Enemies",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "When enabled, enemies cannot pass through this volume and will be blocked by its collision."
+                },
+                "blockThrowables": {
+                    "name": "Block Throwables",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "When enabled, throwable objects are blocked by this volume and cannot pass through it."
+                },
+                "blockCharacters": {
+                    "name": "Block Characters",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "When enabled, player characters are blocked by this volume and cannot pass through it."
+                },
+                "damageAmount": {
+                    "name": "Damage Amount",
+                    "type": "number",
+                    "min": 0,
+                    "default": 20,
+                    "description": "Amount of damage dealt to the player on contact with this volume. Set to 9999 for instant kill."
+                },
+                "loosePoints": {
+                    "name": "Loose Points",
+                    "type": "number",
+                    "min": 0,
+                    "default": 2,
+                    "description": "Number of score points deducted from the player when they enter this volume."
+                },
+                "looseTime": {
+                    "name": "Loose Time",
+                    "type": "number",
+                    "min": 0,
+                    "default": 2,
+                    "description": "Number of seconds deducted from the game timer when the player enters this volume."
+                }
+            }
+        }
+    }
+}

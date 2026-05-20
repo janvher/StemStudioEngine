@@ -1,0 +1,72 @@
+{
+    "id": "projectile",
+    "name": "Projectile",
+    "isScript": false,
+    "description": "Manages projectile spawning, physics, and collision detection. Fires projectiles in response to 'fire' events with configurable speed, gravity, spread, and damage. Uses object pooling for performance.",
+    "documentation": "## Projectile\nSpawn and manage projectiles with physics and collision.\n\n### Attributes\n- **Speed** - Projectile velocity in units/second\n- **Gravity** - Downward acceleration (0 for straight-line)\n- **Lifetime** - Max seconds before auto-destroy\n- **Spread** - Random deviation in radians\n- **Damage** - Base damage on hit\n- **Radius** - Collision detection radius\n\n### Events\n- **fire** - Launch a projectile. Data: `{ origin, direction, owner?, definitionId? }`\n\n### Tips\n- Set gravity > 0 for arcing projectiles (arrows, grenades)\n- Use spread for shotgun-style weapons\n- Combine with Combat Utils for damage calculation",
+    "author": "stemstudio",
+    "tags": ["combat"],
+    "main": "ProjectileBehavior.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "throttleConfig": {
+        "throttlePriority": "HIGH",
+        "enableFrustumCulling": false,
+        "enableDistanceThrottling": false,
+        "requiresConsistentUpdates": true
+    },
+    "attributes": {
+        "customName": {
+            "name": "Custom Name",
+            "type": "string"
+        },
+        "speed": {
+            "name": "Speed",
+            "type": "number",
+            "min": 1,
+            "max": 200,
+            "default": 20,
+            "description": "Projectile velocity in units per second."
+        },
+        "gravity": {
+            "name": "Gravity",
+            "type": "number",
+            "min": 0,
+            "max": 50,
+            "default": 0,
+            "description": "Downward acceleration applied each frame. Set to 0 for straight-line projectiles."
+        },
+        "lifetime": {
+            "name": "Lifetime",
+            "type": "number",
+            "min": 0.1,
+            "max": 30,
+            "default": 5,
+            "description": "Maximum seconds a projectile exists before auto-destroying."
+        },
+        "spread": {
+            "name": "Spread",
+            "type": "number",
+            "min": 0,
+            "max": 1,
+            "default": 0,
+            "description": "Random directional deviation in radians. Use for shotgun-style spread."
+        },
+        "damage": {
+            "name": "Damage",
+            "type": "number",
+            "min": 0,
+            "max": 1000,
+            "default": 1,
+            "description": "Base damage dealt on hit."
+        },
+        "radius": {
+            "name": "Radius",
+            "type": "number",
+            "min": 0.01,
+            "max": 5,
+            "default": 0.1,
+            "description": "Collision detection radius of the projectile mesh."
+        }
+    }
+}

@@ -1,0 +1,59 @@
+{
+    "id": "shop",
+    "name": "Shop",
+    "isHidden": true,
+    "isScript": false,
+    "description": "An interactive shopping system that displays a customizable HTML-based shop interface when players approach. Supports multiple items with prices, payment types, and visual customization. Creates dynamic UI overlay with shop image, intro dialog, and grid-based item display. Integrates with prefab system for item management and preloading.",
+    "documentation": "## Shop\nCreate an in-game shop where players can buy items.\n\n### Settings\n- **Shop Image** - Image displayed in the shop UI\n- **Intro Dialog** - Text shown when the shop opens\n\n### Items\nAdd items to the shop inventory:\n- **Name** - Display name for the item\n- **Item** - Prefab to give the player on purchase\n- **Payment** - Currency prefab required\n- **Cost** - Price of the item\n\n### Tips\n- Use Consumable behavior on currency items for collecting\n- Players need to collect payment items before purchasing\n- Combine with NPC behavior for a shopkeeper character",
+    "author": "stemstudio",
+    "tags": ["shop"],
+    "main": "ShopBehavior.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "attributes": {
+        "customName": {
+            "name": "Custom Name",
+            "type": "string"
+        },
+        "shopImage": {
+            "name": "Shop Image",
+            "type": "image",
+            "description": "The image displayed at the top of the shop UI when the player opens the shop."
+        },
+        "introDialog": {
+            "name": "Intro Dialog",
+            "type": "string",
+            "isColumnMultiline": true,
+            "description": "The welcome text shown to the player when the shop interface opens."
+        },
+        "items": {
+            "name": "",
+            "type": "group",
+            "array": true,
+            "attributes": {
+                "itemDisplayName": {
+                    "name": "Name",
+                    "type": "string",
+                    "description": "The display name shown to the player for this shop item."
+                },
+                "itemId": {
+                    "name": "Item",
+                    "type": "prefab",
+                    "description": "The prefab that will be given to the player upon purchasing this item."
+                },
+                "paymentType": {
+                    "name": "Payment",
+                    "type": "prefab",
+                    "description": "The currency prefab required to purchase this item. Players must collect this item type to pay."
+                },
+                "price": {
+                    "name": "Cost",
+                    "type": "number",
+                    "min": 0,
+                    "default": 0,
+                    "description": "The number of payment items required to buy this item."
+                }
+            }
+        }
+    }
+}

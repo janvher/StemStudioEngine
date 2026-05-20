@@ -1,0 +1,187 @@
+{
+    "id": "objectInteractions",
+    "name": "Object Interactions",
+    "isScript": false,
+    "description": "A configurable interaction system for objects that enables various player actions including pickup, drop, push, pull, and inventory placement. Provides physics-based object manipulation with customizable interaction settings.",
+    "documentation": "## Object Interactions\nEnable player interactions with scene objects.\n\n### Available Interactions\n- **Pick Up** - Player can pick up the object\n- **Drop** - Player can drop a held object\n- **Push** - Player can push the object (auto on contact, or with E if pickup is disabled)\n- **Pull** - Player can pull the object (auto on contact when facing away, or with P)\n- **Place In Inventory** - Object is added to inventory and removed from scene\n\n### Controls\n- Press **E** to activate an interaction (pick up / push)\n- Press **F** to deactivate (drop)\n- Press **P** to pull a nearby object toward you\n\n### Tips\n- Enable physics on the object for push/pull to work\n- Multiple interactions can be enabled on the same object",
+    "author": "stemstudio",
+    "tags": ["object interaction"],
+    "main": "ObjectInteractionsBehavior.ts",
+    "version": "1.1.0",
+    "dependencies": {},
+    "throttleConfig": {
+        "throttlePriority": "HIGH",
+        "enableFrustumCulling": true,
+        "enableDistanceThrottling": false,
+        "requiresConsistentUpdates": true
+    },
+    "attributes": {
+        "customName": {
+            "name": "Custom Name",
+            "type": "string"
+        },
+        "pickUp": {
+            "name": "Pick Up",
+            "type": "boolean",
+            "description": "When enabled, the player can pick up this object by pressing the interact key.",
+            "default": true
+        },
+        "drop": {
+            "name": "Drop",
+            "type": "boolean",
+            "description": "When enabled, the player can drop this object after picking it up.",
+            "default": true
+        },
+        "push": {
+            "name": "Push",
+            "type": "boolean",
+            "description": "When enabled, the player can push this object using physics. Requires physics to be enabled on the object.",
+            "default": true
+        },
+        "pull": {
+            "name": "Pull",
+            "type": "boolean",
+            "description": "When enabled, the player can pull this object toward them. Requires physics to be enabled on the object.",
+            "default": true
+        },
+        "placeInInventory": {
+            "name": "Place In Inventory",
+            "type": "boolean",
+            "description": "When enabled, the object is placed into the player's inventory on interaction instead of being held.",
+            "default": false
+        },
+        "separator1": {
+            "type": "separator"
+        },
+        "interactionDistance": {
+            "name": "Interaction Distance",
+            "type": "number",
+            "min": 0.5,
+            "max": 20,
+            "default": 3.5
+        },
+        "interactionCooldownMs": {
+            "name": "Interaction Cooldown (ms)",
+            "type": "number",
+            "min": 0,
+            "max": 2000,
+            "default": 150
+        },
+        "interactionMass": {
+            "name": "Interaction Mass",
+            "type": "number",
+            "min": 0.1,
+            "max": 1000,
+            "default": 1
+        },
+        "separator2": {
+            "type": "separator"
+        },
+        "holdDistance": {
+            "name": "Hold Distance",
+            "type": "number",
+            "min": 0.2,
+            "max": 8,
+            "default": 1.75
+        },
+        "holdHeight": {
+            "name": "Hold Height",
+            "type": "number",
+            "min": -2,
+            "max": 6,
+            "default": 1.1
+        },
+        "holdSideOffset": {
+            "name": "Hold Side Offset",
+            "type": "number",
+            "min": -5,
+            "max": 5,
+            "default": 0
+        },
+        "rotateWithPlayer": {
+            "name": "Rotate With Player",
+            "type": "boolean",
+            "default": true
+        },
+        "separator3": {
+            "type": "separator"
+        },
+        "pushImpulse": {
+            "name": "Push Impulse",
+            "type": "number",
+            "min": 0,
+            "max": 200,
+            "default": 8
+        },
+        "pullImpulse": {
+            "name": "Pull Impulse",
+            "type": "number",
+            "min": 0,
+            "max": 200,
+            "default": 8
+        },
+        "contactPushDistance": {
+            "name": "Contact Push Distance",
+            "type": "number",
+            "min": 0.1,
+            "max": 5,
+            "default": 0.1
+        },
+        "contactPushForce": {
+            "name": "Contact Push Force",
+            "type": "number",
+            "min": 0,
+            "max": 50,
+            "default": 0.5
+        },
+        "contactPullForce": {
+            "name": "Contact Pull Force",
+            "type": "number",
+            "min": 0,
+            "max": 50,
+            "default": 0.5
+        },
+        "dropForwardImpulse": {
+            "name": "Drop Forward Impulse",
+            "type": "number",
+            "min": 0,
+            "max": 100,
+            "default": 0
+        },
+        "dropUpwardImpulse": {
+            "name": "Drop Upward Impulse",
+            "type": "number",
+            "min": 0,
+            "max": 100,
+            "default": 0
+        },
+        "separator4": {
+            "type": "separator"
+        },
+        "debugLogs": {
+            "name": "Debug Logs",
+            "type": "boolean",
+            "default": false
+        },
+        "debugOverlay": {
+            "name": "Debug Overlay",
+            "type": "boolean",
+            "default": false
+        },
+        "separator5": {
+            "type": "separator"
+        },
+        "eKeyToActive": {
+            "name": "E Key: to Active",
+            "type": "label"
+        },
+        "fKeyToDeActive": {
+            "name": "F Key: to De-Active",
+            "type": "label"
+        },
+        "pKeyToPull": {
+            "name": "P Key: to Pull",
+            "type": "label"
+        }
+    }
+}

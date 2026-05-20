@@ -1,0 +1,32 @@
+{
+    "id": "setParent",
+    "name": "Set Parent",
+    "description": "Reparents target objects while optionally preserving world transform.",
+    "author": "stemstudio",
+    "version": "1.0.0",
+    "main": "SetParentLambda.ts",
+    "tags": [
+        "common",
+        "hierarchy",
+        "trigger"
+    ],
+    "attributes": {},
+    "readComponents": [
+        "parentUUID",
+        "keepWorldTransform"
+    ],
+    "writeComponents": [],
+    "componentSchema": {
+        "parentUUID": {
+            "name": "Parent UUID",
+            "type": "string",
+            "default": ""
+        },
+        "keepWorldTransform": {
+            "name": "Keep World Transform",
+            "type": "boolean",
+            "default": true
+        }
+    },
+    "documentation": "## Set Parent\n\nReparents target objects while optionally preserving world transform.\n\n### Runtime Notes\n- Attach this lambda to objects via Lambda Components.\n- If Auto Apply is enabled, it runs every frame.\n- If Auto Apply is disabled, call `lambdaInstance.apply(deltaTime)` from behavior/lambda code.\n\n### Component Parameters\n| Key | Label | Type | Default | Options |\n| --- | --- | --- | --- | --- |\n| `parentUUID` | Parent UUID | `string` | `` | - |\n| `keepWorldTransform` | Keep World Transform | `boolean` | `true` | - |"
+}

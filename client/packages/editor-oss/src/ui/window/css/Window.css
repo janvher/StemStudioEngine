@@ -1,0 +1,162 @@
+.WindowMaskV2 {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 9000000;
+    box-sizing: border-box;
+}
+
+.WindowMaskV2.hidden {
+    display: none;
+}
+
+.WindowMaskV2.mask {
+    background-color: rgba(0, 0, 0, 0.6);
+    pointer-events: all;
+    z-index: 1000;
+}
+
+.Window {
+    position: relative;
+    width: 600px;
+    height: 400px;
+    padding: 0px;
+    background: var(--theme-dialog-bg);
+    pointer-events: all;
+    z-index: 200;
+    box-shadow: var(--theme-dialog-shadow);
+    border: none;
+    transition: all 0.4s;
+    border-radius: var(--theme-dialog-border-radius);
+    box-sizing: border-box;
+}
+
+.Window > .wrap {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    background: var(--theme-dialog-bg);
+    border-radius: var(--theme-dialog-border-radius);
+}
+
+.Window > .wrap > .title {
+    font-size: var(--theme-font-size-s);
+    color: #fff;
+    text-align: left;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    font-weight: var(--theme-font-medium-plus);
+    line-height: 21px;
+    border-top-left-radius: var(--theme-dialog-border-radius);
+    border-top-right-radius: var(--theme-dialog-border-radius);
+    box-sizing: border-box;
+    padding: 12px;
+    position: relative;
+    flex: none;
+}
+
+.Window > .wrap > .title > .controls {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    right: 8px;
+    text-align: right;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.Window > .wrap > .title > .controls > .icon {
+    width: 16px;
+    height: 24px;
+    margin-right: 4px;
+    vertical-align: top;
+    display: inline-block;
+    cursor: pointer;
+}
+
+.Window > .wrap > .title > .controls > .window-close-button {
+    width: 24px;
+    height: 24px;
+    color: #ffffff;
+    font-size: 18px;
+    line-height: 24px;
+    text-align: center;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.Window > .wrap > .title > .controls > .window-close-button:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.Window > .wrap > .content {
+    word-break: break-word;
+    overflow: hidden;
+    height: 100%;
+    width: 100%;
+    font-size: var(--theme-font-size-s);
+    font-weight: var(--theme-font-regular);
+    color: var(--theme-font-unselected-tertiary-color);
+    padding: 0 12px;
+    box-sizing: border-box;
+}
+
+.Window.no-padding > .wrap > .content {
+    left: 0;
+    right: 0;
+    top: 24px;
+    bottom: 32px;
+}
+
+.Window > .wrap > .buttons {
+    padding: 0 8px 12px;
+    width: 100%;
+    overflow: hidden;
+    flex: none;
+}
+
+.Window > .wrap > .buttons > .button-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 16px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.Window > .wrap input {
+    border: none;
+    font-family: "Roboto";
+    height: 28px;
+    border-radius: 8px;
+    background-color: var(--theme-container-secondary-dark);
+    font-size: var(--theme-font-size-s);
+    font-weight: var(--theme-font-regular);
+    color: var(--theme-font-unselected-color);
+    line-height: 120%;
+    padding: 6px 7px 6px 14px;
+}
+
+.Window.Confirm,
+.Window.Prompt {
+    width: 343px;
+    height: 184px;
+}
+
+.Window.Alert {
+    width: 320px;
+    height: 180px;
+}

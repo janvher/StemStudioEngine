@@ -1,0 +1,91 @@
+# Render.com Blueprint for the public buildwithstem.com site.
+#
+# Apply with `render blueprint apply` or by pointing a Render workspace
+# at this repo. Defines:
+#   - buildwithstem-site: static site (landing, docs, playground iframe,
+#     embedded editor / player / app shell bundles)
+#   - buildwithstem-ai (optional): the Go AI proxy from server/cmd/ai-server.
+#     Disabled by default — uncomment when you want to expose a hosted
+#     copy of the proxy. The local-only flow keeps working without it.
+#
+# The static site is the only thing the site needs to function. The Go
+# proxy is BYOK; visitors who want AI features can run it locally or you
+# can opt into the hosted variant below.
+
+services:
+    - type: web
+      name: buildwithstem-site
+      runtime: static
+      branch: main
+      buildCommand: |
+          curl -fsSL https://bun.sh/install | bash
+          export PATH=$HOME/.bun/bin:$PATH
+          bun install --frozen-lockfile
+          BUILD_MODE=oss bun run build
+      staticPublishPath: ./build/public
+      pullRequestPreviewsEnabled: true
+      headers:
+          - path: /*
+            name: X-Frame-Options
+            value: SAMEORIGIN
+          - path: /*
+            name: Referrer-Policy
+            value: no-referrer-when-downgrade
+          - path: /assets/*
+            name: Cache-Control
+            value: public, max-age=31536000, immutable
+      routes:
+          - type: rewrite
+            source: /play/*
+            destination: /play.html
+          - type: rewrite
+            source: /create/project
+            destination: /editor.html
+          - type: rewrite
+            source: /create/project/*
+            destination: /editor.html
+          - type: rewrite
+            source: /stem-editor/*
+            destination: /editor.html
+          - type: rewrite
+            source: /dashboard
+            destination: /shell.html
+          - type: rewrite
+            source: /dashboard/*
+            destination: /shell.html
+          - type: rewrite
+            source: /docs
+            destination: /index.html
+          - type: rewrite
+            source: /docs/*
+            destination: /index.html
+          - type: rewrite
+            source: /playground
+            destination: /index.html
+          - type: rewrite
+            source: /playground/*
+            destination: /index.html
+          - type: rewrite
+            source: /*
+            destination: /index.html
+
+    # Optional: hosted AI proxy. Visitors hit it from the editor when they
+    # set REACT_APP_SERVER_HOST=https://buildwithstem-ai.onrender.com (or
+    # the bound URL). The proxy fronts BYOK keys configured via env vars.
+    #
+    # - type: web
+    #   name: buildwithstem-ai
+    #   runtime: go
+    #   branch: main
+    #   rootDir: server
+    #   buildCommand: go build -tags oss -trimpath -o ai-server ./cmd/ai-server
+    #   startCommand: ./ai-server serve
+    #   envVars:
+    #     - key: BUILD_MODE
+    #       value: oss
+    #     - key: AI_SERVER_PORT
+    #       value: "10000"
+    #     - key: ANTHROPIC_API_KEY
+    #       sync: false
+    #     - key: OPENAI_API_KEY
+    #       sync: false

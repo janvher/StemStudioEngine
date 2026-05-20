@@ -1,0 +1,41 @@
+# Go AI proxy (server/cmd/ai-server). Listens on :8081 inside the
+# compose network and is reached via the nginx /api/ proxy.
+
+FROM golang:1.25-alpine AS builder
+
+WORKDIR /src
+
+# Module manifest first for caching.
+COPY server/go.mod server/go.sum* ./
+RUN go mod download
+
+COPY server ./
+
+ENV CGO_ENABLED=0
+ENV GOOS=linux
+
+RUN go build -tags oss -trimpath -ldflags="-s -w" \
+    -o /out/ai-server ./cmd/ai-server
+
+# ---- runtime ------------------------------------------------------------
+# We need a shell + mkdir for the writable log dir; distroless static-debian
+# has neither. Alpine is small enough and matches what nginx uses.
+
+FROM alpine:3.20 AS runner
+
+WORKDIR /app
+
+RUN addgroup -S app && adduser -S app -G app \
+ && mkdir -p /app/logs /app/public \
+ && chown -R app:app /app
+
+# Default config. Override at runtime by mounting your own at
+# /app/config.toml (compose `volumes:` block) or pass --config flag.
+COPY server/config.toml /app/config.toml
+
+COPY --from=builder /out/ai-server /app/ai-server
+
+USER app
+EXPOSE 8081
+ENTRYPOINT ["/app/ai-server"]
+CMD ["serve"]

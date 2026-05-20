@@ -1,0 +1,60 @@
+{
+    "id": "destructible",
+    "name": "Destructible",
+    "isScript": false,
+    "description": "Makes an object destructible via a Trigger step or an EventBus event. On destruction, the object is hidden and its physics body removed; it can optionally respawn after a delay.",
+    "author": "stemstudio",
+    "tags": [
+        "gameplay",
+        "destruction",
+        "trigger",
+        "physics"
+    ],
+    "main": "DestructibleBehavior.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "attributes": {
+        "startOnTrigger": {
+            "type": "boolean",
+            "default": true,
+            "description": "When true, the Trigger behavior's APPLY_BEHAVIOR step will destroy this object. Leave on to wire destruction through the scene's triggers."
+        },
+        "triggerEvent": {
+            "type": "string",
+            "default": "",
+            "description": "Optional EventBus topic that also triggers destruction (e.g. boss.defeated, wall.break). Leave empty to use Trigger behaviors only."
+        },
+        "respawn": {
+            "type": "boolean",
+            "default": false,
+            "description": "If true, the object reappears and re-enables physics after respawnDelay seconds."
+        },
+        "respawnDelay": {
+            "type": "number",
+            "default": 5,
+            "description": "Seconds to wait before respawn when respawn is enabled."
+        },
+        "destroyedEvent": {
+            "type": "string",
+            "default": "",
+            "description": "Optional EventBus topic emitted right after destruction. Use this to chain further reactions (VFX, achievements, score)."
+        },
+        "postFxFlash": {
+            "type": "string",
+            "default": "",
+            "options": ["", "film", "chromaticAberration", "lut"],
+            "description": "If set, fires a short flash on the chosen post-processing pass at destruction. Requires the pass to be enabled in Project Settings."
+        },
+        "flashDuration": {
+            "type": "number",
+            "default": 0.25,
+            "description": "Duration of the optional post-processing flash in seconds."
+        },
+        "flashPeak": {
+            "type": "number",
+            "default": 0.03,
+            "description": "Peak intensity of the optional post-processing flash. Typical: chromaticAberration 0.02-0.05, film/lut 0.5-1.0."
+        }
+    },
+    "documentation": "## Destructible\n\nMakes the attached object respond to destruction events. Primary wiring is through a Trigger behavior; an EventBus topic is also supported for systems that prefer event-driven destruction.\n\n### How It Works\n1. Attach Destructible to the object you want to be breakable.\n2. Keep `startOnTrigger` enabled (default) so a Trigger step with `APPLY_BEHAVIOR` will destroy the object.\n3. On destruction:\n   - `target.visible` is set to `false` and physics body is removed.\n   - `target.userData.destroyed` is set to `true` so other triggers can read it via the `OBJECT_STATE_COMPARE` condition.\n   - If `destroyedEvent` is set, that EventBus topic is emitted with `{uuid, target}`.\n   - If `postFxFlash` is set, the configured flash plays.\n4. If `respawn` is on, `respawnDelay` seconds later the object is restored (visible + physics re-added + `userData.destroyed = false`).\n\n### Trigger Integration Example\nAttach Destructible (startOnTrigger=true) to a crate. Add a Trigger to a button: condition `PRESS_E`, step type `APPLY_BEHAVIOR`, target = the crate's Destructible behavior. Pressing E on the button now destroys the crate.\n\n### Event-Driven Example\nSet `triggerEvent` to `boss.defeated`. Any gameplay code (or other behavior) that emits that topic will destroy the object. Useful for boss encounters where multiple props should disappear simultaneously.\n\n### Chaining\nCombine with Visual Effect / PostFX / Generic Sound behaviors that subscribe to this object's `destroyedEvent` to build layered destruction reactions without hard-coding them into Destructible itself.\n\n### Limitations\n- This is a logical destruction (hide + physics remove). It does NOT spawn debris or fracture geometry. For ConvexObjectBreaker-style shattering, combine with a dedicated debris prefab placed via the `destroyedEvent`.\n- The object still exists in the scene graph so it can be respawned. If you need permanent removal, omit respawn and optionally call scene removal yourself after the destroyedEvent fires."
+}

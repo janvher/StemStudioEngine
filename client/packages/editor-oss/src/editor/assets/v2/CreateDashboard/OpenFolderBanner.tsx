@@ -1,0 +1,214 @@
+import {useEffect, useState} from "react";
+import styled from "styled-components";
+
+import {IS_OSS} from "@stem/editor-oss/mode/buildMode";
+import {
+    FileSystemProjectStore,
+    getOSSPersistenceMode,
+    getProjectStore,
+    isFileSystemAccessSupported,
+    saveHandle,
+    setOSSPersistenceMode,
+    setProjectStore,
+} from "@stem/editor-oss/persistence";
+
+const Panel = styled.div`
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 14px 16px;
+    background: rgba(16, 22, 36, 0.78);
+    border: 1px solid rgba(120, 200, 255, 0.18);
+    border-radius: 10px;
+    color: #e8f1ff;
+    font-size: 12.5px;
+    flex: 1 1 0;
+    min-width: 0;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+    transition: border-color 120ms ease, box-shadow 120ms ease;
+    &:hover {
+        border-color: rgba(120, 200, 255, 0.32);
+        box-shadow: 0 6px 22px rgba(0, 0, 0, 0.26);
+    }
+`;
+
+const Icon = styled.div`
+    flex: 0 0 32px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(120, 200, 255, 0.16);
+    color: #b9dcff;
+`;
+
+const Body = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    flex: 1 1 auto;
+`;
+
+const Title = styled.div`
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: #b9dcff;
+    text-transform: uppercase;
+`;
+
+const Text = styled.span`
+    line-height: 1.4;
+    color: #e8f1ff;
+`;
+
+const Strong = styled.strong`
+    color: #ffffff;
+    font-weight: 600;
+`;
+
+const Action = styled.button`
+    background: linear-gradient(180deg, #5cb6ff 0%, #4aa1f0 100%);
+    color: #06121f;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 11.5px;
+    align-self: flex-start;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: filter 120ms ease, transform 80ms ease;
+    &:hover:not(:disabled) {
+        filter: brightness(1.08);
+    }
+    &:active:not(:disabled) {
+        transform: translateY(1px);
+    }
+    &:disabled {
+        opacity: 0.55;
+        cursor: default;
+    }
+`;
+
+const Hint = styled.span`
+    opacity: 0.7;
+    font-size: 11px;
+`;
+
+/**
+ * Dashboard banner that lets the user point StemStudio at a local folder for
+ * project storage at any time. Always visible in OSS when File System Access
+ * is supported; copy adapts to the current persistence mode so users can
+ * either adopt folder storage for the first time or switch to a different
+ * folder later. The reconnect banner sits on top of this one and handles
+ * the "filesystem mode but permission revoked" recovery case.
+ *
+ * The picker must run in a user-gesture click handler (browser requirement),
+ * so the button itself triggers `showDirectoryPicker` — no intermediate
+ * confirm dialog. On success the active `ProjectStore` is swapped to a
+ * `FileSystemProjectStore`, the persistence-mode flag flips to `filesystem`,
+ * and the page reloads so the project list refetches from disk.
+ */
+export const OpenFolderBanner = () => {
+    const [supported] = useState<boolean>(() => IS_OSS && isFileSystemAccessSupported());
+    const [activeKind, setActiveKind] = useState<"indexeddb" | "filesystem" | "remote" | "unknown">("unknown");
+    const [folderName, setFolderName] = useState<string | null>(null);
+    const [busy, setBusy] = useState(false);
+    const [hint, setHint] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!IS_OSS || !supported) return;
+        try {
+            const mode = getOSSPersistenceMode();
+            const store = getProjectStore();
+            const kind = store.kind;
+            // We treat "user picked filesystem AND the store is filesystem"
+            // as the only state where the banner advertises a *switch*; the
+            // reconnect banner covers the "picked filesystem, fell back to
+            // IDB" case so we don't compete with it.
+            setActiveKind(mode === "filesystem" && kind === "filesystem" ? "filesystem" : (kind as never));
+            // Surface the picked folder name when available so users can
+            // verify they connected the right directory without having to
+            // re-prompt the OS dialog.
+            const getName = (store as {getDirectoryName?: () => string}).getDirectoryName;
+            if (typeof getName === "function") {
+                try { setFolderName(getName.call(store)); } catch { setFolderName(null); }
+            }
+        } catch {
+            setActiveKind("indexeddb");
+        }
+    }, [supported]);
+
+    if (!IS_OSS || !supported) return null;
+    const inFsMode = activeKind === "filesystem";
+
+    const handleClick = async () => {
+        setBusy(true);
+        setHint(null);
+        try {
+            const picker = (window as unknown as {
+                showDirectoryPicker?: (opts?: {mode?: "read" | "readwrite"}) => Promise<unknown>;
+            }).showDirectoryPicker;
+            if (!picker) {
+                setHint("File System Access is not supported in this browser.");
+                return;
+            }
+            const handle = (await picker({mode: "readwrite"})) as never;
+            setOSSPersistenceMode("filesystem");
+            setProjectStore(new FileSystemProjectStore(handle));
+            await saveHandle(handle);
+            // Refetch the project list against the new store. Reload is the
+            // simplest path — React Query caches assume one stable store
+            // identity per session, and the bootstrap flag (which controls
+            // whether the OSS modal re-shows) is already set.
+            window.location.reload();
+        } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            // The user clicking "Cancel" in the directory picker raises an
+            // AbortError; treat that as a quiet dismissal.
+            if (/AbortError|aborted|cancell?ed/i.test(message)) {
+                setHint(null);
+            } else {
+                setHint(`Could not open folder: ${message}`);
+            }
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    return (
+        <Panel role="status" data-testid="open-folder-banner">
+            <Icon aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                </svg>
+            </Icon>
+            <Body>
+                <Title>{inFsMode ? "Folder storage" : "Switch to folder storage"}</Title>
+                <Text>
+                    {inFsMode ? (
+                        <>
+                            Saving to <Strong>{folderName ?? "selected folder"}</Strong>. New projects land here as <code>.stemscript.json</code>.
+                        </>
+                    ) : (
+                        <>Pick a folder and StemStudio writes each project as a <code>.stemscript.json</code> file you control.</>
+                    )}
+                </Text>
+                <Action
+                    type="button"
+                    onClick={handleClick}
+                    disabled={busy}
+                    data-testid="open-folder-button"
+                >
+                    {busy ? "Opening…" : inFsMode ? "Change folder" : "Open project folder"}
+                </Action>
+                {hint && <Hint>{hint}</Hint>}
+            </Body>
+        </Panel>
+    );
+};

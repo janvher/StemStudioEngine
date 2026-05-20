@@ -1,0 +1,36 @@
+# StemStudio AI server configuration.
+
+[server]
+port = ":8081"
+keep_alive_enabled = true
+keep_alive_timeout = 600
+keep_alive_interval = 20
+
+[database]
+type = ""
+
+[authority]
+firebase_config_path = ""
+
+[proxy]
+api_map_config_path = ""
+
+[history]
+max_versions = 100
+
+[upload]
+max_size = 1000000000
+
+[path]
+public_dir = "./public"
+log_dir = "./logs"
+
+[log]
+file = "./logs/StemStudio.txt"
+
+[ai_credits]
+image_gen_cost = 10
+object_gen_cost = 50
+copilot_cost = 5
+default_amount = 1000
+credits_refresh_rate = 604800

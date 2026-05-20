@@ -1,0 +1,56 @@
+{
+    "id": "follow",
+    "name": "Follow",
+    "isScript": false,
+    "description": "A motion behavior that makes an object smoothly follow and track another target object in 3D space. The follower maintains a configurable distance from its target while optionally rotating to face it. Supports physics-enabled objects and special handling for DirectionalLight objects that automatically follow the camera. KEY FEATURES:",
+    "documentation": "## Follow\nMake an object follow another object in the scene.\n\n### Settings\n- **Follow Target** - The object to follow\n- **Distance** - Minimum distance to maintain from target\n- **Speed** - Movement speed (0-100)\n- **Rotate** - Face the target while following\n\n### Tips\n- Use **Start on Trigger** for conditional following\n- Great for companion characters, floating cameras, or orbiting objects\n- Combine with animations for a walking companion effect",
+    "author": "stemstudio",
+    "tags": ["motion"],
+    "main": "FollowBehavior.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "throttleConfig": {
+        "throttlePriority": "MEDIUM",
+        "enableFrustumCulling": true,
+        "enableDistanceThrottling": true,
+        "requiresConsistentUpdates": false
+    },
+    "attributes": {
+        "customName": {
+            "name": "Custom Name",
+            "type": "string"
+        },
+        "startOnTrigger": {
+            "name": "Start on Trigger",
+            "type": "boolean",
+            "default": false,
+            "description": "When enabled, the object will not follow until activated by a trigger event."
+        },
+        "followTargetUuid": {
+            "name": "Follow Target",
+            "type": "object",
+            "description": "The scene object that this object will follow and move toward."
+        },
+        "distance": {
+            "name": "Distance",
+            "type": "number",
+            "min": 0,
+            "default": 1,
+            "description": "The minimum distance to maintain from the target. The follower stops moving when within this range."
+        },
+        "speed": {
+            "name": "Speed",
+            "type": "number",
+            "min": 0,
+            "max": 100,
+            "default": 1,
+            "description": "How fast the object moves toward its target. Higher values result in quicker following."
+        },
+        "rotate": {
+            "name": "Rotate",
+            "type": "boolean",
+            "default": true,
+            "description": "When enabled, the object rotates to face the target while following it."
+        }
+    }
+}

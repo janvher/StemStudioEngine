@@ -1,0 +1,5 @@
+{
+  "local": "http://localhost:2020",
+  "prod": "http://localhost",
+  "ego": "https://apis.ego.io"
+}

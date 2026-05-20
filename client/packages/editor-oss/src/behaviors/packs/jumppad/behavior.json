@@ -1,0 +1,110 @@
+{
+    "id": "jumppad",
+    "name": "Jump Pad",
+    "isScript": false,
+    "description": "An interactive physics-based launcher that applies impulse forces to objects on collision, propelling them into the air. Offers sophisticated control modes for both strength and angle: fixed values, random ranges, or movement-based dynamic calculation. Features cooldown prevention and orientation-aware impulse direction. KEY FEATURES:",
+    "documentation": "## Jump Pad\nLaunch the player into the air on collision.\n\n### Strength\n- **Strength Mode** - Fixed, Random, or Movement Based\n- **Strength** - Base launch force\n- **Max Strength** - Upper limit for random/movement modes\n\n### Angle\n- **Enable Angle** - Apply directional launch\n- **Angle Mode** - Fixed, Random, or Movement Based\n- **Angle** - Launch direction (-90 to 90 degrees)\n- **Min/Max Angle** - Range for random/movement modes\n\n### Tips\n- Place on flat surfaces the player will walk over\n- Movement Based mode launches harder when player is running\n- Combine with Visual Effect for launch particles",
+    "author": "stemstudio",
+    "tags": ["motion"],
+    "main": "JumppadBehavior.ts",
+    "version": "1.1.0",
+    "dependencies": {},
+    "throttleConfig": {
+        "throttlePriority": "HIGH",
+        "enableFrustumCulling": false,
+        "enableDistanceThrottling": false,
+        "requiresConsistentUpdates": false
+    },
+    "attributes": {
+        "customName": {
+            "name": "Custom Name",
+            "type": "string"
+        },
+        "strengthMode": {
+            "name": "Strength Mode",
+            "type": "enum",
+            "description": "How the launch force is determined. Fixed uses a constant value, Random picks from a range, and Movement Based scales with the player's speed.",
+            "options": [
+                {
+                    "value": "fixed",
+                    "label": "Fixed"
+                },
+                {
+                    "value": "random",
+                    "label": "Random"
+                },
+                {
+                    "value": "movement",
+                    "label": "Movement Based"
+                }
+            ],
+            "default": "fixed"
+        },
+        "strength": {
+            "name": "Strength",
+            "type": "number",
+            "min": 0.5,
+            "max": 100,
+            "description": "Base launch force applied to the player. In random/movement modes, this acts as the minimum strength.",
+            "default": 1
+        },
+        "maxStrength": {
+            "name": "Max Strength",
+            "type": "number",
+            "min": 0.5,
+            "max": 100,
+            "default": 2,
+            "description": "Used for random and movement modes"
+        },
+        "enableAngle": {
+            "name": "Enable Angle",
+            "type": "boolean",
+            "description": "When enabled, applies a directional angle to the launch instead of launching straight up.",
+            "default": false
+        },
+        "angleMode": {
+            "name": "Angle Mode",
+            "type": "enum",
+            "description": "How the launch angle is determined. Fixed uses a constant angle, Random picks from a range, and Movement Based adjusts based on the player's velocity.",
+            "options": [
+                {
+                    "value": "fixed",
+                    "label": "Fixed"
+                },
+                {
+                    "value": "random",
+                    "label": "Random"
+                },
+                {
+                    "value": "movement",
+                    "label": "Movement Based"
+                }
+            ],
+            "default": "fixed"
+        },
+        "angle": {
+            "name": "Angle",
+            "type": "number",
+            "min": -90,
+            "max": 90,
+            "description": "Launch direction in degrees relative to the pad's orientation. 0 is straight up, negative tilts one way and positive tilts the other.",
+            "default": 0
+        },
+        "minAngle": {
+            "name": "Min Angle",
+            "type": "number",
+            "min": -90,
+            "max": 90,
+            "default": -90,
+            "description": "Used for random and movement modes"
+        },
+        "maxAngle": {
+            "name": "Max Angle",
+            "type": "number",
+            "min": -90,
+            "max": 90,
+            "default": 90,
+            "description": "Used for random and movement modes"
+        }
+    }
+}

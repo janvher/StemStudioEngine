@@ -1,0 +1,76 @@
+.Viewport {
+    --editor-workspace-background: linear-gradient(180deg, #5b6474 0%, #485161 100%);
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: block;
+    overflow: hidden;
+    background: var(--editor-workspace-background);
+}
+
+.Viewport.is-workspace {
+    width: 100vw;
+    max-width: none;
+}
+
+.Viewport>.workspace-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: var(--editor-workspace-background);
+}
+
+.Viewport>.editor {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    background: var(--editor-workspace-background);
+}
+
+.Viewport.is-workspace>.editor {
+    width: 100vw;
+    max-width: none;
+}
+
+/* Play mode: offset the scene container below the top nav.
+ * FloatingNav is aligned with the edit-mode TopNav (solid bar anchored at top,
+ * height = EDITOR_TOP_NAV_HEIGHT = 48px), so the offset matches.
+ * The renderer picks up the new container size via ResizeEvent's ResizeObserver,
+ * so no JS plumbing needed.
+ */
+.Viewport.is-playing>.editor {
+    top: 48px;
+    height: calc(100% - 48px);
+}
+
+.Viewport>.cesium {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+}
+
+.Viewport>.svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+}
+
+.Viewport>.player {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    z-index: 10;
+}

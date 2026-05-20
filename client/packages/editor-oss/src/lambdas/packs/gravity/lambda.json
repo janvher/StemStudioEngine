@@ -1,0 +1,48 @@
+{
+    "id": "gravity",
+    "name": "Gravity Lambda",
+    "description": "Applies gravitational force to registered objects",
+    "author": "stemstudio",
+    "version": "1.0.0",
+    "main": "GravityLambda.ts",
+    "tags": [
+        "physics"
+    ],
+    "attributes": {
+        "gravityStrength": {
+            "name": "Gravity Strength",
+            "type": "number",
+            "default": 9.81,
+            "min": 0,
+            "max": 100
+        }
+    },
+    "readComponents": [
+        "mass",
+        "drag",
+        "useGravity"
+    ],
+    "writeComponents": [],
+    "componentSchema": {
+        "mass": {
+            "name": "Mass",
+            "type": "number",
+            "default": 1,
+            "min": 0.01,
+            "max": 1000
+        },
+        "drag": {
+            "name": "Drag",
+            "type": "number",
+            "default": 0.1,
+            "min": 0,
+            "max": 1
+        },
+        "useGravity": {
+            "name": "Use Gravity",
+            "type": "boolean",
+            "default": true
+        }
+    },
+    "documentation": "## Gravity Lambda\n\nApplies gravitational force to registered objects\n\n### Runtime Notes\n- Attach this lambda to objects via Lambda Components.\n- If Auto Apply is enabled, it runs every frame.\n- If Auto Apply is disabled, call `lambdaInstance.apply(deltaTime)` from behavior/lambda code.\n\n### Component Parameters\n| Key | Label | Type | Default | Options |\n| --- | --- | --- | --- | --- |\n| `mass` | Mass | `number` | `1` | - |\n| `drag` | Drag | `number` | `0.1` | - |\n| `useGravity` | Use Gravity | `boolean` | `true` | - |\n\n### Instance Attributes\n| Key | Label | Type | Default |\n| --- | --- | --- | --- |\n| `gravityStrength` | Gravity Strength | `number` | `9.81` |"
+}

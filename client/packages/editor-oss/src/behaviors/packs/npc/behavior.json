@@ -1,0 +1,158 @@
+{
+    "id": "npc",
+    "name": "NPC",
+    "isScript": false,
+    "description": "A simplified AI system for creating non-hostile non-player characters with basic roaming and idle behaviors. NPCs can stand still or wander within a defined area, responding to player proximity with state transitions and animations. Simpler alternative to Enemy behavior, focused on ambient life and non-combat interactions.",
+    "documentation": "## NPC\nCreate non-player characters that roam or stand in the scene.\n\n### Movement\n- **Movement Type** - Stand Still or Roam\n- **Movement Speed** - Walking speed\n- **Roam Distance** - How far the NPC wanders\n- **Engage Distance** - Range to interact with the player\n\n### Stats\n- **Health** - NPC hit points (default: 100)\n\n### Animations\nAssign animations: Idle, Walking, Running, Jumping, Crouching, Tripping, Falling, Dying, Attacking.\n\n### Tips\n- For AI-powered conversation NPCs, use the **AI NPC** behavior instead\n- Great for ambient characters like villagers or shopkeepers\n- Combine with NavMesh for intelligent pathfinding",
+    "author": "stemstudio",
+    "tags": ["npc"],
+    "main": "NPCBehavior.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "throttleConfig": {
+        "throttlePriority": "HIGH",
+        "enableFrustumCulling": true,
+        "enableDistanceThrottling": false,
+        "requiresConsistentUpdates": false
+    },
+    "objectSettings": {
+        "physics": {
+            "enabled": true,
+            "type": "kinematic",
+            "shape": "capsule",
+            "mass": 1
+        }
+    },
+    "attributes": {
+        "customName": {
+            "name": "Custom Name",
+            "type": "string"
+        },
+        "movementType": {
+            "name": "Movement Type",
+            "type": "enum",
+            "description": "Controls whether the NPC stays in place or wanders around its starting position.",
+            "options": [
+                {
+                    "label": "Stand Still",
+                    "value": "standing"
+                },
+                {
+                    "label": "Roam",
+                    "value": "roam"
+                }
+            ],
+            "default": "standing"
+        },
+        "separatorHealth": {
+            "type": "separator"
+        },
+        "health": {
+            "name": "Health",
+            "type": "number",
+            "min": 0,
+            "description": "Hit points for the NPC. The NPC dies when health reaches 0.",
+            "default": 100
+        },
+        "movementSpeed": {
+            "name": "Movement Speed",
+            "type": "number",
+            "min": 0,
+            "description": "Walking speed of the NPC in units per second when roaming.",
+            "default": 5
+        },
+        "roamDistance": {
+            "name": "Roam Distance",
+            "type": "number",
+            "min": 1,
+            "description": "Maximum distance in units the NPC can wander from its starting position.",
+            "default": 10
+        },
+        "engageDistance": {
+            "name": "Engage Distance",
+            "type": "number",
+            "min": 1,
+            "description": "Distance in units at which the NPC detects and reacts to the player.",
+            "default": 5
+        },
+        "separatorAnim": {
+            "type": "separator"
+        },
+        "movementAnimLabel": {
+            "name": "Animations",
+            "type": "label"
+        },
+        "idleAnimation": {
+            "name": "Idle",
+            "type": "enum",
+            "description": "Animation to play when the NPC is standing still.",
+            "autoFill": "object.animations",
+            "searchFor": ["idle"],
+            "default": "none"
+        },
+        "walkAnimation": {
+            "name": "Walking",
+            "type": "enum",
+            "description": "Animation to play when the NPC is walking.",
+            "autoFill": "object.animations",
+            "searchFor": ["walk"],
+            "default": "none"
+        },
+        "runAnimation": {
+            "name": "Running",
+            "type": "enum",
+            "description": "Animation to play when the NPC is running.",
+            "autoFill": "object.animations",
+            "searchFor": ["run"],
+            "default": "none"
+        },
+        "jumpAnimation": {
+            "name": "Jumping",
+            "type": "enum",
+            "description": "Animation to play when the NPC is jumping.",
+            "autoFill": "object.animations",
+            "searchFor": ["jump"],
+            "default": "none"
+        },
+        "crouchAnimation": {
+            "name": "Crouching",
+            "type": "enum",
+            "description": "Animation to play when the NPC is crouching.",
+            "autoFill": "object.animations",
+            "searchFor": ["crouch"],
+            "default": "none"
+        },
+        "trippingAnimation": {
+            "name": "Tripping",
+            "type": "enum",
+            "description": "Animation to play when the NPC trips or stumbles.",
+            "autoFill": "object.animations",
+            "searchFor": ["trip"],
+            "default": "none"
+        },
+        "fallAnimation": {
+            "name": "Falling",
+            "type": "enum",
+            "description": "Animation to play when the NPC is falling.",
+            "autoFill": "object.animations",
+            "searchFor": ["fall"],
+            "default": "none"
+        },
+        "dieAnimation": {
+            "name": "Dying",
+            "type": "enum",
+            "description": "Animation to play when the NPC dies.",
+            "autoFill": "object.animations",
+            "searchFor": ["die", "death"],
+            "default": "none"
+        },
+        "attackingAnimation": {
+            "name": "Attacking",
+            "type": "enum",
+            "description": "Animation to play when the NPC is attacking.",
+            "autoFill": "object.animations",
+            "searchFor": ["attack"],
+            "default": "none"
+        }
+    }
+}

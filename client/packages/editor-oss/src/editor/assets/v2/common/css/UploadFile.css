@@ -1,0 +1,73 @@
+.UploadView .description {
+    font-size: var(--theme-font-size-s);
+    font-weight: var(--theme-font-medium);
+    line-height: 115%;
+    text-align: center;
+    color: var(--theme-font-unselected-color);
+}
+
+.UploadView > .container {
+    margin: 16px auto 11px;
+    width: 211px;
+    height: 95px;
+    border-radius: 12px;
+}
+
+.UploadView > .file-preview {
+    position: relative;
+    background: transparent;
+    border: none;
+}
+
+.UploadView > .file-preview video {
+    border-radius: 12px;
+}
+
+.UploadView > .file-preview > .file-preview-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+.UploadView > .file-preview > .remove-file-button {
+    width: 24px;
+    height: 21px;
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+
+    position: absolute;
+    top: 0;
+    right: 0;
+    transform: translate(50%, -50%);
+    z-index: 1;
+}
+
+.UploadView > .file-preview > .remove-file-button > img {
+    width: 100%;
+    height: 100%;
+}
+
+.UploadWrapper {
+    border: 1px solid #fff;
+    color: var(--theme-font-main-selected-color);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    padding: 0;
+    background: transparent;
+}
+
+.UploadWrapper .upload-icon-button {
+    width: 30px;
+    height: 35px;
+}
+
+.UploadWrapper .icon-text {
+    font-size: var(--theme-font-size-s);
+    font-weight: var(--theme-font-regular);
+    line-height: 120%;
+}

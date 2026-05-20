@@ -1,0 +1,6 @@
+{
+  "name": "@stemstudio/local-backend",
+  "private": true,
+  "type": "module",
+  "main": "src/index.mjs"
+}

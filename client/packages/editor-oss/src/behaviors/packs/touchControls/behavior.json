@@ -1,0 +1,577 @@
+{
+    "id": "touchControls",
+    "name": "Touch Controls",
+    "isScript": false,
+    "isHidden": true,
+    "description": "A comprehensive mobile touch input system providing customizable on-screen controls with joysticks, buttons, and steering wheels. Automatically adapts to device type (mobile/tablet/desktop) and orientation (portrait/landscape) with per-device configuration. Supports dynamic scaling, EventBus integration, and runtime visibility control. Essential for mobile gameplay with full virtual input dispatching.",
+    "tags": [
+        "controls",
+        "mobile",
+        "touch",
+        "joystick"
+    ],
+    "main": "TouchControls.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "isSingleton": true,
+    "throttleConfig": {
+        "throttlePriority": "CRITICAL",
+        "enableFrustumCulling": false,
+        "enableDistanceThrottling": false,
+        "requiresConsistentUpdates": true
+    },
+    "isThrottlingLocked": true,
+    "attributeTemplates": {
+        "virtualControls": {
+            "type": "group",
+            "attributes": {
+                "scaling": {
+                    "name": "Scaling",
+                    "type": "group",
+                    "attributes": {
+                        "scaleMode": {
+                            "name": "Scale Mode",
+                            "type": "enum",
+                            "options": [
+                                {
+                                    "label": "None",
+                                    "value": "none"
+                                },
+                                {
+                                    "label": "Width Based",
+                                    "value": "width"
+                                },
+                                {
+                                    "label": "Height Based",
+                                    "value": "height"
+                                },
+                                {
+                                    "label": "Min Dimension",
+                                    "value": "min"
+                                },
+                                {
+                                    "label": "Max Dimension",
+                                    "value": "max"
+                                },
+                                {
+                                    "label": "DPI Based",
+                                    "value": "dpi"
+                                }
+                            ],
+                            "default": "dpi",
+                            "description": "Scaling mode for touch controls"
+                        },
+                        "targetScreenWidth": {
+                            "name": "Target Screen Width",
+                            "type": "number",
+                            "min": 100,
+                            "max": 2000,
+                            "default": 800,
+                            "visibleIf": {
+                                "scaleMode": [
+                                    "width",
+                                    "min",
+                                    "max"
+                                ]
+                            },
+                            "description": "Target screen width for scaling (100 - 2000px)"
+                        },
+                        "targetScreenHeight": {
+                            "name": "Target Screen Height",
+                            "type": "number",
+                            "min": 100,
+                            "max": 2000,
+                            "default": 600,
+                            "visibleIf": {
+                                "scaleMode": [
+                                    "height",
+                                    "min",
+                                    "max"
+                                ]
+                            },
+                            "description": "Target screen height for scaling (100 - 2000px)"
+                        }
+                    }
+                },
+                "joystick": {
+                    "name": "Joystick",
+                    "type": "group",
+                    "attributes": {
+                        "joystickEnabled": {
+                            "name": "Enabled",
+                            "type": "boolean",
+                            "default": true,
+                            "description": "Enable or disable the virtual joystick control for movement input."
+                        },
+                        "joystickDeadzone": {
+                            "name": "Deadzone",
+                            "type": "number",
+                            "min": 0,
+                            "max": 1,
+                            "step": 0.01,
+                            "default": 0.1,
+                            "visibleIf": {
+                                "joystickEnabled": true
+                            },
+                            "description": "Joystick deadzone for movement input (0-1)"
+                        },
+                        "joystickRunThreshold": {
+                            "name": "Run Threshold",
+                            "type": "number",
+                            "min": 0,
+                            "max": 1,
+                            "step": 0.01,
+                            "default": 0.7,
+                            "visibleIf": {
+                                "joystickEnabled": true
+                            },
+                            "description": "Threshold for running input (0-1). Above this value, character will run instead of walk."
+                        },
+                        "joystickPosition": {
+                            "name": "Position",
+                            "type": "vector2",
+                            "default": [
+                                0.2,
+                                0.15
+                            ],
+                            "min": [
+                                0,
+                                0
+                            ],
+                            "max": [
+                                1,
+                                1
+                            ],
+                            "visibleIf": {
+                                "joystickEnabled": true
+                            },
+                            "description": "Position of the joystick on the screen, normalized to [0, 0] to [1, 1]"
+                        },
+                        "joystickSize": {
+                            "name": "Size",
+                            "type": "number",
+                            "min": 1,
+                            "max": 400,
+                            "default": 100,
+                            "visibleIf": {
+                                "joystickEnabled": true
+                            },
+                            "description": "Joystick diameter in pixels (1-100)"
+                        },
+                        "joystickHandleScale": {
+                            "name": "Thumb Scale",
+                            "type": "number",
+                            "min": 0.1,
+                            "max": 2,
+                            "step": 0.01,
+                            "default": 1,
+                            "visibleIf": {
+                                "joystickEnabled": true
+                            },
+                            "description": "Scale factor for the joystick handle (thumb), 1 = default size"
+                        },
+                        "joystickBackgroundImage": {
+                            "name": "Joystick Background",
+                            "type": "image",
+                            "visibleIf": {
+                                "joystickEnabled": true
+                            },
+                            "description": "Background image for the joystick base"
+                        },
+                        "joystickHandleImage": {
+                            "name": "Joystick Handle",
+                            "type": "image",
+                            "visibleIf": {
+                                "joystickEnabled": true
+                            },
+                            "description": "Image for the joystick handle (thumb)"
+                        }
+                    }
+                },
+                "steeringWheel": {
+                    "name": "Steering Wheel",
+                    "type": "group",
+                    "attributes": {
+                        "steeringWheelEnabled": {
+                            "name": "Enabled",
+                            "type": "boolean",
+                            "default": false,
+                            "description": "Enable or disable the virtual steering wheel control for rotational input."
+                        },
+                        "steeringWheelPosition": {
+                            "name": "Position",
+                            "type": "vector2",
+                            "default": [
+                                0.5,
+                                0.15
+                            ],
+                            "min": [
+                                0,
+                                0
+                            ],
+                            "max": [
+                                1,
+                                1
+                            ],
+                            "visibleIf": {
+                                "steeringWheelEnabled": true
+                            },
+                            "description": "Position of the steering wheel on the screen, normalized to [0, 0] to [1, 1]"
+                        },
+                        "steeringWheelSize": {
+                            "name": "Size",
+                            "type": "number",
+                            "min": 1,
+                            "max": 400,
+                            "default": 100,
+                            "visibleIf": {
+                                "steeringWheelEnabled": true
+                            },
+                            "description": "Steering wheel diameter in pixels (1-400)"
+                        },
+                        "steeringWheelSensitivity": {
+                            "name": "Sensitivity",
+                            "type": "number",
+                            "min": 0.1,
+                            "max": 3,
+                            "step": 0.1,
+                            "default": 1,
+                            "visibleIf": {
+                                "steeringWheelEnabled": true
+                            },
+                            "description": "Steering sensitivity multiplier (0.1-3)"
+                        },
+                        "steeringWheelMaxRotation": {
+                            "name": "Max Rotation",
+                            "type": "number",
+                            "min": 30,
+                            "max": 180,
+                            "step": 5,
+                            "default": 90,
+                            "visibleIf": {
+                                "steeringWheelEnabled": true
+                            },
+                            "description": "Maximum rotation angle in degrees (30-180)"
+                        },
+                        "steeringWheelReturnSpeed": {
+                            "name": "Return Speed",
+                            "type": "number",
+                            "min": 1,
+                            "max": 20,
+                            "step": 0.5,
+                            "default": 5,
+                            "visibleIf": {
+                                "steeringWheelEnabled": true
+                            },
+                            "description": "Speed at which wheel returns to center (1-20)"
+                        },
+                        "steeringWheelImage": {
+                            "name": "Steering Wheel Image",
+                            "type": "image",
+                            "visibleIf": {
+                                "steeringWheelEnabled": true
+                            },
+                            "description": "Image for the steering wheel"
+                        }
+                    }
+                },
+                "buttons": {
+                    "name": "Buttons",
+                    "type": "group",
+                    "array": true,
+                    "attributes": {
+                        "buttonEnabled": {
+                            "name": "Enabled",
+                            "type": "boolean",
+                            "default": true,
+                            "description": "Enable or disable this individual button."
+                        },
+                        "buttonId": {
+                            "name": "Button ID",
+                            "type": "string",
+                            "default": "",
+                            "description": "Unique identifier for this button"
+                        },
+                        "buttonType": {
+                            "name": "Type",
+                            "type": "enum",
+                            "options": [
+                                {
+                                    "label": "Jump",
+                                    "value": "jump"
+                                },
+                                {
+                                    "label": "Interact",
+                                    "value": "interact"
+                                },
+                                {
+                                    "label": "Custom",
+                                    "value": "customEvent"
+                                },
+                                {
+                                    "label": "Custom Input",
+                                    "value": "customInput"
+                                }
+                            ],
+                            "default": "jump",
+                            "visibleIf": {
+                                "buttonEnabled": true
+                            },
+                            "description": "The action this button performs: Jump, Interact, a custom event, or a custom virtual input."
+                        },
+                        "buttonPosition": {
+                            "name": "Position",
+                            "type": "vector2",
+                            "default": [
+                                0.5,
+                                0.5
+                            ],
+                            "min": [
+                                0,
+                                0
+                            ],
+                            "max": [
+                                1,
+                                1
+                            ],
+                            "visibleIf": {
+                                "buttonEnabled": true
+                            },
+                            "description": "Position of the button on the screen, normalized to [0, 0] to [1, 1]"
+                        },
+                        "buttonSize": {
+                            "name": "Size",
+                            "type": "number",
+                            "min": 1,
+                            "max": 400,
+                            "default": 60,
+                            "visibleIf": {
+                                "buttonEnabled": true
+                            },
+                            "description": "Button diameter in pixels (1-400)"
+                        },
+                        "onButtonPress": {
+                            "name": "On Press Event",
+                            "type": "string",
+                            "default": "",
+                            "visibleIf": {
+                                "buttonType": "customEvent",
+                                "buttonEnabled": true
+                            },
+                            "description": "Custom event to trigger when the button is pressed"
+                        },
+                        "customInputName": {
+                            "name": "Custom Input",
+                            "type": "string",
+                            "default": "",
+                            "visibleIf": {
+                                "buttonType": "customInput",
+                                "buttonEnabled": true
+                            },
+                            "description": "Virtual InputManager action name to set while this button is pressed"
+                        },
+                        "onButtonRelease": {
+                            "name": "On Release Event",
+                            "type": "string",
+                            "default": "",
+                            "visibleIf": {
+                                "buttonType": "customEvent",
+                                "buttonEnabled": true
+                            },
+                            "description": "Custom event to trigger when the button is released"
+                        },
+                        "buttonImage": {
+                            "name": "Button Image",
+                            "type": "image",
+                            "visibleIf": {
+                                "buttonEnabled": true
+                            },
+                            "description": "Image for the button"
+                        }
+                    },
+                    "default": [
+                        {
+                            "buttonId": "jumpButton",
+                            "buttonEnabled": true,
+                            "buttonPosition": [
+                                0.8,
+                                0.15
+                            ],
+                            "buttonSize": 60,
+                            "buttonType": "jump",
+                            "onButtonPress": "",
+                            "onButtonRelease": "",
+                            "buttonImage": null
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    "attributes": {
+        "editorLayoutPreview": {
+            "name": "Device Preview",
+            "type": "enum",
+            "options": [
+                {
+                    "label": "Mobile",
+                    "value": "mobile"
+                },
+                {
+                    "label": "Tablet",
+                    "value": "tablet"
+                },
+                {
+                    "label": "Desktop",
+                    "value": "desktop"
+                }
+            ],
+            "default": "mobile",
+            "description": "Select which device layout to preview and edit in the editor"
+        },
+        "editorLayoutOrientation": {
+            "name": "Orientation Preview",
+            "type": "enum",
+            "options": [
+                {
+                    "label": "Portrait",
+                    "value": "portrait"
+                },
+                {
+                    "label": "Landscape",
+                    "value": "landscape"
+                }
+            ],
+            "default": "landscape",
+            "description": "Preview orientation for the selected device layout in the editor"
+        },
+        "mobileEnabled": {
+            "name": "Enabled",
+            "type": "boolean",
+            "default": true,
+            "description": "Enable touch controls on mobile devices",
+            "visibleIf": {
+                "editorLayoutPreview": "mobile"
+            }
+        },
+        "mobileVerticalLayout": {
+            "name": "Vertical Layout",
+            "template": "virtualControls",
+            "description": "Control layout used when the mobile device is in portrait orientation.",
+            "visibleIf": {
+                "mobileEnabled": true,
+                "editorLayoutPreview": "mobile",
+                "editorLayoutOrientation": "portrait"
+            },
+            "default": {
+                "joystick": {
+                    "joystickSize": 50
+                },
+                "buttons": [
+                    {
+                        "buttonSize": 30
+                    }
+                ]
+            }
+        },
+        "mobileHorizontalLayout": {
+            "name": "Horizontal Layout",
+            "template": "virtualControls",
+            "description": "Control layout used when the mobile device is in landscape orientation.",
+            "visibleIf": {
+                "mobileEnabled": true,
+                "editorLayoutPreview": "mobile",
+                "editorLayoutOrientation": "landscape"
+            },
+            "default": {
+                "joystick": {
+                    "joystickSize": 50
+                },
+                "buttons": [
+                    {
+                        "buttonSize": 30
+                    }
+                ]
+            }
+        },
+        "tabletEnabled": {
+            "name": "Enabled",
+            "type": "boolean",
+            "default": true,
+            "description": "Enable touch controls on tablet devices",
+            "visibleIf": {
+                "editorLayoutPreview": "tablet"
+            }
+        },
+        "tabletVerticalLayout": {
+            "name": "Vertical Layout",
+            "template": "virtualControls",
+            "description": "Control layout used when the tablet is in portrait orientation.",
+            "visibleIf": {
+                "tabletEnabled": true,
+                "editorLayoutPreview": "tablet",
+                "editorLayoutOrientation": "portrait"
+            },
+            "default": {
+                "joystick": {
+                    "joystickSize": 80
+                },
+                "buttons": [
+                    {
+                        "buttonSize": 50
+                    }
+                ]
+            }
+        },
+        "tabletHorizontalLayout": {
+            "name": "Horizontal Layout",
+            "template": "virtualControls",
+            "description": "Control layout used when the tablet is in landscape orientation.",
+            "visibleIf": {
+                "tabletEnabled": true,
+                "editorLayoutPreview": "tablet",
+                "editorLayoutOrientation": "landscape"
+            },
+            "default": {
+                "joystick": {
+                    "joystickSize": 80
+                },
+                "buttons": [
+                    {
+                        "buttonSize": 50
+                    }
+                ]
+            }
+        },
+        "desktopEnabled": {
+            "name": "Enabled",
+            "type": "boolean",
+            "default": false,
+            "description": "Enable touch controls on desktop devices",
+            "visibleIf": {
+                "editorLayoutPreview": "desktop"
+            }
+        },
+        "desktopVerticalLayout": {
+            "name": "Vertical Layout",
+            "template": "virtualControls",
+            "description": "Control layout used when a desktop browser window is in portrait orientation.",
+            "visibleIf": {
+                "desktopEnabled": true,
+                "editorLayoutPreview": "desktop",
+                "editorLayoutOrientation": "portrait"
+            }
+        },
+        "desktopHorizontalLayout": {
+            "name": "Horizontal Layout",
+            "template": "virtualControls",
+            "description": "Control layout used when a desktop browser window is in landscape orientation.",
+            "visibleIf": {
+                "desktopEnabled": true,
+                "editorLayoutPreview": "desktop",
+                "editorLayoutOrientation": "landscape"
+            }
+        }
+    },
+    "documentation": "## Touch Controls\n\nA comprehensive mobile touch input system providing customizable on-screen controls with joysticks, buttons, and steering wheels. Automatically adapts to device type (mobile/tablet/desktop) and orientation (portrait/landscape) with per-device configuration. Supports dynamic scaling, EventBus integration, and runtime visibility control. Essential for mobile gameplay with full virtual input dispatching.\n\n### Key Features\n- Device-aware initialization: mobile, tablet, desktop detection\n- Orientation-specific layouts: separate portrait and landscape configs\n- Virtual joystick with configurable deadzone and run threshold\n- Steering wheel control with rotation limits and return speed\n- Multiple customizable buttons with icons and positions\n- Responsive scaling system: width/height/min/max dimension modes\n- Runtime visibility toggling via EventBus\n- Dynamic show/hide for individual controls\n- VirtualInputDispatcher integration for seamless input mapping\n- Singleton behavior (one per scene)\n- Debounced resize handling for smooth transitions\n- Z-index management for proper layering\n- Editor preview support with live attribute updates\n\n### How It Works\n1. Attach to scene (singleton, auto-manages touch controls)\n2. Configure device enablement: mobileEnabled, tabletEnabled, desktopEnabled\n3. For each enabled device, set portrait and landscape layouts\n4. Scaling configuration:\n   - scaleMode: none/width/height/min/max based on screen dimensions\n   - targetScreenWidth/Height for reference resolution\n5. Joystick setup:\n   - Position (x, y in 0-1 screen space)\n   - Size, deadzone, run threshold\n   - Optional image customization\n6. Steering wheel setup:\n   - Position, size, sensitivity\n   - maxRotation angle, return speed\n   - Custom wheel image\n7. Buttons array:\n   - Each button: type (jump/interact/custom), position, size, icon\n   - Configurable key bindings and custom events\n8. On game start:\n   - Detects device type via userAgent and touch support\n   - Checks orientation (portrait vs landscape)\n   - Loads appropriate layout configuration\n   - Creates DOM elements for each control\n   - Registers pointer event listeners via PointerEventManager\n9. Runtime updates:\n   - Window resize triggers debounced orientation check\n   - If orientation changes, recreates controls with new layout\n   - Scaler recalculates positions and sizes\n10. Input flow:\n    - Touch events captured by control elements\n    - Joystick: calculates normalized direction vector (-1 to 1)\n    - Buttons: dispatch virtual key press/release events\n    - Steering wheel: rotation angle mapped to turn input\n    - VirtualInputDispatcher translates to game input system\n11. EventBus commands:\n    - touchControls:enable/disable - toggle interactivity\n    - touchControls:toggleVisibility - show/hide all controls\n    - touchControls:showButton/hideButton - individual button control\n    - touchControls:showJoystick/hideJoystick\n    - touchControls:showSteeringWheel/hideSteeringWheel\n12. Cleanup on stop: removes listeners, DOM elements\n\n### Common Use Cases\n- Mobile game virtual controls\n- Tablet touch interface for desktop games\n- Cross-platform input system\n- Racing games with steering wheel controls\n- Top-down or third-person mobile games\n- Platformers with jump/interact buttons\n- Custom gesture-based controls\n- Responsive mobile UI for various screen sizes\n- Games with multiple control schemes per device\n- Hybrid touch/keyboard games\n\n### When Not To Use\n- For desktop-only games (no touch support needed)\n- When using native device controls (gyroscope, tilt)\n- For gesture-based games (swipe, pinch, etc.)\n- When implementing custom touch UI from scratch\n- For simple click/tap interactions (use pointer events directly)\n- When controls should be in 3D world space\n- For VR or AR applications\n- When using external controller input only\n- For games with no player movement/actions\n- When building platform-specific native apps\n\n### Technical Details\n- Device detection: navigator.userAgent + maxTouchPoints\n- Tablet detection: iPad, Android tablets, iPadOS 13+ Safari\n- Mobile: iPhone, iPod, Android Mobile, Windows Phone patterns\n- Orientation: window.innerHeight > innerWidth = portrait\n- Resize debouncing: 100ms timeout to prevent rapid recreation\n- Z-index hierarchy: HUD_Z_INDEX.TouchJoystick (-999), TouchButtons (-998)\n- Scaling calculation: viewport dimensions vs target screen size\n- Joystick: circular touch area, normalized vector output\n- Deadzone: minimum joystick displacement before input registers\n- Run threshold: joystick distance triggering run vs walk\n- Steering wheel: rotation clamped to maxRotation (degrees)\n- Return speed: rate at which wheel returns to center (per second)\n- Button press: dispatches keydown event via VirtualInputDispatcher\n- Button release: dispatches keyup event\n- Custom events: EventBus.send() for game-specific actions\n- DOM injection: elements added to document.body\n- Pointer capture: uses PointerEventManager for unified touch/mouse\n- Throttle: CRITICAL priority, always updates, no culling\n- isSingleton: true enforces one instance per scene\n- isThrottlingLocked: true prevents throttle config changes\n- Editor support: TouchControlsEditor for live preview\n- Cleanup: removes event listeners, DOM elements, subscriptions\n- Layout switching: full teardown and recreation on orientation change"
+}

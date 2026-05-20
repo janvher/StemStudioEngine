@@ -1,0 +1,57 @@
+{
+    "id": "randomizedSpawner",
+    "name": "Randomized Spawner",
+    "isScript": false,
+    "description": "A weighted random spawn system that instantiates prefabs from a configurable list based on probability percentages. Supports collision-triggered or event-triggered spawning with optional multiple spawn mode. Prefabs are preloaded for instant spawning and can be configured with individual spawn chances for loot tables, enemy waves, or randomized environments.",
+    "documentation": "## Randomized Spawner\nSpawn random objects from a weighted list.\n\n### Settings\n- **Multiple Spawn** - Allow spawning multiple objects at once\n- **Random List** - Configure objects and their spawn probability\n  - **Prefab to spawn** - Select a prefab to spawn\n  - **Probability %** - Chance of spawning (0-100)\n\n### Tips\n- Use **Start On Trigger** for event-driven spawning\n- Set different probabilities for rare vs common items\n- Great for loot drops, random obstacles, or enemy waves",
+    "author": "stemstudio",
+    "tags": ["random", "spawner"],
+    "main": "RandomizedSpawnerBehavior.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "attributes": {
+        "customName": {
+            "name": "Custom Name",
+            "type": "string"
+        },
+        "startOnTrigger": {
+            "name": "Start On Trigger",
+            "type": "boolean",
+            "default": false,
+            "description": "When enabled, spawning is activated by an event trigger instead of automatically on collision."
+        },
+        "multipleSpawn": {
+            "name": "Multiple Spawn",
+            "type": "boolean",
+            "default": false,
+            "description": "When enabled, allows spawning multiple objects at once instead of just one per activation."
+        },
+        "randomList": {
+            "name": "Random",
+            "type": "group",
+            "array": true,
+            "normalizeField": "probability",
+            "attributes": {
+                "prefabId": {
+                    "name": "Prefab to spawn",
+                    "type": "prefab",
+                    "description": "The prefab asset to instantiate when this entry is selected by the random roll."
+                },
+                "probability": {
+                    "name": "Probability %",
+                    "type": "number",
+                    "min": 0,
+                    "max": 100,
+                    "default": 100,
+                    "description": "The weighted chance (0-100) that this prefab will be chosen when spawning. Values are normalized across all entries."
+                }
+            },
+            "default": [
+                {
+                    "prefabId": "",
+                    "probability": 100
+                }
+            ]
+        }
+    }
+}

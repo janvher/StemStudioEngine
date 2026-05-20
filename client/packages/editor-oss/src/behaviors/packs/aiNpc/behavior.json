@@ -1,0 +1,276 @@
+{
+    "id": "aiNpc",
+    "name": "Ai Npc",
+    "isScript": false,
+    "description": "Advanced AI-powered NPC with conversational abilities, autonomous behavior, and physical interactions. This behavior creates intelligent NPCs that can engage in natural voice or text conversations, perform physical actions in the game world, and react to their environment dynamically.",
+    "documentation": "## AI NPC\nCreate AI-powered NPCs that can chat with players using text or voice.\n\n### Profile & Voice\n- **AI NPC Profile** - Select a pre-configured NPC personality\n- **Voice** - Choose from 20+ ElevenLabs voice personas\n- **Active In Voice Chat** - Enable voice conversation\n- **Show Text Chat** - Display text chat bubble\n\n### Movement & Range\n- **Range** - How close the player must be to interact\n- **Object Interaction Range** - Range for interacting with scene objects\n- **Walk/Run Speed** - NPC movement speeds\n- **Roam Distance** - How far the NPC wanders from its origin\n\n### World Context\n- **Environment** - Describes the NPC's world (e.g. \"fantasy village\")\n- **Groups** - Social groups the NPC belongs to\n\n### Animations\nAssign animations: Idle, Walking, Running, Pick Up, Talking, Wave, Point gestures.\n\n### Tips\n- Configure personality through the NPC Profile resource\n- NPC conversations are stored per scene in MongoDB\n- Requires Firebase authentication for AI endpoints",
+    "author": "stemstudio",
+    "tags": ["ai", "npc"],
+    "main": "AiNpcBehavior.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "throttleConfig": {
+        "throttlePriority": "HIGH",
+        "enableFrustumCulling": false,
+        "enableDistanceThrottling": false,
+        "requiresConsistentUpdates": true
+    },
+    "attributes": {
+        "customName": {
+            "name": "Custom Name",
+            "type": "string"
+        },
+        "npc_profile": {
+            "name": "AI NPC Profile",
+            "type": "enum",
+            "autoFill": "resources.npcs",
+            "description": "The pre-configured NPC personality profile that defines this NPC's backstory, knowledge, and conversational style."
+        },
+        "voice_id": {
+            "name": "Voice",
+            "type": "enum",
+            "options": [
+                {
+                    "label": "Aria",
+                    "value": "9BWtsMINqrJLrRacOk9x"
+                },
+                {
+                    "label": "Roger",
+                    "value": "CwhRBWXzGAHq8TQ4Fs17"
+                },
+                {
+                    "label": "Sarah",
+                    "value": "EXAVITQu4vr4xnSDxMaL"
+                },
+                {
+                    "label": "Laura",
+                    "value": "FGY2WhTYpPnrIDTdsKH5"
+                },
+                {
+                    "label": "Charlie",
+                    "value": "IKne3meq5aSn9XLyUdCD"
+                },
+                {
+                    "label": "George",
+                    "value": "JBFqnCBsd6RMkjVDRZzb"
+                },
+                {
+                    "label": "Callum",
+                    "value": "N2lVS1w4EtoT3dr4eOWO"
+                },
+                {
+                    "label": "River",
+                    "value": "SAz9YHcvj6GT2YYXdXww"
+                },
+                {
+                    "label": "Liam",
+                    "value": "TX3LPaxmHKxFdv7VOQHJ"
+                },
+                {
+                    "label": "Charlotte",
+                    "value": "XB0fDUnXU5powFXDhCwa"
+                },
+                {
+                    "label": "Alice",
+                    "value": "Xb7hH8MSUJpSbSDYk0k2"
+                },
+                {
+                    "label": "Matilda",
+                    "value": "XrExE9yKIg1WjnnlVkGX"
+                },
+                {
+                    "label": "Will",
+                    "value": "bIHbv24MWmeRgasZH58o"
+                },
+                {
+                    "label": "Jessica",
+                    "value": "cgSgspJ2msm6clMCkdW9"
+                },
+                {
+                    "label": "Eric",
+                    "value": "cjVigY5qzO86Huf0OWal"
+                },
+                {
+                    "label": "Chris",
+                    "value": "iP95p4xoKVk53GoZ742B"
+                },
+                {
+                    "label": "Brian",
+                    "value": "nPczCjzI2devNBz1zQrb"
+                },
+                {
+                    "label": "Daniel",
+                    "value": "onwK4e9ZLuTAKqWW03F9"
+                },
+                {
+                    "label": "Lily",
+                    "value": "pFZP5JQG7iQjIQuC4Bku"
+                },
+                {
+                    "label": "Bill",
+                    "value": "pqHfZKP75CvOlQylNhV4"
+                }
+            ],
+            "default": "9BWtsMINqrJLrRacOk9x",
+            "description": "The ElevenLabs voice persona used for text-to-speech when the NPC speaks aloud."
+        },
+        "range": {
+            "name": "Range",
+            "type": "number",
+            "default": 5,
+            "description": "How close the player must be to the NPC to start a conversation or interaction."
+        },
+        "object_interaction_range": {
+            "name": "Object Interaction Range",
+            "type": "number",
+            "default": 10,
+            "description": "Maximum distance at which the NPC can detect and interact with objects in the scene."
+        },
+        "walkSpeed": {
+            "name": "Walk Speed",
+            "type": "number",
+            "min": 0,
+            "default": 2.5,
+            "description": "Movement speed of the NPC when walking, in units per second."
+        },
+        "runSpeed": {
+            "name": "Run Speed",
+            "type": "number",
+            "min": 0,
+            "default": 9,
+            "description": "Movement speed of the NPC when running, in units per second."
+        },
+        "active_in_voice_chat": {
+            "name": "Active In Voice Chat",
+            "type": "boolean",
+            "default": false,
+            "description": "When enabled, the NPC listens for voice input and responds with spoken audio instead of text only."
+        },
+        "show_text_chat": {
+            "name": "Show Text Chat",
+            "type": "boolean",
+            "default": true,
+            "description": "When enabled, displays a text chat bubble above the NPC so players can read the conversation."
+        },
+        "roamDistance": {
+            "name": "Roam Distance",
+            "type": "number",
+            "description": "Maximum distance the NPC can wander from its original position when idle. Leave empty to disable roaming."
+        },
+        "environment": {
+            "name": "Environment",
+            "type": "string",
+            "default": "fantasy village",
+            "description": "A text description of the NPC's world setting, provided as context to the AI for more immersive conversations."
+        },
+        "groups": {
+            "array": true,
+            "name": "Groups",
+            "type": "string",
+            "default": "villagers",
+            "description": "Social groups or factions the NPC belongs to, used for AI context and inter-NPC relationships."
+        },
+        "movementAnimLabel": {
+            "name": "Movement Animations",
+            "type": "label"
+        },
+        "idleAnimation": {
+            "name": "Idle",
+            "type": "enum",
+            "options": [
+                {
+                    "label": "None",
+                    "value": "none"
+                }
+            ],
+            "autoFill": "object.animations",
+            "searchFor": ["idle"],
+            "default": "none",
+            "description": "Animation to play when the NPC is standing still and not engaged in any activity."
+        },
+        "walkAnimation": {
+            "name": "Walking",
+            "type": "enum",
+            "options": [
+                {
+                    "label": "None",
+                    "value": "none"
+                }
+            ],
+            "autoFill": "object.animations",
+            "searchFor": ["walk"],
+            "default": "none",
+            "description": "Animation to play when the NPC is walking."
+        },
+        "runAnimation": {
+            "name": "Running",
+            "type": "enum",
+            "options": [
+                {
+                    "label": "None",
+                    "value": "none"
+                }
+            ],
+            "autoFill": "object.animations",
+            "searchFor": ["run"],
+            "default": "none",
+            "description": "Animation to play when the NPC is running."
+        },
+        "pickUpAnimation": {
+            "name": "Pick Up Gesture",
+            "type": "enum",
+            "options": [
+                {
+                    "label": "None",
+                    "value": "none"
+                }
+            ],
+            "autoFill": "object.animations",
+            "searchFor": ["pick", "pickup", "grab"],
+            "default": "none",
+            "description": "Animation to play when the NPC picks up or grabs an object."
+        },
+        "talkAnimation": {
+            "name": "Talking",
+            "type": "enum",
+            "options": [
+                {
+                    "label": "None",
+                    "value": "none"
+                }
+            ],
+            "autoFill": "object.animations",
+            "searchFor": ["talk", "speaking"],
+            "default": "none",
+            "description": "Animation to play when the NPC is speaking during a conversation."
+        },
+        "waveAnimation": {
+            "name": "Wave Gesture",
+            "type": "enum",
+            "options": [
+                {
+                    "label": "None",
+                    "value": "none"
+                }
+            ],
+            "autoFill": "object.animations",
+            "searchFor": ["wave", "greeting"],
+            "default": "none",
+            "description": "Animation to play when the NPC waves or greets a player."
+        },
+        "pointAnimation": {
+            "name": "Point Gesture",
+            "type": "enum",
+            "options": [
+                {
+                    "label": "None",
+                    "value": "none"
+                }
+            ],
+            "autoFill": "object.animations",
+            "searchFor": ["point"],
+            "default": "none",
+            "description": "Animation to play when the NPC points at something in the scene."
+        }
+    }
+}

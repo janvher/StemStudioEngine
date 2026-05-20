@@ -1,0 +1,44 @@
+{
+    "id": "setMaterial",
+    "name": "Set Material",
+    "description": "Sets material color/emissive/opacity on mesh objects.",
+    "author": "stemstudio",
+    "version": "1.0.0",
+    "main": "SetMaterialLambda.ts",
+    "tags": [
+        "common",
+        "visual",
+        "trigger"
+    ],
+    "attributes": {},
+    "readComponents": [
+        "color",
+        "emissive",
+        "opacity",
+        "includeChildren"
+    ],
+    "writeComponents": [],
+    "componentSchema": {
+        "color": {
+            "name": "Color",
+            "type": "string",
+            "default": "#ffffff"
+        },
+        "emissive": {
+            "name": "Emissive",
+            "type": "string",
+            "default": ""
+        },
+        "opacity": {
+            "name": "Opacity",
+            "type": "number",
+            "default": 1
+        },
+        "includeChildren": {
+            "name": "Include Children",
+            "type": "boolean",
+            "default": true
+        }
+    },
+    "documentation": "## Set Material\n\nSets material color/emissive/opacity on mesh objects.\n\n### Runtime Notes\n- Attach this lambda to objects via Lambda Components.\n- If Auto Apply is enabled, it runs every frame.\n- If Auto Apply is disabled, call `lambdaInstance.apply(deltaTime)` from behavior/lambda code.\n\n### Component Parameters\n| Key | Label | Type | Default | Options |\n| --- | --- | --- | --- | --- |\n| `color` | Color | `string` | `#ffffff` | - |\n| `emissive` | Emissive | `string` | `` | - |\n| `opacity` | Opacity | `number` | `1` | - |\n| `includeChildren` | Include Children | `boolean` | `true` | - |"
+}

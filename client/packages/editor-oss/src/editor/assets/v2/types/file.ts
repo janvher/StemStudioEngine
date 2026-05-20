@@ -1,0 +1,74 @@
+export type FileData = {
+    AddTim?: string;
+    CreateTime?: string;
+    CategoryID?: string;
+    CategoryName?: string;
+    FileName?: string;
+    FileSize?: string;
+    FileType?: string;
+    ID: string;
+    publishRevisionId: string;
+    AssetID: string | null;
+    UserID: string;
+    Name: string;
+    Description: string;
+    PlayCount: number;
+    Likes?: number;
+    RemixCount: number;
+    ShareCount?: number;
+    Tags: string;
+    SaveName?: string;
+    SavePath?: string;
+    Thumbnail: string;
+    Type?: string;
+    Url: string;
+    DeleteEnabled?: boolean;
+    LockedItems?: string;
+    UpdateTime: string;
+    IsSandbox: boolean;
+    isCommunity?: boolean;
+    IsCloneable?: boolean;
+    IsCollaborative?: boolean;
+    IsPublic?: boolean;
+    IsAssetPack?: boolean;
+    IsTopPick?: boolean;
+    IsPublished: boolean;
+    IsAvatar?: boolean;
+    IsAIGenerated?: boolean;
+    ERTHLibrary?: boolean;
+    IsArchived?: boolean;
+    AiPromptMode?: boolean;
+    RemixedFromSceneID?: string;
+    SceneID?: string[];
+    AssetsCount?: number;
+};
+
+export const DEFAULT_FILE_DATA: FileData = {
+    AddTim: "",
+    CreateTime: "",
+    CategoryID: "",
+    CategoryName: "",
+    FileName: "",
+    FileSize: "",
+    FileType: "",
+    ID: "",
+    Name: "",
+    SaveName: "",
+    SavePath: "",
+    Thumbnail: "",
+    Type: "",
+    Url: "",
+    DeleteEnabled: true,
+    UpdateTime: "",
+    UserID: "",
+    publishRevisionId: "",
+    AssetID: null,
+    Description: "",
+    PlayCount: 0,
+    RemixCount: 0,
+    Tags: "",
+    IsSandbox: false,
+    IsCloneable: false,
+    IsPublished: false,
+    IsAIGenerated: false,
+};

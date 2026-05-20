@@ -1,0 +1,105 @@
+{
+    "id": "jointHinge",
+    "name": "Hinge Joint",
+    "isScript": false,
+    "description": "A physics constraint that connects two objects with a single rotational axis, like a door hinge or wheel axle. Objects can rotate freely around the specified axis while remaining locked in all other degrees of freedom. Supports angular limits, motorized rotation, and configurable collision between connected objects. KEY FEATURES:",
+    "documentation": "## Hinge Joint\nConnect two objects with a rotational constraint.\n\n### Settings\n- **Other Object** - The object to connect\n- **Collision Enabled** - Allow collisions between joined objects\n- **Axis** - Rotation axis (X, Y, Z)\n\n### Angular Limits\n- **Angular Limit Enabled** - Restrict rotation range\n- **Rotation Limit** - Max rotation in degrees (X, Y, Z)\n\n### Motor\n- **Motor Enabled** - Apply rotational force\n- **Motor Speed** - Rotation speed\n- **Motor Torque** - Rotational force strength\n\n### Tips\n- Great for doors, lids, pendulums, and swinging objects\n- Enable motor for self-rotating objects like windmills\n- Use angular limits for door-like constraints",
+    "author": "stemstudio",
+    "tags": ["motion"],
+    "main": "HingeJointBehavior.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "throttleConfig": {
+        "throttlePriority": "LOW",
+        "enableFrustumCulling": false,
+        "enableDistanceThrottling": false,
+        "requiresConsistentUpdates": false
+    },
+    "attributes": {
+        "customName": {
+            "name": "Custom Name",
+            "type": "string"
+        },
+        "objectB": {
+            "name": "Other object",
+            "type": "object",
+            "description": "The second physics-enabled object to connect with this hinge joint."
+        },
+        "collisionEnabled": {
+            "name": "Collision enabled",
+            "type": "boolean",
+            "default": true,
+            "description": "When enabled, the two joined objects can still collide with each other. Disable to allow them to overlap."
+        },
+        "axis": {
+            "name": "Axis",
+            "type": "group",
+            "array": false,
+            "description": "The rotation axis direction for the hinge. Set one component to 1 to define the axis (e.g., Y=1 for a vertical door hinge).",
+            "attributes": {
+                "x": {
+                    "name": "X",
+                    "type": "number",
+                    "description": "X component of the hinge rotation axis."
+                },
+                "y": {
+                    "name": "Y",
+                    "type": "number",
+                    "description": "Y component of the hinge rotation axis."
+                },
+                "z": {
+                    "name": "Z",
+                    "type": "number",
+                    "description": "Z component of the hinge rotation axis."
+                }
+            }
+        },
+        "angularLimitEnabled": {
+            "name": "Angular limit enabled",
+            "type": "boolean",
+            "default": false,
+            "description": "When enabled, restricts how far the hinge can rotate using the rotation limit values."
+        },
+        "angularLimit": {
+            "name": "Rotation limit (in degrees)",
+            "type": "group",
+            "array": false,
+            "description": "The maximum rotation angle in degrees for each axis. Only applies when angular limit is enabled.",
+            "attributes": {
+                "x": {
+                    "name": "X",
+                    "type": "number",
+                    "description": "Maximum rotation angle in degrees around the X axis."
+                },
+                "y": {
+                    "name": "Y",
+                    "type": "number",
+                    "description": "Maximum rotation angle in degrees around the Y axis."
+                },
+                "z": {
+                    "name": "Z",
+                    "type": "number",
+                    "description": "Maximum rotation angle in degrees around the Z axis."
+                }
+            }
+        },
+        "motorEnabled": {
+            "name": "Motor enabled",
+            "type": "boolean",
+            "default": false,
+            "description": "When enabled, applies a continuous rotational force to the hinge, making it spin like a motor."
+        },
+        "motorSpeed": {
+            "name": "Motor Speed",
+            "type": "number",
+            "default": 0,
+            "description": "The target rotational speed of the motor. Higher values make the hinge spin faster."
+        },
+        "motorTorque": {
+            "name": "Motor Torque",
+            "type": "number",
+            "default": 0,
+            "description": "The maximum rotational force the motor can apply. Higher values allow the motor to overcome heavier resistance."
+        }
+    }
+}

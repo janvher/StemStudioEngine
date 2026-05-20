@@ -1,0 +1,63 @@
+# buildwithstem.com static-host routing.
+#
+# The build emits four HTML shells, each backed by a SPA. Static hosts
+# (Cloudflare Pages, Netlify, Render Static Sites) honour _redirects with
+# status 200 as a "serve this file but keep the URL" instruction — the SPA
+# router takes over inside the browser.
+#
+#   index.html    — public site: landing, docs, /playground iframe wrapper
+#   shell.html    — app shell (PublicAppContainerLite): dashboard, project
+#                   list, OSS bootstrap modal, and the rest of the
+#                   marketing/account routes baked into AppRouter.tsx
+#   editor.html   — full editor runtime
+#   play.html     — player-only runtime
+#
+# Order matters: first matching rule wins.
+
+# Player ---------------------------------------------------------------
+/play/*                       /play.html              200
+
+# Editor ---------------------------------------------------------------
+/create/project               /editor.html            200
+/create/project/*             /editor.html            200
+/stem-editor                  /editor.html            200
+/stem-editor/*                /editor.html            200
+
+# Public site (landing, docs, playground iframe wrapper) ---------------
+/                             /index.html             200
+/docs                         /index.html             200
+/docs/*                       /index.html             200
+/playground                   /index.html             200
+/playground/*                 /index.html             200
+
+# App shell (dashboard, project list, etc.) ----------------------------
+/dashboard                    /shell.html             200
+/dashboard/*                  /shell.html             200
+/discover                     /shell.html             200
+/discover/*                   /shell.html             200
+/browse                       /shell.html             200
+/browse/*                     /shell.html             200
+/game/*                       /shell.html             200
+/my-avatars                   /shell.html             200
+/my-avatars/*                 /shell.html             200
+/settings                     /shell.html             200
+/settings/*                   /shell.html             200
+/search/*                     /shell.html             200
+/legal/*                      /shell.html             200
+/3rd-party-attributions       /shell.html             200
+/contact-us                   /shell.html             200
+/about                        /shell.html             200
+/login                        /shell.html             200
+/signup                       /shell.html             200
+/register                     /shell.html             200
+/forgot-password              /shell.html             200
+/waitlist                     /shell.html             200
+/admin-panel                  /shell.html             200
+/forum                        /shell.html             200
+/news                         /shell.html             200
+/learn                        /shell.html             200
+/remix                        /shell.html             200
+/view-more/*                  /shell.html             200
+
+# Catch-all → public site (renders 404 page inside the SPA) ------------
+/*                            /index.html             200

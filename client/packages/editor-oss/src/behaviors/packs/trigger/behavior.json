@@ -1,0 +1,862 @@
+{
+    "id": "trigger",
+    "name": "Trigger",
+    "isScript": false,
+    "description": "A versatile conditional trigger system that activates or deactivates other behaviors based on player interaction, object collision, or key presses. Supports multiple conditions with partial/full matching logic and delayed execution. Essential for creating interactive zones, puzzles, and scripted sequences.",
+    "documentation": "## Trigger\nThe core logic behavior for creating interactive gameplay. Triggers activate or deactivate other behaviors based on conditions.\n\n### Conditions (If)\n- **Player Touches** - Activates on player collision\n- **Object Touches** - Activates when a specific object collides\n- **Press E Key** - Activates on player interaction (shows UI text)\n\n### Actions\n- **Then** - What happens when the condition is met (Activate/Deactivate)\n- **Then Object** - Which object and behavior to affect\n- **Else** - What happens when the condition is NOT met\n- **Else Object** - Which object and behavior to affect on else\n\n### Settings\n- **Delay** - Time in seconds before the trigger fires\n\n### Tips\n- Target behaviors must have **Start On Trigger** enabled\n- Chain multiple triggers for complex game logic\n- Use with Enable/Disable, Tween, Platform, Spawn, and more",
+    "author": "stemstudio",
+    "tags": [],
+    "main": "TriggerBehavior.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "throttleConfig": {
+        "throttlePriority": "CRITICAL",
+        "enableFrustumCulling": false,
+        "enableDistanceThrottling": false,
+        "requiresConsistentUpdates": true
+    },
+    "attributes": {
+        "customName": {
+            "name": "Custom Name",
+            "type": "string"
+        },
+        "if_condition": {
+            "name": "If Condition",
+            "type": "group",
+            "array": true,
+            "default": [],
+            "itemLabel": "Statement",
+            "attributes": {
+                "conditionType": {
+                    "name": "If",
+                    "type": "enum",
+                    "description": "The type of condition that must be met for this trigger to fire.",
+                    "options": [
+                        {
+                            "label": "On Enter Trigger Volume",
+                            "value": "on_enter"
+                        },
+                        {
+                            "label": "On Exit Trigger Volume",
+                            "value": "on_exit"
+                        },
+                        {
+                            "label": "While Inside Trigger Volume",
+                            "value": "while_inside"
+                        },
+                        {
+                            "label": "Player Touches",
+                            "value": "player_touches"
+                        },
+                        {
+                            "label": "Object Touches",
+                            "value": "object_touches"
+                        },
+                        {
+                            "label": "Press E Key",
+                            "value": "pressE"
+                        },
+                        {
+                            "label": "Press F Key",
+                            "value": "pressF"
+                        },
+                        {
+                            "label": "Key/Button Pressed",
+                            "value": "key_button_pressed"
+                        },
+                        {
+                            "label": "Timer Elapsed",
+                            "value": "timer_elapsed"
+                        },
+                        {
+                            "label": "Distance Compare",
+                            "value": "distance_compare"
+                        },
+                        {
+                            "label": "Has Tag/Team/Faction",
+                            "value": "has_tag_team_faction"
+                        },
+                        {
+                            "label": "Variable Compare",
+                            "value": "variable_compare"
+                        },
+                        {
+                            "label": "Behavior State",
+                            "value": "behavior_state"
+                        },
+                        {
+                            "label": "Animation Event Reached",
+                            "value": "animation_event_reached"
+                        },
+                        {
+                            "label": "Line Of Sight",
+                            "value": "line_of_sight"
+                        },
+                        {
+                            "label": "Random Chance %",
+                            "value": "random_chance"
+                        },
+                        {
+                            "label": "Cooldown Ready",
+                            "value": "cooldown_ready"
+                        },
+                        {
+                            "label": "On Interact",
+                            "value": "on_interact"
+                        },
+                        {
+                            "label": "Object State Compare",
+                            "value": "object_state_compare"
+                        },
+                        {
+                            "label": "Time Window",
+                            "value": "time_window"
+                        },
+                        {
+                            "label": "Multiplayer Role",
+                            "value": "multiplayer_role"
+                        },
+                        {
+                            "label": "Physics Collision Event",
+                            "value": "physics_collision_event"
+                        },
+                        {
+                            "label": "AI Proximity",
+                            "value": "ai_proximity"
+                        }
+                    ]
+                },
+                "objectUUID": {
+                    "name": "Object",
+                    "description": "The specific scene object that must collide with this object to satisfy the condition.",
+                    "visibleIf": {
+                        "conditionType": "object_touches"
+                    },
+                    "type": "object",
+                    "excludeNames": ["GlobalBehaviorHost"],
+                    "excludeSelf": true
+                },
+                "interactionText": {
+                    "name": "UI Text",
+                    "description": "Text shown on-screen to prompt the player to press E to interact.",
+                    "visibleIf": {
+                        "conditionType": "pressE"
+                    },
+                    "type": "string"
+                },
+                "inputKey": {
+                    "name": "Input",
+                    "type": "enum",
+                    "default": "e",
+                    "description": "The key or button the player must press to satisfy this condition.",
+                    "visibleIf": {
+                        "conditionType": "key_button_pressed"
+                    },
+                    "options": [
+                        {
+                            "label": "E",
+                            "value": "e"
+                        },
+                        {
+                            "label": "F",
+                            "value": "f"
+                        },
+                        {
+                            "label": "Mouse Left",
+                            "value": "mouse_left"
+                        },
+                        {
+                            "label": "Controller A",
+                            "value": "controller_a"
+                        }
+                    ]
+                },
+                "timerSeconds": {
+                    "name": "Seconds",
+                    "type": "number",
+                    "default": 1,
+                    "description": "Number of seconds that must elapse before this condition is satisfied.",
+                    "visibleIf": {
+                        "conditionType": "timer_elapsed"
+                    }
+                },
+                "distanceObjectUUID": {
+                    "name": "Object",
+                    "type": "object",
+                    "description": "The target object whose distance from this object is measured.",
+                    "excludeNames": ["GlobalBehaviorHost"],
+                    "excludeSelf": true,
+                    "visibleIf": {
+                        "conditionType": "distance_compare"
+                    }
+                },
+                "distanceOperator": {
+                    "name": "Compare",
+                    "type": "enum",
+                    "default": "lt",
+                    "description": "Comparison operator: trigger when the distance is less than or greater than the threshold.",
+                    "visibleIf": {
+                        "conditionType": "distance_compare"
+                    },
+                    "options": [
+                        {
+                            "label": "Distance < X",
+                            "value": "lt"
+                        },
+                        {
+                            "label": "Distance > X",
+                            "value": "gt"
+                        }
+                    ]
+                },
+                "distanceValue": {
+                    "name": "Distance X",
+                    "type": "number",
+                    "default": 3,
+                    "description": "The distance threshold (in world units) used for the comparison.",
+                    "visibleIf": {
+                        "conditionType": "distance_compare"
+                    }
+                },
+                "metadataScope": {
+                    "name": "Target",
+                    "type": "enum",
+                    "default": "self",
+                    "description": "Which entity to check for the tag, team, or faction value.",
+                    "visibleIf": {
+                        "conditionType": "has_tag_team_faction"
+                    },
+                    "options": [
+                        {
+                            "label": "Self",
+                            "value": "self"
+                        },
+                        {
+                            "label": "Player",
+                            "value": "player"
+                        },
+                        {
+                            "label": "Object",
+                            "value": "object"
+                        }
+                    ]
+                },
+                "metadataObjectUUID": {
+                    "name": "Object",
+                    "type": "object",
+                    "description": "The scene object to inspect for the specified tag, team, or faction.",
+                    "excludeNames": ["GlobalBehaviorHost"],
+                    "excludeSelf": true,
+                    "visibleIf": {
+                        "conditionType": "has_tag_team_faction",
+                        "metadataScope": "object"
+                    }
+                },
+                "metadataKey": {
+                    "name": "Field",
+                    "type": "enum",
+                    "default": "tag",
+                    "description": "The metadata field to check: tag, team, or faction.",
+                    "visibleIf": {
+                        "conditionType": "has_tag_team_faction"
+                    },
+                    "options": [
+                        {
+                            "label": "Tag",
+                            "value": "tag"
+                        },
+                        {
+                            "label": "Team",
+                            "value": "team"
+                        },
+                        {
+                            "label": "Faction",
+                            "value": "faction"
+                        }
+                    ]
+                },
+                "metadataValue": {
+                    "name": "Value",
+                    "type": "string",
+                    "default": "",
+                    "description": "The expected value to match against the selected metadata field.",
+                    "visibleIf": {
+                        "conditionType": "has_tag_team_faction"
+                    }
+                },
+                "variablePath": {
+                    "name": "Key",
+                    "type": "string",
+                    "default": "",
+                    "description": "The store key to read (e.g. 'score', 'coins').",
+                    "visibleIf": {
+                        "conditionType": "variable_compare"
+                    }
+                },
+                "variableOperator": {
+                    "name": "Operator",
+                    "type": "enum",
+                    "default": "eq",
+                    "description": "The comparison operator used to evaluate the variable against the target value.",
+                    "visibleIf": {
+                        "conditionType": "variable_compare"
+                    },
+                    "options": [
+                        {
+                            "label": "=",
+                            "value": "eq"
+                        },
+                        {
+                            "label": "!=",
+                            "value": "neq"
+                        },
+                        {
+                            "label": "<",
+                            "value": "lt"
+                        },
+                        {
+                            "label": "<=",
+                            "value": "lte"
+                        },
+                        {
+                            "label": ">",
+                            "value": "gt"
+                        },
+                        {
+                            "label": ">=",
+                            "value": "gte"
+                        }
+                    ]
+                },
+                "variableValue": {
+                    "name": "Compare To",
+                    "type": "string",
+                    "default": "",
+                    "description": "The target value to compare the variable against.",
+                    "visibleIf": {
+                        "conditionType": "variable_compare"
+                    }
+                },
+                "behaviorObjectUUID": {
+                    "name": "Behavior Object",
+                    "type": "object",
+                    "description": "The scene object that owns the behavior whose state is being checked.",
+                    "excludeNames": ["GlobalBehaviorHost"],
+                    "visibleIf": {
+                        "conditionType": "behavior_state"
+                    }
+                },
+                "behaviorIdentifier": {
+                    "name": "Behavior ID/UUID",
+                    "type": "string",
+                    "default": "",
+                    "description": "The identifier or UUID of the behavior to check the state of.",
+                    "visibleIf": {
+                        "conditionType": "behavior_state"
+                    }
+                },
+                "behaviorState": {
+                    "name": "Expected State",
+                    "type": "enum",
+                    "default": "enabled",
+                    "description": "The state the target behavior must be in for this condition to pass.",
+                    "visibleIf": {
+                        "conditionType": "behavior_state"
+                    },
+                    "options": [
+                        {
+                            "label": "Enabled",
+                            "value": "enabled"
+                        },
+                        {
+                            "label": "Disabled",
+                            "value": "disabled"
+                        },
+                        {
+                            "label": "Running",
+                            "value": "running"
+                        }
+                    ]
+                },
+                "animationEventScope": {
+                    "name": "Animation Source",
+                    "type": "enum",
+                    "default": "self",
+                    "description": "Which entity's animation to listen to for the named event.",
+                    "visibleIf": {
+                        "conditionType": "animation_event_reached"
+                    },
+                    "options": [
+                        {
+                            "label": "Self",
+                            "value": "self"
+                        },
+                        {
+                            "label": "Player",
+                            "value": "player"
+                        },
+                        {
+                            "label": "Object",
+                            "value": "object"
+                        }
+                    ]
+                },
+                "animationEventObjectUUID": {
+                    "name": "Object",
+                    "type": "object",
+                    "description": "The scene object whose animation events are monitored.",
+                    "excludeNames": ["GlobalBehaviorHost"],
+                    "excludeSelf": true,
+                    "visibleIf": {
+                        "conditionType": "animation_event_reached",
+                        "animationEventScope": "object"
+                    }
+                },
+                "animationEventName": {
+                    "name": "Event Name",
+                    "type": "string",
+                    "default": "",
+                    "description": "The name of the animation event that must be reached to satisfy this condition.",
+                    "visibleIf": {
+                        "conditionType": "animation_event_reached"
+                    }
+                },
+                "lineOfSightObjectUUID": {
+                    "name": "Sight Target",
+                    "type": "object",
+                    "description": "The target object that must be visible (unobstructed) from this object's position.",
+                    "excludeNames": ["GlobalBehaviorHost"],
+                    "excludeSelf": true,
+                    "visibleIf": {
+                        "conditionType": "line_of_sight"
+                    }
+                },
+                "lineOfSightMaxDistance": {
+                    "name": "Max Distance",
+                    "type": "number",
+                    "default": 0,
+                    "description": "Maximum range for the line-of-sight check in world units. Set to 0 for unlimited range.",
+                    "visibleIf": {
+                        "conditionType": "line_of_sight"
+                    }
+                },
+                "chancePercent": {
+                    "name": "Chance %",
+                    "type": "number",
+                    "default": 50,
+                    "description": "The percentage probability (0-100) that this condition will pass each time it is evaluated.",
+                    "visibleIf": {
+                        "conditionType": "random_chance"
+                    }
+                },
+                "cooldownSeconds": {
+                    "name": "Cooldown Seconds",
+                    "type": "number",
+                    "default": 1,
+                    "description": "Seconds that must pass after the last trigger activation before this condition can pass again.",
+                    "visibleIf": {
+                        "conditionType": "cooldown_ready"
+                    }
+                },
+                "interactTargetUUID": {
+                    "name": "Interact Target",
+                    "type": "object",
+                    "description": "The object the player must be near and interact with to satisfy this condition.",
+                    "excludeNames": ["GlobalBehaviorHost"],
+                    "visibleIf": {
+                        "conditionType": "on_interact"
+                    }
+                },
+                "interactInputKey": {
+                    "name": "Input",
+                    "type": "enum",
+                    "default": "e",
+                    "description": "The key or button the player presses to interact with the target object.",
+                    "visibleIf": {
+                        "conditionType": "on_interact"
+                    },
+                    "options": [
+                        {
+                            "label": "E",
+                            "value": "e"
+                        },
+                        {
+                            "label": "F",
+                            "value": "f"
+                        },
+                        {
+                            "label": "Mouse Left",
+                            "value": "mouse_left"
+                        },
+                        {
+                            "label": "Controller A",
+                            "value": "controller_a"
+                        }
+                    ]
+                },
+                "interactMaxDistance": {
+                    "name": "Max Distance",
+                    "type": "number",
+                    "default": 5,
+                    "description": "Maximum distance (in world units) the player can be from the target to interact.",
+                    "visibleIf": {
+                        "conditionType": "on_interact"
+                    }
+                },
+                "stateObjectUUID": {
+                    "name": "Object",
+                    "type": "object",
+                    "description": "The scene object whose state property is compared.",
+                    "excludeNames": ["GlobalBehaviorHost"],
+                    "visibleIf": {
+                        "conditionType": "object_state_compare"
+                    }
+                },
+                "stateKey": {
+                    "name": "State",
+                    "type": "enum",
+                    "default": "visible",
+                    "description": "The object state property to evaluate (visible, active, destroyed, or a custom state).",
+                    "visibleIf": {
+                        "conditionType": "object_state_compare"
+                    },
+                    "options": [
+                        {
+                            "label": "Visible",
+                            "value": "visible"
+                        },
+                        {
+                            "label": "Active",
+                            "value": "active"
+                        },
+                        {
+                            "label": "Destroyed",
+                            "value": "destroyed"
+                        },
+                        {
+                            "label": "Custom State",
+                            "value": "custom_state"
+                        }
+                    ]
+                },
+                "stateOperator": {
+                    "name": "Compare",
+                    "type": "enum",
+                    "default": "eq",
+                    "description": "Whether the object state must equal or not equal the given value.",
+                    "visibleIf": {
+                        "conditionType": "object_state_compare"
+                    },
+                    "options": [
+                        {
+                            "label": "=",
+                            "value": "eq"
+                        },
+                        {
+                            "label": "!=",
+                            "value": "neq"
+                        }
+                    ]
+                },
+                "stateValue": {
+                    "name": "State Value",
+                    "type": "string",
+                    "default": "true",
+                    "description": "The value to compare the object state against (e.g. 'true', 'false', or a custom string).",
+                    "visibleIf": {
+                        "conditionType": "object_state_compare"
+                    }
+                },
+                "timeSource": {
+                    "name": "Time Source",
+                    "type": "enum",
+                    "default": "scene",
+                    "description": "Whether to use the in-game scene clock or the real-world system clock.",
+                    "visibleIf": {
+                        "conditionType": "time_window"
+                    },
+                    "options": [
+                        {
+                            "label": "Scene Game Time",
+                            "value": "scene"
+                        },
+                        {
+                            "label": "System Time",
+                            "value": "system"
+                        }
+                    ]
+                },
+                "timeStartHour": {
+                    "name": "Start Hour",
+                    "type": "number",
+                    "default": 8,
+                    "description": "The hour (0-23) at which the time window begins.",
+                    "visibleIf": {
+                        "conditionType": "time_window"
+                    }
+                },
+                "timeEndHour": {
+                    "name": "End Hour",
+                    "type": "number",
+                    "default": 18,
+                    "description": "The hour (0-23) at which the time window ends.",
+                    "visibleIf": {
+                        "conditionType": "time_window"
+                    }
+                },
+                "multiplayerRole": {
+                    "name": "Role Check",
+                    "type": "enum",
+                    "default": "host",
+                    "description": "The multiplayer role or team membership the local client must have.",
+                    "visibleIf": {
+                        "conditionType": "multiplayer_role"
+                    },
+                    "options": [
+                        {
+                            "label": "Is Host",
+                            "value": "host"
+                        },
+                        {
+                            "label": "Is Local Player",
+                            "value": "local_player"
+                        },
+                        {
+                            "label": "Team Is",
+                            "value": "team"
+                        }
+                    ]
+                },
+                "multiplayerTeamValue": {
+                    "name": "Team Value",
+                    "type": "string",
+                    "default": "",
+                    "description": "The team name or ID the local player must belong to.",
+                    "visibleIf": {
+                        "conditionType": "multiplayer_role",
+                        "multiplayerRole": "team"
+                    }
+                },
+                "physicsObjectUUID": {
+                    "name": "Collision Object",
+                    "type": "object",
+                    "description": "The specific object that must physically collide with this object.",
+                    "excludeNames": ["GlobalBehaviorHost"],
+                    "excludeSelf": true,
+                    "visibleIf": {
+                        "conditionType": "physics_collision_event"
+                    }
+                },
+                "physicsEventType": {
+                    "name": "Event Type",
+                    "type": "enum",
+                    "default": "enter",
+                    "description": "Whether to trigger on the start or end of a physics collision.",
+                    "visibleIf": {
+                        "conditionType": "physics_collision_event"
+                    },
+                    "options": [
+                        {
+                            "label": "Collision Enter",
+                            "value": "enter"
+                        },
+                        {
+                            "label": "Collision Exit",
+                            "value": "exit"
+                        }
+                    ]
+                },
+                "physicsMinImpact": {
+                    "name": "Min Impact",
+                    "type": "number",
+                    "default": 0,
+                    "description": "Minimum collision impulse required to satisfy the condition. Set to 0 for any collision.",
+                    "visibleIf": {
+                        "conditionType": "physics_collision_event"
+                    }
+                },
+                "aiTargetScope": {
+                    "name": "AI Target",
+                    "type": "enum",
+                    "default": "player",
+                    "description": "Whether the AI proximity check targets the player or a specific scene object.",
+                    "visibleIf": {
+                        "conditionType": "ai_proximity"
+                    },
+                    "options": [
+                        {
+                            "label": "Player",
+                            "value": "player"
+                        },
+                        {
+                            "label": "Object",
+                            "value": "object"
+                        }
+                    ]
+                },
+                "aiObjectUUID": {
+                    "name": "Target Object",
+                    "type": "object",
+                    "description": "The scene object the AI must be near for this proximity check.",
+                    "excludeNames": ["GlobalBehaviorHost"],
+                    "excludeSelf": true,
+                    "visibleIf": {
+                        "conditionType": "ai_proximity",
+                        "aiTargetScope": "object"
+                    }
+                },
+                "aiRange": {
+                    "name": "Range",
+                    "type": "number",
+                    "default": 10,
+                    "description": "Detection radius in world units for the AI proximity check.",
+                    "visibleIf": {
+                        "conditionType": "ai_proximity"
+                    }
+                },
+                "aiFovDegrees": {
+                    "name": "FOV Degrees",
+                    "type": "number",
+                    "default": 120,
+                    "description": "Field-of-view angle in degrees for the AI proximity cone. 360 means all-around detection.",
+                    "visibleIf": {
+                        "conditionType": "ai_proximity"
+                    }
+                }
+            }
+        },
+        "if_operator": {
+            "name": "Condition Match",
+            "type": "enum",
+            "default": "and",
+            "description": "How multiple conditions are combined: AND requires all to pass, OR requires at least one.",
+            "options": [
+                {
+                    "label": "AND (All Conditions)",
+                    "value": "and"
+                },
+                {
+                    "label": "OR (Any Condition)",
+                    "value": "or"
+                }
+            ]
+        },
+        "separator1": {
+            "type": "separator"
+        },
+        "then_steps": {
+            "name": "Then",
+            "type": "group",
+            "array": true,
+            "itemLabel": "Statement",
+            "addItemLabel": "Add another Then Statement",
+            "default": [
+                {
+                    "thenType": "activate",
+                    "delay": 0
+                }
+            ],
+            "attributes": {
+                "thenType": {
+                    "name": "Then",
+                    "type": "enum",
+                    "description": "The action to perform when the trigger conditions are met.",
+                    "options": [
+                        {
+                            "label": "Activate",
+                            "value": "activate"
+                        },
+                        {
+                            "label": "Deactivate",
+                            "value": "deactivate"
+                        },
+                        {
+                            "label": "Apply Lambda",
+                            "value": "apply_lambda"
+                        },
+                        {
+                            "label": "Apply Behavior",
+                            "value": "apply_behavior"
+                        },
+                        {
+                            "label": "Set Attribute",
+                            "value": "set_attribute"
+                        },
+                        {
+                            "label": "Send Event",
+                            "value": "send_event"
+                        }
+                    ]
+                },
+                "then_lambda": {
+                    "name": "This Object",
+                    "type": "objectBehaviors",
+                    "targetEntity": "lambda",
+                    "defaultToSelf": true,
+                    "description": "The object and lambda to execute when the trigger fires.",
+                    "visibleIf": {
+                        "thenType": "apply_lambda"
+                    }
+                },
+                "then_behavior": {
+                    "name": "This Object",
+                    "type": "objectBehaviors",
+                    "targetEntity": "behavior",
+                    "filterByAttributes": {
+                        "startOnTrigger": true
+                    },
+                    "defaultToSelf": true,
+                    "description": "The object and behavior to activate or deactivate. Only behaviors with 'Start On Trigger' enabled are shown.",
+                    "visibleIf": {
+                        "thenType": "apply_behavior"
+                    }
+                },
+                "attributeKey": {
+                    "name": "Attribute Key",
+                    "type": "string",
+                    "default": "",
+                    "description": "The attribute key to set on the target behavior or object.",
+                    "visibleIf": {
+                        "thenType": "set_attribute"
+                    }
+                },
+                "attributeValue": {
+                    "name": "Attribute Value",
+                    "type": "string",
+                    "default": "",
+                    "description": "The new value to assign to the specified attribute.",
+                    "visibleIf": {
+                        "thenType": "set_attribute"
+                    }
+                },
+                "eventName": {
+                    "name": "Event Name",
+                    "type": "string",
+                    "default": "trigger",
+                    "description": "The name of the custom event to broadcast via the EventBus.",
+                    "visibleIf": {
+                        "thenType": "send_event"
+                    }
+                },
+                "eventData": {
+                    "name": "Event Data",
+                    "type": "string",
+                    "default": "",
+                    "description": "Optional payload string sent along with the event.",
+                    "visibleIf": {
+                        "thenType": "send_event"
+                    }
+                },
+                "delay": {
+                    "name": "Activation Delay",
+                    "type": "number",
+                    "default": 0,
+                    "description": "Time in seconds to wait before executing this action after the conditions are met."
+                }
+            }
+        },
+        "separator2": {
+            "type": "separator"
+        }
+    }
+}

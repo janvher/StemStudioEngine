@@ -1,0 +1,80 @@
+{
+    "id": "rotation",
+    "name": "Rotation",
+    "description": "Sets object rotation using Euler angles (degrees) or quaternion components",
+    "author": "stemstudio",
+    "version": "1.0.0",
+    "main": "RotationLambda.ts",
+    "tags": [
+        "transform"
+    ],
+    "attributes": {},
+    "readComponents": [
+        "x",
+        "y",
+        "z",
+        "useQuaternion",
+        "qx",
+        "qy",
+        "qz",
+        "qw",
+        "order"
+    ],
+    "writeComponents": [],
+    "componentSchema": {
+        "x": {
+            "name": "X (degrees)",
+            "type": "number",
+            "default": 0
+        },
+        "y": {
+            "name": "Y (degrees)",
+            "type": "number",
+            "default": 0
+        },
+        "z": {
+            "name": "Z (degrees)",
+            "type": "number",
+            "default": 0
+        },
+        "useQuaternion": {
+            "name": "Use Quaternion",
+            "type": "boolean",
+            "default": false
+        },
+        "qx": {
+            "name": "Quaternion X",
+            "type": "number",
+            "default": 0
+        },
+        "qy": {
+            "name": "Quaternion Y",
+            "type": "number",
+            "default": 0
+        },
+        "qz": {
+            "name": "Quaternion Z",
+            "type": "number",
+            "default": 0
+        },
+        "qw": {
+            "name": "Quaternion W",
+            "type": "number",
+            "default": 1
+        },
+        "order": {
+            "name": "Euler Order",
+            "type": "string",
+            "default": "XYZ",
+            "options": [
+                "XYZ",
+                "YXZ",
+                "ZXY",
+                "ZYX",
+                "YZX",
+                "XZY"
+            ]
+        }
+    },
+    "documentation": "## Rotation\n\nSets object rotation using Euler angles (degrees) or quaternion components\n\n### Runtime Notes\n- Attach this lambda to objects via Lambda Components.\n- If Auto Apply is enabled, it runs every frame.\n- If Auto Apply is disabled, call `lambdaInstance.apply(deltaTime)` from behavior/lambda code.\n\n### Component Parameters\n| Key | Label | Type | Default | Options |\n| --- | --- | --- | --- | --- |\n| `x` | X (degrees) | `number` | `0` | - |\n| `y` | Y (degrees) | `number` | `0` | - |\n| `z` | Z (degrees) | `number` | `0` | - |\n| `useQuaternion` | Use Quaternion | `boolean` | `false` | - |\n| `qx` | Quaternion X | `number` | `0` | - |\n| `qy` | Quaternion Y | `number` | `0` | - |\n| `qz` | Quaternion Z | `number` | `0` | - |\n| `qw` | Quaternion W | `number` | `1` | - |\n| `order` | Euler Order | `string` | `XYZ` | `XYZ`, `YXZ`, `ZXY`, `ZYX`, `YZX`, `XZY` |"
+}

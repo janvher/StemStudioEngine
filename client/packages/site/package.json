@@ -1,0 +1,6 @@
+{
+  "name": "@stemstudio/web-site",
+  "private": true,
+  "type": "module",
+  "main": "src/main.tsx"
+}

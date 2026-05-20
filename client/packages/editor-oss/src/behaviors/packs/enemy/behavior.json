@@ -1,0 +1,287 @@
+{
+    "id": "enemy",
+    "name": "Enemy",
+    "isScript": false,
+    "description": "A comprehensive AI-driven enemy system with state-based behavior, combat mechanics, and multiplayer synchronization. Creates intelligent opponents that detect, pursue, attack, and retreat from players using configurable animations, weapons, and movement patterns. Supports multiple enemy types with customizable attributes for health, damage, speed, and attack patterns.",
+    "documentation": "## Enemy\nCreate hostile NPCs that chase and attack the player.\n\n### Enemy Type\n- **Aggressive** - Actively pursues the player\n- **Defensive** - Only attacks when provoked\n- **Patrols** - Follows a patrol pattern\n- **Custom** - Fully configurable behavior\n\n### Combat Settings\n- **Weapon** - Weapon type (Hands, Sword, Rifle, Bow, etc.)\n- **Health** - Enemy hit points (default: 100)\n- **Attack Damage/Distance/Speed** - Combat parameters\n- **Fight Distance** - Range to engage in melee\n- **Respawn** - Number of times the enemy respawns\n- **Fall Delay** - Delay before ragdoll on death\n\n### Movement\n- **Movement Speed** - How fast the enemy moves\n- **Roam Distance** - Patrol area radius\n- **Rotation Speed** - Turning speed\n- **Show Roam Area** - Visualize patrol zone in editor\n\n### Animations\nAssign animations: Idle, Walking, Running, Jumping, Crouching, Tripping, Falling, Dying, Attacking.\n\n### Tips\n- Use **Start On Trigger** to activate enemies conditionally\n- Physics is auto-configured (kinematic capsule)\n- Combine with Trigger behavior for wave-based spawning",
+    "author": "stemstudio",
+    "tags": ["enemy"],
+    "main": "EnemyBehavior.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "throttleConfig": {
+        "throttlePriority": "HIGH",
+        "enableFrustumCulling": true,
+        "enableDistanceThrottling": true,
+        "requiresConsistentUpdates": false
+    },
+    "objectSettings": {
+        "physics": {
+            "enabled": true,
+            "type": "kinematic",
+            "shape": "capsule",
+            "mass": 1
+        }
+    },
+    "attributes": {
+        "customName": {
+            "name": "Custom Name",
+            "type": "string"
+        },
+        "startOnTrigger": {
+            "name": "Start On Trigger",
+            "type": "boolean",
+            "default": false,
+            "description": "When enabled, the enemy remains inactive until a trigger event is received from another behavior."
+        },
+        "enemyType": {
+            "name": "Enemy Type",
+            "type": "enum",
+            "options": [
+                {
+                    "label": "Aggressive",
+                    "value": "Aggressive"
+                },
+                {
+                    "label": "Defensive",
+                    "value": "Defensive"
+                },
+                {
+                    "label": "Patrols",
+                    "value": "Patrols"
+                },
+                {
+                    "label": "Custom",
+                    "value": "Custom"
+                }
+            ],
+            "default": "Aggressive",
+            "description": "The AI behavior pattern for this enemy. Aggressive enemies pursue players, Defensive enemies react when provoked, and Patrol enemies follow a set path."
+        },
+        "separator1": {
+            "type": "separator"
+        },
+        "enemySettings": {
+            "name": "Enemy Settings",
+            "type": "label"
+        },
+        "showRoamArea": {
+            "name": "Show Roam Area",
+            "type": "boolean",
+            "default": false,
+            "description": "Display a visual indicator in the editor showing the enemy's patrol radius. Only visible in edit mode."
+        },
+        "weapon": {
+            "name": "Type of weapon",
+            "type": "enum",
+            "options": [
+                {
+                    "label": "Machine Gun",
+                    "value": "Machine Gun"
+                },
+                {
+                    "label": "Sub Machine Gun",
+                    "value": "Sub Machine Gun"
+                },
+                {
+                    "label": "Rifle",
+                    "value": "Rifle"
+                },
+                {
+                    "label": "SciFi Sniper Rifle",
+                    "value": "SciFi Sniper Rifle"
+                },
+                {
+                    "label": "Shot Gun",
+                    "value": "Shot Gun"
+                },
+                {
+                    "label": "Pistol",
+                    "value": "Pistol"
+                },
+                {
+                    "label": "Bow",
+                    "value": "Bow"
+                },
+                {
+                    "label": "Hands",
+                    "value": "Hands"
+                },
+                {
+                    "label": "Sword",
+                    "value": "Sword"
+                },
+                {
+                    "label": "Knife",
+                    "value": "Knife"
+                },
+                {
+                    "label": "Staff",
+                    "value": "Staff"
+                },
+                {
+                    "label": "Grenade",
+                    "value": "Grenade"
+                }
+            ],
+            "default": "Hands",
+            "description": "The weapon this enemy uses in combat. Determines attack range, animation style, and projectile behavior."
+        },
+        "health": {
+            "name": "Health",
+            "type": "number",
+            "min": 0,
+            "default": 100,
+            "description": "Total hit points for the enemy. When health reaches zero, the enemy plays its death animation and respawns if respawns remain."
+        },
+        "movementSpeed": {
+            "name": "Movement Speed",
+            "type": "number",
+            "min": 0,
+            "default": 5,
+            "description": "How fast the enemy moves when chasing or patrolling. Higher values make the enemy harder to outrun."
+        },
+        "attackDamage": {
+            "name": "Attack Damage",
+            "type": "number",
+            "min": 0,
+            "default": 1,
+            "description": "Amount of damage dealt to the player per attack hit."
+        },
+        "attackDistance": {
+            "name": "Attack Distance",
+            "type": "number",
+            "min": 0,
+            "default": 25,
+            "description": "Maximum distance at which the enemy detects and begins pursuing the player."
+        },
+        "attackSpeed": {
+            "name": "Attack Speed",
+            "type": "number",
+            "min": 0,
+            "default": 1,
+            "description": "How frequently the enemy attacks in seconds. Lower values result in faster, more aggressive attacks."
+        },
+        "respawnAmount": {
+            "name": "Respawn",
+            "type": "number",
+            "min": 0,
+            "default": 1,
+            "description": "Number of times this enemy respawns after being defeated. Set to 0 for no respawning."
+        },
+        "fallDelay": {
+            "name": "Fall Delay",
+            "type": "number",
+            "min": 0,
+            "default": 1,
+            "description": "Delay in seconds before the enemy ragdolls after being defeated. Allows the death animation to play before the body falls."
+        },
+        "fightDistance": {
+            "name": "Fight Distance",
+            "type": "number",
+            "min": 0,
+            "default": 1,
+            "description": "Distance at which the enemy stops approaching and begins its melee attack. Controls how close the enemy gets before striking."
+        },
+        "roamDistance": {
+            "name": "Roam Distance",
+            "type": "number",
+            "min": 0,
+            "default": 1,
+            "description": "Maximum radius the enemy roams from its starting position when patrolling or idle."
+        },
+        "rotationSpeed": {
+            "name": "Rotation Speed",
+            "type": "number",
+            "min": 0,
+            "default": 1,
+            "description": "How quickly the enemy turns to face its target. Higher values make the enemy rotate faster."
+        },
+        "directionDuration": {
+            "name": "Direction Duration",
+            "type": "number",
+            "min": 0,
+            "default": 1,
+            "description": "How long in seconds the enemy moves in one direction before choosing a new heading while roaming."
+        },
+        "separatorAnim": {
+            "type": "separator"
+        },
+        "movementAnimLabel": {
+            "name": "Animations",
+            "type": "label"
+        },
+        "idleAnimation": {
+            "name": "Idle",
+            "type": "enum",
+            "autoFill": "object.animations",
+            "searchFor": ["idle"],
+            "default": "none",
+            "description": "Animation to play when the enemy is standing still and not engaged in combat."
+        },
+        "walkAnimation": {
+            "name": "Walking",
+            "type": "enum",
+            "autoFill": "object.animations",
+            "searchFor": ["walk"],
+            "default": "none",
+            "description": "Animation to play when the enemy is walking at normal speed."
+        },
+        "runAnimation": {
+            "name": "Running",
+            "type": "enum",
+            "autoFill": "object.animations",
+            "searchFor": ["run"],
+            "default": "none",
+            "description": "Animation to play when the enemy is running to chase a target."
+        },
+        "jumpAnimation": {
+            "name": "Jumping",
+            "type": "enum",
+            "autoFill": "object.animations",
+            "searchFor": ["jump"],
+            "default": "none",
+            "description": "Animation to play when the enemy is jumping."
+        },
+        "crouchAnimation": {
+            "name": "Crouching",
+            "type": "enum",
+            "autoFill": "object.animations",
+            "searchFor": ["crouch"],
+            "default": "none",
+            "description": "Animation to play when the enemy is crouching or taking cover."
+        },
+        "trippingAnimation": {
+            "name": "Tripping",
+            "type": "enum",
+            "autoFill": "object.animations",
+            "searchFor": ["trip"],
+            "default": "none",
+            "description": "Animation to play when the enemy stumbles or is knocked off balance."
+        },
+        "fallAnimation": {
+            "name": "Falling",
+            "type": "enum",
+            "autoFill": "object.animations",
+            "searchFor": ["fall"],
+            "default": "none",
+            "description": "Animation to play when the enemy is falling through the air."
+        },
+        "dieAnimation": {
+            "name": "Dying",
+            "type": "enum",
+            "autoFill": "object.animations",
+            "searchFor": ["die", "death"],
+            "default": "none",
+            "description": "Animation to play when the enemy is defeated and its health reaches zero."
+        },
+        "attackAnimation": {
+            "name": "Attacking",
+            "type": "enum",
+            "autoFill": "object.animations",
+            "searchFor": ["attack"],
+            "default": "none",
+            "description": "Animation to play when the enemy performs an attack on the player."
+        }
+    }
+}

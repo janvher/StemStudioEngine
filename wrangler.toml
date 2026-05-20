@@ -1,0 +1,9 @@
+# Cloudflare Pages config for buildwithstem.com.
+#
+# Used by `wrangler pages deploy` and the dashboard-driven deploys alike.
+# Build output lives at `build/public/`; _redirects inside that folder
+# handles all SPA routing.
+
+name = "buildwithstem"
+compatibility_date = "2026-05-19"
+pages_build_output_dir = "build/public"

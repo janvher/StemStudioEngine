@@ -1,0 +1,197 @@
+{
+    "id": "navmesh",
+    "name": "NavMesh",
+    "isScript": false,
+    "description": "A sophisticated navigation mesh system that generates walkable surfaces from scene geometry and provides pathfinding services for AI agents. Uses Recast/Detour algorithm via navcat library to create optimized navigation meshes with configurable agent parameters, obstacle detection, and debug visualization. Singleton behavior that automatically regenerates on scene changes. KEY FEATURES:",
+    "documentation": "## NavMesh\nGenerate navigation meshes for AI pathfinding.\n\n### Cell Settings\n- **Cell Size** - Horizontal precision (smaller = more detail)\n- **Cell Height** - Vertical precision (should be < Max Climb)\n\n### Agent Settings\n- **Agent Height/Radius** - Size of navigation agents\n- **Max Climb Height** - Step height agents can traverse\n- **Max Slope** - Maximum walkable slope angle\n\n### Quality Settings\n- **Region Min/Merge Size** - Control mesh simplification\n- **Edge Max Length/Error** - Polygon edge parameters\n- **Vertices Per Polygon** - Max vertices (3-6)\n\n### Behavior\n- **Auto Generate** - Build NavMesh automatically on load\n- **Only Physics Meshes** - Limit to objects with physics\n- **Show Debug Mesh** - Visualize the NavMesh wireframe\n\n### Tips\n- Only one NavMesh per scene (singleton)\n- Used by Enemy, NPC, and AI NPC for pathfinding\n- Lower cell size = better quality but slower generation\n- Enable debug mesh to verify walkable areas",
+    "author": "stemstudio",
+    "tags": ["navigation", "ai", "pathfinding"],
+    "main": "NavMeshBehavior.ts",
+    "priority": -500,
+    "version": "1.0.0",
+    "dependencies": {},
+    "isSingleton": true,
+    "throttleConfig": {
+        "throttlePriority": "LOW",
+        "enableFrustumCulling": false,
+        "enableDistanceThrottling": false,
+        "requiresConsistentUpdates": false
+    },
+    "isThrottlingLocked": true,
+    "objectSettings": {
+        "physics": {
+            "enabled": false
+        }
+    },
+    "attributes": {
+        "customName": {
+            "name": "Custom Name",
+            "type": "string"
+        },
+        "enabled": {
+            "name": "Enable NavMesh",
+            "type": "boolean",
+            "description": "Enable or disable the navigation mesh system",
+            "default": true
+        },
+        "cellLabel": {
+            "name": "Cell Settings",
+            "type": "label",
+            "description": "Controls the resolution of the navigation mesh"
+        },
+        "cellSize": {
+            "name": "Cell Size",
+            "type": "slider",
+            "min": 0.1,
+            "max": 1,
+            "step": 0.05,
+            "default": 0.2,
+            "description": "Size of cells in horizontal plane. Smaller values = higher precision but slower generation"
+        },
+        "cellHeight": {
+            "name": "Cell Height",
+            "type": "slider",
+            "min": 0.05,
+            "max": 0.5,
+            "step": 0.025,
+            "default": 0.1,
+            "description": "Height of cells. Should be smaller than agentMaxClimb"
+        },
+        "agentLabel": {
+            "name": "Agent Settings",
+            "type": "label",
+            "description": "Configure the size and capabilities of navigation agents"
+        },
+        "agentHeight": {
+            "name": "Agent Height",
+            "type": "slider",
+            "min": 0.5,
+            "max": 3,
+            "step": 0.1,
+            "default": 1.8,
+            "description": "Height of navigation agents (NPCs, enemies, etc.)"
+        },
+        "agentRadius": {
+            "name": "Agent Radius",
+            "type": "slider",
+            "min": 0.1,
+            "max": 1,
+            "step": 0.05,
+            "default": 0.5,
+            "description": "Radius of navigation agents. Affects how close agents can get to walls"
+        },
+        "agentMaxClimb": {
+            "name": "Max Climb Height",
+            "type": "slider",
+            "min": 0.1,
+            "max": 1,
+            "step": 0.05,
+            "default": 0.3,
+            "description": "Maximum height agents can climb (steps, curbs, etc.)"
+        },
+        "agentMaxSlope": {
+            "name": "Max Slope (degrees)",
+            "type": "slider",
+            "min": 0,
+            "max": 90,
+            "step": 5,
+            "default": 45,
+            "description": "Maximum slope angle agents can walk on"
+        },
+        "qualityLabel": {
+            "name": "Quality Settings",
+            "type": "label",
+            "description": "Balance between quality and performance"
+        },
+        "regionMinSize": {
+            "name": "Region Min Size",
+            "type": "slider",
+            "min": 1,
+            "max": 50,
+            "step": 1,
+            "default": 8,
+            "description": "Minimum size of walkable regions. Smaller regions will be removed"
+        },
+        "regionMergeSize": {
+            "name": "Region Merge Size",
+            "type": "slider",
+            "min": 1,
+            "max": 100,
+            "step": 1,
+            "default": 20,
+            "description": "Regions smaller than this will be merged with larger ones"
+        },
+        "edgeMaxLen": {
+            "name": "Edge Max Length",
+            "type": "slider",
+            "min": 1,
+            "max": 50,
+            "step": 1,
+            "default": 12,
+            "description": "Maximum length of polygon edges. Lower values = more detailed mesh"
+        },
+        "edgeMaxError": {
+            "name": "Edge Max Error",
+            "type": "slider",
+            "min": 0.1,
+            "max": 10,
+            "step": 0.1,
+            "default": 1.3,
+            "description": "Maximum error allowed when simplifying edges"
+        },
+        "vertsPerPoly": {
+            "name": "Vertices Per Polygon",
+            "type": "slider",
+            "min": 3,
+            "max": 6,
+            "step": 1,
+            "default": 6,
+            "description": "Maximum number of vertices per polygon"
+        },
+        "detailLabel": {
+            "name": "Detail Settings",
+            "type": "label",
+            "description": "Controls detail mesh generation for precise navigation"
+        },
+        "detailSampleDist": {
+            "name": "Detail Sample Distance",
+            "type": "slider",
+            "min": 0,
+            "max": 50,
+            "step": 1,
+            "default": 6,
+            "description": "Distance between detail mesh samples. 0 = disabled"
+        },
+        "detailSampleMaxError": {
+            "name": "Detail Max Error",
+            "type": "slider",
+            "min": 0,
+            "max": 10,
+            "step": 0.1,
+            "default": 1,
+            "description": "Maximum error in detail mesh"
+        },
+        "behaviorLabel": {
+            "name": "Behavior Settings",
+            "type": "label"
+        },
+        "autoGenerate": {
+            "name": "Auto Generate",
+            "type": "boolean",
+            "default": false,
+            "description": "Automatically generate NavMesh on initialization"
+        },
+        "onlyPhysicsMeshes": {
+            "name": "Only Physics Meshes",
+            "type": "boolean",
+            "default": false,
+            "description": "Only include meshes with physics bodies in navmesh generation"
+        },
+        "debugVisualization": {
+            "name": "Show Debug Mesh",
+            "type": "boolean",
+            "default": false,
+            "description": "Show NavMesh wireframe for debugging and visualization"
+        }
+    }
+}

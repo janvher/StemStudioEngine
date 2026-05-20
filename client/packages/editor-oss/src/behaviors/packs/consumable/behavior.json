@@ -1,0 +1,151 @@
+{
+    "id": "consumable",
+    "name": "Consumable",
+    "isHidden": false,
+    "isScript": false,
+    "description": "A versatile behavior that enables objects to be collected by players, providing various power-ups, resources, or inventory items. Players can collect items either automatically on contact or by pressing a key when near the object.",
+    "documentation": "## Consumable\nCreate collectible items that grant effects to the player.\n\n### Inventory Type\n- **Consumable** - Standard pickup item\n- **Throwable** - Can be thrown after pickup\n- **Weapon** - Equippable weapon\n- **Weapon Ammo** - Ammunition for weapons\n\n### Effects\n- **Health/Shield/Ammo Amount** - Restore resources\n- **Point/Money Amount** - Add score or currency\n- **Speed/Jump Amount** - Temporary movement boosts\n- **Scale Amount** - Resize the character\n- **Time Amount** - Add time to countdown\n\n### Behavior\n- **Consumable Type** - Instant (auto-collect) or Press E\n- **Collision Type** - With Player, Object, or Enemy\n- **Disposable** - Item disappears after use\n- **Can Reappear** - Item respawns after collection\n- **UI Image** - Icon shown in player inventory\n\n### Tips\n- Use duration fields for temporary speed/jump boosts\n- Combine with Visual Effect for pickup particles",
+    "author": "stemstudio",
+    "tags": [],
+    "main": "ConsumableBehavior.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "throttleConfig": {
+        "throttlePriority": "LOW",
+        "enableFrustumCulling": true,
+        "enableDistanceThrottling": true,
+        "requiresConsistentUpdates": false
+    },
+    "attributes": {
+        "customName": {
+            "name": "Custom Name",
+            "type": "string"
+        },
+        "inventoryType": {
+            "name": "Inventory Type",
+            "type": "enum",
+            "description": "Determines how the item behaves in the player's inventory. Consumable is a standard pickup, Throwable can be thrown, Weapon is equippable, and Weapon Ammo provides ammunition.",
+            "options": [
+                {
+                    "label": "CONSUMABLE",
+                    "value": "CONSUMABLE"
+                },
+                {
+                    "label": "THROWABLE",
+                    "value": "THROWABLE"
+                },
+                {
+                    "label": "WEAPON",
+                    "value": "WEAPON"
+                },
+                {
+                    "label": "WEAPON_AMMO",
+                    "value": "WEAPON_AMMO"
+                }
+            ]
+        },
+        "pointAmount": {
+            "type": "number",
+            "description": "Number of score points awarded to the player when this item is collected."
+        },
+        "timeAmount": {
+            "type": "number",
+            "description": "Amount of time in seconds added to a countdown timer when this item is collected."
+        },
+        "healthAmount": {
+            "type": "number",
+            "description": "Amount of health points restored to the player when this item is collected."
+        },
+        "ammoAmount": {
+            "type": "number",
+            "description": "Amount of ammunition added to the player's weapon when this item is collected."
+        },
+        "shieldAmount": {
+            "type": "number",
+            "description": "Amount of shield points granted to the player when this item is collected. Shield absorbs damage before health."
+        },
+        "moneyAmount": {
+            "type": "number",
+            "description": "Amount of in-game currency awarded to the player when this item is collected."
+        },
+        "speedAmount": {
+            "type": "number",
+            "description": "Movement speed boost applied to the player when this item is collected. Use with timeForEffect_speed to make it temporary."
+        },
+        "scaleAmount": {
+            "type": "number",
+            "description": "Scale multiplier applied to the player character when this item is collected. Values greater than 1 enlarge, less than 1 shrink."
+        },
+        "jumpAmount": {
+            "type": "number",
+            "description": "Jump height boost applied to the player when this item is collected. Use with timeForEffect_jump to make it temporary."
+        },
+        "timeForEffect_jump": {
+            "type": "number",
+            "description": "Duration in seconds for the jump boost effect. After this time, the player's jump height returns to normal."
+        },
+        "timeToShowAgain": {
+            "type": "number",
+            "description": "Time in seconds before the item respawns after being collected. Only applies when Can Reappear is enabled."
+        },
+        "timeForEffect_speed": {
+            "type": "number",
+            "description": "Duration in seconds for the speed boost effect. After this time, the player's movement speed returns to normal."
+        },
+        "useBoundingBoxes": {
+            "type": "number",
+            "description": "When set, uses bounding box collision detection instead of physics-based collision for triggering item collection."
+        },
+        "uiImage": {
+            "type": "image",
+            "description": "Icon image displayed in the player's inventory UI to represent this item."
+        },
+        "consumableType": {
+            "name": "Consumable Type",
+            "type": "enum",
+            "description": "Determines how the player collects this item. Instant collects automatically on contact, Press E requires the player to press a key when nearby.",
+            "options": [
+                {
+                    "label": "INSTANT",
+                    "value": "INSTANT"
+                },
+                {
+                    "label": "PRESS E",
+                    "value": "PRESS E"
+                }
+            ]
+        },
+        "collisionType": {
+            "name": "Collision Type",
+            "type": "enum",
+            "description": "Specifies which entity type can collect this item. With Player limits collection to the player character, With Object to any collidable object, and With Enemy to enemy NPCs.",
+            "options": [
+                {
+                    "label": "With Player",
+                    "value": "WITH_PLAYER"
+                },
+                {
+                    "label": "With Object",
+                    "value": "WITH_COLLIDABLE_OBJECTS"
+                },
+                {
+                    "label": "With Enemy",
+                    "value": "WITH_ENEMY"
+                }
+            ],
+            "default": "WITH_PLAYER"
+        },
+        "disposable": {
+            "name": "Disposable",
+            "type": "boolean",
+            "description": "When enabled, the item disappears from the scene after being collected.",
+            "default": true
+        },
+        "canReappear": {
+            "name": "Can Reappear",
+            "type": "boolean",
+            "description": "When enabled, the item respawns after being collected, with the delay set by timeToShowAgain.",
+            "default": false
+        }
+    }
+}

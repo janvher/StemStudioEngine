@@ -1,0 +1,336 @@
+{
+    "id": "character",
+    "name": "Character",
+    "isScript": false,
+    "description": "Core player character controller with full movement, physics, animations, and interaction systems. This is the fundamental behavior for creating playable characters in your game, providing sophisticated third-person control with realistic physics, smooth animations, and extensive customization options.",
+    "documentation": "## Character\nThe core behavior for creating playable characters. Attach this to a 3D model to make it a controllable character.\n\n### Settings\n- **Is Default Character** - Assigns this character to players by default when joining\n- **Auto Forward** - Character moves forward automatically\n- **Health** - Starting health points (default: 100)\n- **Invert Forward Direction** - Flip the model's facing direction\n\n### Movement\n- **Walk Speed** / **Run Speed** - Movement speeds\n- **Jump Height** - How high the character jumps\n- **Climb Speed** - Speed when climbing surfaces\n- **Max Slope** - Maximum walkable slope angle\n- **Look Speed** - Camera rotation sensitivity\n- **Ground/Air Acceleration & Deceleration** - Fine-tune movement feel\n\n### Animations\nAssign model animations for each movement state: Idle, Walking, Running, Jumping, Climbing, Crouching, Falling, Dying.\n\n### Tips\n- Only one default character per scene\n- Requires a 3D model with animations for best results\n- Physics is auto-configured (dynamic capsule collider)",
+    "author": "stemstudio",
+    "tags": ["character"],
+    "main": "CharacterBehavior.ts",
+    "priority": -999,
+    "version": "1.0.0",
+    "dependencies": {},
+    "isSingleton": false,
+    "throttleConfig": {
+        "throttlePriority": "CRITICAL",
+        "enableFrustumCulling": false,
+        "enableDistanceThrottling": false,
+        "requiresConsistentUpdates": true
+    },
+    "isThrottlingLocked": true,
+    "objectSettings": {
+        "physics": {
+            "enabled": true,
+            "type": "dynamic",
+            "shape": "capsule",
+            "mass": 1
+        }
+    },
+    "attributes": {
+        "customName": {
+            "name": "Custom Name",
+            "type": "string"
+        },
+        "isDefault": {
+            "name": "Is Default Character",
+            "type": "boolean",
+            "description": "Assigns this character to players by default when joining. Only one character per scene should have this enabled.",
+            "isExclusive": true,
+            "default": true
+        },
+        "canSwap": {
+            "name": "Can Swap",
+            "type": "boolean",
+            "description": "When enabled, allows players to swap to this character using interaction button.",
+            "defaultSandbox": true,
+            "invisible": true,
+            "default": true
+        },
+        "autoForward": {
+            "name": "Auto Forward",
+            "type": "boolean",
+            "description": "When enabled, the character moves forward automatically without player input.",
+            "default": false
+        },
+        "health": {
+            "name": "Health",
+            "type": "number",
+            "min": 0,
+            "description": "Starting health points for the character. Reaches 0 when the character dies.",
+            "default": 100
+        },
+
+        "separatorMovement": {"type": "separator"},
+        "movementLabel": {"name": "Movement", "type": "label"},
+
+        "walkSpeed": {
+            "name": "Walk Speed",
+            "type": "number",
+            "min": 0,
+            "description": "Movement speed in units per second when walking.",
+            "default": 2.5
+        },
+        "runSpeed": {
+            "name": "Run Speed",
+            "type": "number",
+            "min": 0,
+            "description": "Movement speed in units per second when running (hold shift).",
+            "default": 9
+        },
+        "jumpHeight": {
+            "name": "Jump Height",
+            "type": "number",
+            "min": 0,
+            "description": "Maximum height the character can jump, in world units.",
+            "default": 1
+        },
+        "canClimb": {
+            "name": "Can Climb",
+            "type": "boolean",
+            "default": true
+        },
+        "stepHeight": {
+            "name": "Step Height",
+            "type": "number",
+            "min": 0,
+            "description": "Maximum obstacle height the character can step over without jumping.",
+            "default": 0.1
+        },
+        "climbSpeed": {
+            "name": "Climb Speed",
+            "type": "number",
+            "min": 0,
+            "description": "Movement speed when climbing surfaces, in units per second.",
+            "default": 1
+        },
+        "maxSlope": {
+            "name": "Max Slope (degrees)",
+            "type": "number",
+            "min": 0,
+            "max": 90,
+            "description": "Maximum slope angle in degrees that the character can walk up. Steeper slopes will block movement.",
+            "default": 40
+        },
+
+        "separatorPhysics": {"type": "separator"},
+        "physicsLabel": {"name": "Physics", "type": "label"},
+
+        "pushObjects": {
+            "name": "Push Objects",
+            "type": "boolean",
+            "description": "When enabled, colliding with dynamic physics objects applies a push impulse in the character's movement direction.",
+            "default": true
+        },
+        "pushImpulse": {
+            "name": "Push Impulse",
+            "type": "number",
+            "min": 0,
+            "description": "Scales the impulse force applied to objects when this character pushes them. Higher values push objects harder.",
+            "default": 1
+        },
+        "pushVerticalScale": {
+            "name": "Push Vertical Scale",
+            "type": "number",
+            "min": 0,
+            "max": 1,
+            "description": "Controls upward force when pushing objects. 0 = no vertical push (default), 1 = full upward force from contact angle. Use higher values for football-style kicking.",
+            "default": 0
+        },
+        "kickObjects": {
+            "name": "Kick Objects",
+            "type": "boolean",
+            "description": "When enabled, left-click applies a strong kick impulse to nearby dynamic objects in the character's facing direction.",
+            "default": false
+        },
+        "kickImpulse": {
+            "name": "Kick Impulse",
+            "type": "number",
+            "min": 0,
+            "description": "Strength of the kick impulse applied to objects. Higher values kick objects harder.",
+            "default": 1
+        },
+        "kickAnimation": {
+            "name": "Kick Animation",
+            "type": "enum",
+            "description": "Animation to play when the character kicks.",
+            "options": [
+                {
+                    "label": "None",
+                    "value": "none"
+                }
+            ],
+            "autoFill": "object.animations",
+            "searchFor": ["kick"],
+            "default": "none"
+        },
+
+        "separatorControls": {"type": "separator"},
+        "controlsLabel": {"name": "Controls", "type": "label"},
+
+        "lookSpeed": {
+            "name": "Look Speed",
+            "type": "number",
+            "min": 0,
+            "max": 1,
+            "description": "Camera rotation sensitivity. Lower values give slower, more precise camera control.",
+            "default": 0.2
+        },
+        "groundAcceleration": {
+            "name": "Ground Acceleration",
+            "type": "number",
+            "min": 0,
+            "max": 1,
+            "description": "How quickly the character reaches full speed on the ground. Higher values feel more responsive.",
+            "default": 0.3
+        },
+        "groundDeceleration": {
+            "name": "Ground Deceleration",
+            "type": "number",
+            "min": 0,
+            "max": 1,
+            "description": "How quickly the character stops on the ground. Higher values make stopping feel snappier.",
+            "default": 0.4
+        },
+        "airAcceleration": {
+            "name": "Air Acceleration",
+            "type": "number",
+            "min": 0,
+            "max": 1,
+            "description": "How much the character can change direction while airborne. Lower values feel more realistic.",
+            "default": 0.2
+        },
+        "airDeceleration": {
+            "name": "Air Deceleration",
+            "type": "number",
+            "min": 0,
+            "max": 1,
+            "description": "How quickly the character slows down in the air. Lower values allow more air control.",
+            "default": 0.1
+        },
+        "invertForwardDirection": {
+            "name": "Invert Forward Direction",
+            "type": "boolean",
+            "description": "When enabled, flips the character model's forward direction. Use this if your model faces the wrong way.",
+            "default": false
+        },
+
+        "separatorAnimations": {"type": "separator"},
+        "movementAnimLabel": {
+            "name": "Animations",
+            "type": "label"
+        },
+
+        "idleAnimation": {
+            "name": "Idle",
+            "type": "enum",
+            "description": "Animation to play when the character is standing still.",
+            "options": [
+                {
+                    "label": "None",
+                    "value": "none"
+                }
+            ],
+            "autoFill": "object.animations",
+            "searchFor": ["idle"],
+            "default": "none"
+        },
+        "walkAnimation": {
+            "name": "Walking",
+            "type": "enum",
+            "description": "Animation to play when the character is walking.",
+            "options": [
+                {
+                    "label": "None",
+                    "value": "none"
+                }
+            ],
+            "autoFill": "object.animations",
+            "searchFor": ["walk"],
+            "default": "none"
+        },
+        "runAnimation": {
+            "name": "Running",
+            "type": "enum",
+            "description": "Animation to play when the character is running (holding shift).",
+            "options": [
+                {
+                    "label": "None",
+                    "value": "none"
+                }
+            ],
+            "autoFill": "object.animations",
+            "searchFor": ["run"],
+            "default": "none"
+        },
+        "jumpAnimation": {
+            "name": "Jumping",
+            "type": "enum",
+            "description": "Animation to play when the character is jumping.",
+            "options": [
+                {
+                    "label": "None",
+                    "value": "none"
+                }
+            ],
+            "autoFill": "object.animations",
+            "searchFor": ["jump"],
+            "default": "none"
+        },
+        "climbAnimation": {
+            "name": "Climb",
+            "type": "enum",
+            "description": "Animation to play when the character is climbing a surface.",
+            "options": [
+                {
+                    "label": "None",
+                    "value": "none"
+                }
+            ],
+            "autoFill": "object.animations",
+            "searchFor": ["climb"],
+            "default": "none"
+        },
+        "crouchAnimation": {
+            "name": "Crouching",
+            "type": "enum",
+            "description": "Animation to play when the character is crouching.",
+            "options": [
+                {
+                    "label": "None",
+                    "value": "none"
+                }
+            ],
+            "autoFill": "object.animations",
+            "searchFor": ["crouch"],
+            "default": "none"
+        },
+        "fallAnimation": {
+            "name": "Falling",
+            "type": "enum",
+            "description": "Animation to play when the character is falling through the air.",
+            "options": [
+                {
+                    "label": "None",
+                    "value": "none"
+                }
+            ],
+            "autoFill": "object.animations",
+            "searchFor": ["fall"],
+            "default": "none"
+        },
+        "dieAnimation": {
+            "name": "Dying",
+            "type": "enum",
+            "description": "Animation to play when the character dies (health reaches zero).",
+            "options": [
+                {
+                    "label": "None",
+                    "value": "none"
+                }
+            ],
+            "autoFill": "object.animations",
+            "searchFor": ["die", "death"],
+            "default": "none"
+        }
+    }
+}

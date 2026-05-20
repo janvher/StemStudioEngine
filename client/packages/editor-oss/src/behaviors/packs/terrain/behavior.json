@@ -1,0 +1,665 @@
+{
+    "id": "terrain",
+    "name": "Terrain",
+    "isScript": false,
+    "isHidden": true,
+    "description": "A sophisticated endless procedural terrain generator using Perlin noise-based height maps with multi-layer texturing, object placement, and physics integration. Creates infinite explorable landscapes with height-based material blending (ditch, grass, rock, snow), dynamic chunk loading/unloading, and automatic object distribution. Supports GPU optimization, extensive texture customization, and seamless world generation.",
+    "author": "stemstudio",
+    "tags": [
+        "terrain"
+    ],
+    "main": "EndlessTerrainBehavior.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "isSingleton": true,
+    "throttleConfig": {
+        "throttlePriority": "MEDIUM",
+        "enableFrustumCulling": false,
+        "enableDistanceThrottling": false,
+        "requiresConsistentUpdates": false
+    },
+    "attributes": {
+        "isEndlessTerrain": {
+            "name": "Endless Terrain",
+            "type": "boolean",
+            "default": true,
+            "description": "When enabled, new terrain chunks are dynamically generated around the player as they move, creating an infinite explorable landscape."
+        },
+        "useGPU": {
+            "name": "Use GPU Optimization",
+            "type": "boolean",
+            "default": false,
+            "order": 1,
+            "description": "Use WebGPU for optimized normal computation. Disable for compatibility with older browsers."
+        },
+        "useEnhancedTerrain": {
+            "name": "Enhanced Terrain",
+            "type": "boolean",
+            "default": true,
+            "order": 2,
+            "description": "Enhanced terrain with smooth slopes, domain warping, and natural elevation zones. Disable for classic rolling hills."
+        },
+        "waterEnabled": {
+            "name": "Water",
+            "type": "boolean",
+            "default": true,
+            "order": 2.1,
+            "visibleIf": { "useEnhancedTerrain": true },
+            "description": "Enable water bodies in the terrain. When disabled, all terrain stays above sea level."
+        },
+        "waterPercentage": {
+            "name": "Water Coverage %",
+            "type": "number",
+            "min": 1,
+            "max": 30,
+            "default": 15,
+            "order": 2.2,
+            "visibleIf": { "useEnhancedTerrain": true, "waterEnabled": true },
+            "description": "Percentage of terrain that is below water level. Higher values create more lakes and rivers."
+        },
+        "maxHeight": {
+            "name": "Terrain Height",
+            "type": "number",
+            "default": 200,
+            "description": "Maximum terrain elevation in world units. Controls the amplitude of the Perlin noise height map."
+        },
+        "seed": {
+            "name": "Terrain Seed",
+            "type": "number",
+            "default": 5600,
+            "description": "The seed value for the Perlin noise height generator. Different seeds produce different terrain layouts while keeping the same configuration."
+        },
+        "grassMaxHeight": {
+            "name": "Grass Max Height",
+            "type": "number",
+            "min": 0,
+            "max": 50,
+            "default": 7,
+            "order": 3,
+            "description": "Height where grass ends and rock begins"
+        },
+        "rockMaxHeight": {
+            "name": "Rock Max Height",
+            "type": "number",
+            "min": 0,
+            "max": 100,
+            "default": 39,
+            "order": 4,
+            "description": "Height where rock ends and snow begins"
+        },
+        "ditchTexture": {
+            "name": "Ditch Texture",
+            "type": "image",
+            "default": null,
+            "order": 5,
+            "description": "Low-lying area texture."
+        },
+        "ditchNormalTexture": {
+            "name": "Ditch Normal Map",
+            "type": "image",
+            "default": null,
+            "order": 6,
+            "description": "Normal map for the ditch (low-lying) terrain layer, adding surface detail without extra geometry."
+        },
+        "ditchRoughnessTexture": {
+            "name": "Ditch Roughness Map",
+            "type": "image",
+            "default": null,
+            "order": 7,
+            "description": "Roughness map for the ditch terrain layer. Controls how shiny or matte the surface appears."
+        },
+        "ditchUVMode": {
+            "name": "Ditch UV Mode",
+            "type": "enum",
+            "order": 8,
+            "options": [
+                {
+                    "label": "Scale",
+                    "value": "scale"
+                },
+                {
+                    "label": "Repeat Count",
+                    "value": "repeatCount"
+                }
+            ],
+            "default": "scale"
+        },
+        "ditchUVScaleLocked": {
+            "name": "Ditch UV Scale Locked",
+            "type": "boolean",
+            "default": false,
+            "order": 8,
+            "visibleIf": { "ditchUVMode": "scale" }
+        },
+        "ditchUVScale": {
+            "name": "Ditch UV Scale",
+            "type": "number",
+            "min": 0,
+            "max": 1,
+            "step": 0.001,
+            "default": 0.035,
+            "order": 9,
+            "visibleIf": { "ditchUVMode": "scale", "ditchUVScaleLocked": true },
+            "description": "UV scale factor (0-1). Lower values stretch the texture."
+        },
+        "ditchUVScaleX": {
+            "name": "Ditch UV Scale X",
+            "type": "number",
+            "min": 0,
+            "max": 1,
+            "step": 0.001,
+            "default": 0.035,
+            "order": 9,
+            "visibleIf": { "ditchUVMode": "scale", "ditchUVScaleLocked": false }
+        },
+        "ditchUVScaleY": {
+            "name": "Ditch UV Scale Y",
+            "type": "number",
+            "min": 0,
+            "max": 1,
+            "step": 0.001,
+            "default": 0.035,
+            "order": 9,
+            "visibleIf": { "ditchUVMode": "scale", "ditchUVScaleLocked": false }
+        },
+        "ditchUVRepeatLocked": {
+            "name": "Ditch Repeat Locked",
+            "type": "boolean",
+            "default": true,
+            "order": 9,
+            "visibleIf": { "ditchUVMode": "repeatCount" }
+        },
+        "ditchUVRepeat": {
+            "name": "Ditch Repeat Count",
+            "type": "number",
+            "min": 1,
+            "max": 10,
+            "step": 1,
+            "default": 1,
+            "order": 9,
+            "visibleIf": { "ditchUVMode": "repeatCount", "ditchUVRepeatLocked": true },
+            "description": "Exact number of repeats across the terrain on both axes."
+        },
+        "ditchUVRepeatU": {
+            "name": "Ditch Repeat U",
+            "type": "number",
+            "min": 1,
+            "max": 10,
+            "step": 1,
+            "default": 1,
+            "order": 9,
+            "visibleIf": { "ditchUVMode": "repeatCount", "ditchUVRepeatLocked": false }
+        },
+        "ditchUVRepeatV": {
+            "name": "Ditch Repeat V",
+            "type": "number",
+            "min": 1,
+            "max": 10,
+            "step": 1,
+            "default": 1,
+            "order": 9,
+            "visibleIf": { "ditchUVMode": "repeatCount", "ditchUVRepeatLocked": false }
+        },
+        "groundTexture": {
+            "name": "Grass Texture",
+            "type": "image",
+            "default": null,
+            "order": 10,
+            "description": "Color texture for the grass terrain layer, applied between sea level and Grass Max Height."
+        },
+        "normalTexture": {
+            "name": "Grass Normal Map",
+            "type": "image",
+            "default": null,
+            "order": 11,
+            "description": "Normal map for the grass terrain layer, adding surface detail without extra geometry."
+        },
+        "grassRoughnessTexture": {
+            "name": "Grass Roughness Map",
+            "type": "image",
+            "default": null,
+            "order": 12,
+            "description": "Roughness map for the grass terrain layer. Controls how shiny or matte the surface appears."
+        },
+        "grassUVMode": {
+            "name": "Grass UV Mode",
+            "type": "enum",
+            "order": 13,
+            "options": [
+                {
+                    "label": "Scale",
+                    "value": "scale"
+                },
+                {
+                    "label": "Repeat Count",
+                    "value": "repeatCount"
+                }
+            ],
+            "default": "scale"
+        },
+        "grassUVScaleLocked": {
+            "name": "Grass UV Scale Locked",
+            "type": "boolean",
+            "default": false,
+            "order": 13,
+            "visibleIf": { "grassUVMode": "scale" }
+        },
+        "grassUVScale": {
+            "name": "Grass UV Scale",
+            "type": "number",
+            "min": 0,
+            "max": 1,
+            "step": 0.001,
+            "default": 0.035,
+            "order": 14,
+            "visibleIf": { "grassUVMode": "scale", "grassUVScaleLocked": true },
+            "description": "UV scale factor (0-1). Lower values stretch the texture."
+        },
+        "grassUVScaleX": {
+            "name": "Grass UV Scale X",
+            "type": "number",
+            "min": 0,
+            "max": 1,
+            "step": 0.001,
+            "default": 0.035,
+            "order": 14,
+            "visibleIf": { "grassUVMode": "scale", "grassUVScaleLocked": false }
+        },
+        "grassUVScaleY": {
+            "name": "Grass UV Scale Y",
+            "type": "number",
+            "min": 0,
+            "max": 1,
+            "step": 0.001,
+            "default": 0.035,
+            "order": 14,
+            "visibleIf": { "grassUVMode": "scale", "grassUVScaleLocked": false }
+        },
+        "grassUVRepeatLocked": {
+            "name": "Grass Repeat Locked",
+            "type": "boolean",
+            "default": true,
+            "order": 14,
+            "visibleIf": { "grassUVMode": "repeatCount" }
+        },
+        "grassUVRepeat": {
+            "name": "Grass Repeat Count",
+            "type": "number",
+            "min": 1,
+            "max": 10,
+            "step": 1,
+            "default": 1,
+            "order": 14,
+            "visibleIf": { "grassUVMode": "repeatCount", "grassUVRepeatLocked": true },
+            "description": "Exact number of repeats across the terrain on both axes."
+        },
+        "grassUVRepeatU": {
+            "name": "Grass Repeat U",
+            "type": "number",
+            "min": 1,
+            "max": 10,
+            "step": 1,
+            "default": 1,
+            "order": 14,
+            "visibleIf": { "grassUVMode": "repeatCount", "grassUVRepeatLocked": false }
+        },
+        "grassUVRepeatV": {
+            "name": "Grass Repeat V",
+            "type": "number",
+            "min": 1,
+            "max": 10,
+            "step": 1,
+            "default": 1,
+            "order": 14,
+            "visibleIf": { "grassUVMode": "repeatCount", "grassUVRepeatLocked": false }
+        },
+        "rockTexture": {
+            "name": "Rock Texture",
+            "type": "image",
+            "default": null,
+            "order": 20,
+            "description": "Color texture for the rock terrain layer, applied between Grass Max Height and Rock Max Height."
+        },
+        "rockNormalTexture": {
+            "name": "Rock Normal Map",
+            "type": "image",
+            "default": null,
+            "order": 21,
+            "description": "Normal map for the rock terrain layer, adding surface detail without extra geometry."
+        },
+        "rockRoughnessTexture": {
+            "name": "Rock Roughness Map",
+            "type": "image",
+            "default": null,
+            "order": 22,
+            "description": "Roughness map for the rock terrain layer. Controls how shiny or matte the surface appears."
+        },
+        "rockUVMode": {
+            "name": "Rock UV Mode",
+            "type": "enum",
+            "order": 23,
+            "options": [
+                {
+                    "label": "Scale",
+                    "value": "scale"
+                },
+                {
+                    "label": "Repeat Count",
+                    "value": "repeatCount"
+                }
+            ],
+            "default": "scale"
+        },
+        "rockUVScaleLocked": {
+            "name": "Rock UV Scale Locked",
+            "type": "boolean",
+            "default": false,
+            "order": 23,
+            "visibleIf": { "rockUVMode": "scale" }
+        },
+        "rockUVScale": {
+            "name": "Rock UV Scale",
+            "type": "number",
+            "min": 0,
+            "max": 1,
+            "step": 0.001,
+            "default": 0.035,
+            "order": 24,
+            "visibleIf": { "rockUVMode": "scale", "rockUVScaleLocked": true },
+            "description": "UV scale factor (0-1). Lower values stretch the texture."
+        },
+        "rockUVScaleX": {
+            "name": "Rock UV Scale X",
+            "type": "number",
+            "min": 0,
+            "max": 1,
+            "step": 0.001,
+            "default": 0.035,
+            "order": 24,
+            "visibleIf": { "rockUVMode": "scale", "rockUVScaleLocked": false }
+        },
+        "rockUVScaleY": {
+            "name": "Rock UV Scale Y",
+            "type": "number",
+            "min": 0,
+            "max": 1,
+            "step": 0.001,
+            "default": 0.035,
+            "order": 24,
+            "visibleIf": { "rockUVMode": "scale", "rockUVScaleLocked": false }
+        },
+        "rockUVRepeatLocked": {
+            "name": "Rock Repeat Locked",
+            "type": "boolean",
+            "default": true,
+            "order": 24,
+            "visibleIf": { "rockUVMode": "repeatCount" }
+        },
+        "rockUVRepeat": {
+            "name": "Rock Repeat Count",
+            "type": "number",
+            "min": 1,
+            "max": 10,
+            "step": 1,
+            "default": 1,
+            "order": 24,
+            "visibleIf": { "rockUVMode": "repeatCount", "rockUVRepeatLocked": true },
+            "description": "Exact number of repeats across the terrain on both axes."
+        },
+        "rockUVRepeatU": {
+            "name": "Rock Repeat U",
+            "type": "number",
+            "min": 1,
+            "max": 10,
+            "step": 1,
+            "default": 1,
+            "order": 24,
+            "visibleIf": { "rockUVMode": "repeatCount", "rockUVRepeatLocked": false }
+        },
+        "rockUVRepeatV": {
+            "name": "Rock Repeat V",
+            "type": "number",
+            "min": 1,
+            "max": 10,
+            "step": 1,
+            "default": 1,
+            "order": 24,
+            "visibleIf": { "rockUVMode": "repeatCount", "rockUVRepeatLocked": false }
+        },
+        "snowTexture": {
+            "name": "Snow Texture",
+            "type": "image",
+            "default": null,
+            "order": 25,
+            "description": "Peak/high altitude texture."
+        },
+        "snowNormalTexture": {
+            "name": "Snow Normal Map",
+            "type": "image",
+            "default": null,
+            "order": 26,
+            "description": "Normal map for the snow terrain layer, adding surface detail without extra geometry."
+        },
+        "snowRoughnessTexture": {
+            "name": "Snow Roughness Map",
+            "type": "image",
+            "default": null,
+            "order": 27,
+            "description": "Roughness map for the snow terrain layer. Controls how shiny or matte the surface appears."
+        },
+        "snowUVMode": {
+            "name": "Snow UV Mode",
+            "type": "enum",
+            "order": 28,
+            "options": [
+                {
+                    "label": "Scale",
+                    "value": "scale"
+                },
+                {
+                    "label": "Repeat Count",
+                    "value": "repeatCount"
+                }
+            ],
+            "default": "scale"
+        },
+        "snowUVScaleLocked": {
+            "name": "Snow UV Scale Locked",
+            "type": "boolean",
+            "default": false,
+            "order": 28,
+            "visibleIf": { "snowUVMode": "scale" }
+        },
+        "snowUVScale": {
+            "name": "Snow UV Scale",
+            "type": "number",
+            "min": 0,
+            "max": 1,
+            "step": 0.001,
+            "default": 0.035,
+            "order": 29,
+            "visibleIf": { "snowUVMode": "scale", "snowUVScaleLocked": true },
+            "description": "UV scale factor (0-1). Lower values stretch the texture."
+        },
+        "snowUVScaleX": {
+            "name": "Snow UV Scale X",
+            "type": "number",
+            "min": 0,
+            "max": 1,
+            "step": 0.001,
+            "default": 0.035,
+            "order": 29,
+            "visibleIf": { "snowUVMode": "scale", "snowUVScaleLocked": false }
+        },
+        "snowUVScaleY": {
+            "name": "Snow UV Scale Y",
+            "type": "number",
+            "min": 0,
+            "max": 1,
+            "step": 0.001,
+            "default": 0.035,
+            "order": 29,
+            "visibleIf": { "snowUVMode": "scale", "snowUVScaleLocked": false }
+        },
+        "snowUVRepeatLocked": {
+            "name": "Snow Repeat Locked",
+            "type": "boolean",
+            "default": true,
+            "order": 29,
+            "visibleIf": { "snowUVMode": "repeatCount" }
+        },
+        "snowUVRepeat": {
+            "name": "Snow Repeat Count",
+            "type": "number",
+            "min": 1,
+            "max": 10,
+            "step": 1,
+            "default": 1,
+            "order": 29,
+            "visibleIf": { "snowUVMode": "repeatCount", "snowUVRepeatLocked": true },
+            "description": "Exact number of repeats across the terrain on both axes."
+        },
+        "snowUVRepeatU": {
+            "name": "Snow Repeat U",
+            "type": "number",
+            "min": 1,
+            "max": 10,
+            "step": 1,
+            "default": 1,
+            "order": 29,
+            "visibleIf": { "snowUVMode": "repeatCount", "snowUVRepeatLocked": false }
+        },
+        "snowUVRepeatV": {
+            "name": "Snow Repeat V",
+            "type": "number",
+            "min": 1,
+            "max": 10,
+            "step": 1,
+            "default": 1,
+            "order": 29,
+            "visibleIf": { "snowUVMode": "repeatCount", "snowUVRepeatLocked": false }
+        },
+        "treeDensity": {
+            "name": "Tree Density",
+            "type": "number",
+            "min": 0,
+            "max": 100,
+            "default": 50,
+            "order": 3.1,
+            "description": "Controls how densely trees are placed in forest areas. 0 = no trees, 50 = default, 100 = maximum density."
+        },
+        "rockDensity": {
+            "name": "Rock Density",
+            "type": "number",
+            "min": 0,
+            "max": 100,
+            "default": 50,
+            "order": 3.2,
+            "description": "Controls how densely boulders are placed. 0 = no rocks, 50 = default, 100 = maximum density."
+        },
+        "isDefaultState": {
+            "name": "Is Default State",
+            "type": "boolean",
+            "default": true,
+            "hidden": true,
+            "description": "Tracks whether terrain objects are in default state (never customized by user)"
+        },
+        "terrainObjects": {
+            "name": "Terrain Objects",
+            "type": "group",
+            "array": true,
+            "order": 30,
+            "attributes": {
+                "previewUrl": {
+                    "name": "Preview",
+                    "type": "modelPreview",
+                    "default": "",
+                    "order": 0,
+                    "size": 64,
+                    "description": "Model thumbnail preview"
+                },
+                "modelName": {
+                    "name": "Bundled Model",
+                    "type": "string",
+                    "default": "",
+                    "order": 1,
+                    "readOnly": true,
+                    "description": "Name of default bundled model"
+                },
+                "modelAsset": {
+                    "name": "Custom Model (Assets)",
+                    "type": "modelAsset",
+                    "order": 2,
+                    "description": "Select a model from your asset library to use instead of the bundled model"
+                },
+                "minScale": {
+                    "name": "Min Scale",
+                    "type": "number",
+                    "min": 0.1,
+                    "max": 100,
+                    "default": 1,
+                    "order": 3,
+                    "description": "Minimum random scale multiplier for placed instances of this object."
+                },
+                "maxScale": {
+                    "name": "Max Scale",
+                    "type": "number",
+                    "min": 0.1,
+                    "max": 100,
+                    "default": 1,
+                    "order": 4,
+                    "description": "Maximum random scale multiplier for placed instances of this object."
+                },
+                "terrainOffset": {
+                    "name": "Terrain Offset",
+                    "type": "number",
+                    "min": -10,
+                    "max": 10,
+                    "default": 0,
+                    "order": 4.5,
+                    "description": "Vertical offset in world units (meters) applied to the object's base. Positive values sink the object into the terrain; negative values lift it above."
+                },
+                "probability": {
+                    "name": "Probability %",
+                    "type": "number",
+                    "min": 0,
+                    "max": 100,
+                    "default": 100,
+                    "order": 5,
+                    "description": "Percentage chance (0-100) that this object spawns at each valid placement point."
+                },
+                "objectType": {
+                    "name": "Type",
+                    "type": "enum",
+                    "options": [
+                        {
+                            "label": "Plant",
+                            "value": "plant"
+                        },
+                        {
+                            "label": "Rock",
+                            "value": "rock"
+                        },
+                        {
+                            "label": "Tree",
+                            "value": "tree"
+                        }
+                    ],
+                    "default": "plant",
+                    "order": 6,
+                    "description": "Category of terrain object, which determines height-based placement rules."
+                }
+            },
+            "default": []
+        },
+        "resetButton": {
+            "name": "Reset to Default",
+            "type": "button",
+            "action": "resetToDefaults",
+            "buttonText": "Reset to Default",
+            "order": 100,
+            "description": "Resets all terrain settings and objects back to their default values."
+        }
+    },
+    "documentation": "## Terrain\n\nA sophisticated endless procedural terrain generator using Perlin noise-based height maps with multi-layer texturing, object placement, and physics integration. Creates infinite explorable landscapes with height-based material blending (ditch, grass, rock, snow), dynamic chunk loading/unloading, and automatic object distribution. Supports GPU optimization, extensive texture customization, and seamless world generation.\n\n### Key Features\n- Infinite procedural terrain generation with chunk-based loading\n- Perlin noise height function with configurable seed and amplitude\n- Four terrain layers with height-based blending: ditch, grass, rock, snow\n- Individual texture sets per layer: diffuse, normal, roughness maps\n- Configurable UV scaling per texture layer (0-1 range)\n- Optional WebGPU optimization for normal computation\n- Automatic object placement: trees, rocks, grass, flowers, snow objects\n- Height-based object distribution rules\n- Physics mesh generation for terrain collision\n- Chunk management with player-centric loading\n- Editor preview support with live parameter updates\n- Singleton behavior (one terrain per scene)\n- Customizable terrain object types and densities\n- Asset loading from library or custom models\n\n### How It Works\n1. Attach to plane/mesh object (becomes invisible terrain root)\n2. Configure maxHeight (amplitude), seed, and height thresholds\n3. Set texture URLs for each layer (ditch, grass, rock, snow)\n4. On init, creates EndlessProceduralTerrain instance with height function\n5. Height function: Perlin noise(x, z, seed) * maxHeight\n6. Chunk system divides world into grid cells (chunkSize units)\n7. As player/camera moves, chunks within view distance are generated\n8. Each chunk:\n   - Generates geometry via height sampling at chunkSegments resolution\n   - Creates material with 4-layer shader (height-based blending)\n   - Calculates normals (GPU-accelerated if enabled)\n   - Applies textures with UV scaling\n   - Generates physics trimesh for collision\n9. Object placement system:\n   - Samples terrain height at random positions\n   - Places objects based on height thresholds and type rules\n   - Instantiates from asset library or default models\n   - Adds physics bodies for solid objects\n10. Distant chunks unloaded to manage memory\n11. Material blending:\n    - Ditch: y < 0 (below sea level)\n    - Grass: 0 < y < grassMaxHeight\n    - Rock: grassMaxHeight < y < rockMaxHeight\n    - Snow: y > rockMaxHeight\n12. Editor mode: shows debug visualization, updates on attribute changes\n\n### Common Use Cases\n- Open-world games with large explorable areas\n- Survival games needing infinite terrain\n- Procedural generation for roguelike environments\n- Flight simulators with ground terrain\n- Exploration games with varied biomes\n- Sandbox games with terrain modification\n- Racing games with procedural tracks\n- Nature simulation or ecosystem modeling\n- Hiking or outdoor adventure games\n- Sci-fi games with alien planet surfaces\n\n### When Not To Use\n- For handcrafted level design (use static meshes)\n- In small enclosed environments (overkill)\n- When precise terrain control is needed\n- For 2D or flat-surface games\n- When terrain should be destructible/modifiable at runtime\n- For underwater environments (needs different approach)\n- In VR with limited performance budget (heavy system)\n- When multiple distinct terrain types in one scene\n- For mobile platforms with severe performance constraints\n- When terrain should follow specific map data or heightmaps\n\n### Technical Details\n- Chunk system: EndlessProceduralTerrain manages chunk lifecycle\n- Height function: Perlin noise from EndlessTerrainHeight.getChunkSize()\n- Chunk size: configurable via EndlessTerrainHeight (default varies)\n- Chunk segments: 20 subdivisions per chunk for resolution\n- Layer thresholds: grassMaxHeight (default 7), rockMaxHeight (default 12)\n- GPU optimization: useGPU flag enables WebGPU normal calculation\n- Texture loading: async via THREE.TextureLoader from URLs\n- UV scaling: multiplies base UVs by scale factor (0-1)\n- Material: custom shader with 4-layer height-based blending\n- Physics: EndlessTerrainPhysics manages trimesh collision meshes\n- Object placement: EndlessTerrainObjects with density-based distribution\n- Object types: getDefaultTerrainObjectConfigs() provides default set\n- Asset loading: assetLoader from game/editor for model imports\n- Singleton enforcement: isSingleton: true in config\n- Update loop: tracks player position, updates chunks, objects, physics\n- Race condition protection: initializationToken prevents stale initializations\n- Editor integration: onEditorAdded/AttributesUpdated for live preview\n- Throttle priority: MEDIUM, throttling locked\n- Backward compatibility: handles userData.isEndlessTerrain flag\n- Performance: frustum culling disabled (chunks manage visibility)"
+}

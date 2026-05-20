@@ -1,0 +1,225 @@
+{
+    "id": "testAttributesBehavior",
+    "name": "TestAttributesBehavior",
+    "isScript": false,
+    "description": "Test behavior",
+    "debugOnly": true,
+    "author": "stemstudio",
+    "tags": [
+        "test"
+    ],
+    "main": "TestAttributesBehavior.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "attributeTemplates": {
+        "colorTemplate": {
+            "name": "Color",
+            "type": "group",
+            "attributes": {
+                "red": {
+                    "name": "Red",
+                    "type": "number",
+                    "min": 0,
+                    "max": 255,
+                    "default": 255
+                },
+                "green": {
+                    "name": "Green",
+                    "type": "number",
+                    "min": 0,
+                    "max": 255,
+                    "default": 255
+                },
+                "blue": {
+                    "name": "Blue",
+                    "type": "number",
+                    "min": 0,
+                    "max": 255,
+                    "default": 255
+                }
+            }
+        }
+    },
+    "attributes": {
+        "colorTemplateType": {
+            "name": "Color Template Type",
+            "type": "enum",
+            "options": [
+                {
+                    "label": "Primary",
+                    "value": "primary"
+                },
+                {
+                    "label": "Secondary",
+                    "value": "secondary"
+                }
+            ],
+            "default": "primary"
+        },
+        "primaryColor": {
+            "template": "colorTemplate",
+            "name": "Color",
+            "default": {
+                "red": 255,
+                "green": 0,
+                "blue": 0
+            },
+            "visibleIf": {
+                "colorTemplateType": "primary"
+            }
+        },
+        "secondaryColor": {
+            "template": "colorTemplate",
+            "name": "Color",
+            "default": {
+                "red": 0,
+                "green": 255,
+                "blue": 0
+            },
+            "visibleIf": {
+                "colorTemplateType": "secondary"
+            }
+        },
+        "boolAttribute": {
+            "name": "Boolean Attribute",
+            "type": "boolean",
+            "default": true
+        },
+        "numberAttribute": {
+            "name": "Number Attribute",
+            "type": "number",
+            "default": 42,
+            "min": 0,
+            "max": 100
+        },
+        "sliderAttribute": {
+            "name": "Slider Attribute",
+            "type": "slider",
+            "default": 50,
+            "min": 0,
+            "max": 100,
+            "step": 1
+        },
+        "stringAttribute": {
+            "name": "String Attribute",
+            "type": "string",
+            "default": "Hello, World!"
+        },
+        "multilineStringAttribute": {
+            "name": "Multiline String Attribute",
+            "type": "string",
+            "isColumnMultiline": true,
+            "default": "This is a\nmultiline string."
+        },
+        "vector2Attribute": {
+            "name": "Vector2 Attribute",
+            "type": "vector2",
+            "default": [
+                0,
+                0
+            ]
+        },
+        "vector3Attribute": {
+            "name": "Vector3 Attribute",
+            "type": "vector3",
+            "default": [
+                0,
+                0,
+                0
+            ]
+        },
+        "enumAttribute": {
+            "name": "Enum Attribute",
+            "type": "enum",
+            "options": [
+                {
+                    "label": "Option 1",
+                    "value": "option1"
+                },
+                {
+                    "label": "Option 2",
+                    "value": "option2"
+                },
+                {
+                    "label": "Option 3",
+                    "value": "option3"
+                }
+            ],
+            "default": "option1"
+        },
+        "enumSoundAttribute": {
+            "name": "Enum Sound Attribute",
+            "type": "enum",
+            "autoFill": "resources.sounds",
+            "default": "none"
+        },
+        "enumVideoAttribute": {
+            "name": "Enum Video Attribute",
+            "type": "enum",
+            "autoFill": "resources.videos",
+            "default": "none"
+        },
+        "enumImageAttribute": {
+            "name": "Enum Image Attribute",
+            "type": "enum",
+            "autoFill": "resources.images",
+            "default": "none"
+        },
+        "objectAttribute": {
+            "name": "Object Attribute",
+            "type": "object",
+            "default": null
+        },
+        "imageAttribute": {
+            "name": "Image Attribute",
+            "type": "image",
+            "default": null
+        },
+        "testGroup": {
+            "type": "group",
+            "attributes": {
+                "groupNumber": {
+                    "name": "Group Number",
+                    "type": "number",
+                    "default": 10
+                },
+                "groupString": {
+                    "name": "Group String",
+                    "type": "string",
+                    "default": "Group Text"
+                },
+                "nestedGroup": {
+                    "type": "group",
+                    "attributes": {
+                        "nestedNumber": {
+                            "name": "Nested Number",
+                            "type": "number",
+                            "default": 5
+                        },
+                        "nestedString": {
+                            "name": "Nested String",
+                            "type": "string",
+                            "default": "Nested Text"
+                        }
+                    }
+                }
+            }
+        },
+        "testGroup2": {
+            "type": "group",
+            "attributes": {
+                "groupNumber": {
+                    "name": "Group Number",
+                    "type": "number",
+                    "default": 10
+                },
+                "groupString": {
+                    "name": "Group String",
+                    "type": "string",
+                    "default": "Group Text"
+                }
+            }
+        }
+    },
+    "documentation": "## TestAttributesBehavior\n\nTest behavior"
+}

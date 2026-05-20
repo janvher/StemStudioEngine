@@ -1,0 +1,85 @@
+/**
+ * Object pool for lambda component data records.
+ * Eliminates GC pressure from per-object allocation in registerObject().
+ *
+ * Usage:
+ *   const data = ComponentDataPool.acquire(lambdaId, defaults);
+ *   // ... use data ...
+ *   ComponentDataPool.release(lambdaId, data);
+ */
+import { IdleWorkQueue } from "./IdleWorkQueue";
+
+export class ComponentDataPool {
+    private static pools: Map<string, Array<Record<string, any>>> = new Map();
+    private static poolSizes: Map<string, number> = new Map();
+    private static idleQueue = new IdleWorkQueue();
+
+    /**
+     * Pre-allocate pooled objects to avoid cold-start allocation.
+     * @param lambdaId
+     * @param defaults
+     * @param count
+     */
+    static warmUp(lambdaId: string, defaults: Record<string, any>, count: number = 50): void {
+        const pool = this.getPool(lambdaId);
+        for (let i = 0; i < count; i++) {
+            pool.push({ ...defaults });
+        }
+        this.poolSizes.set(lambdaId, count);
+    }
+
+    /**
+     * Get a component data object, reset to defaults.
+     * @param lambdaId
+     * @param defaults
+     */
+    static acquire(lambdaId: string, defaults: Record<string, any>): Record<string, any> {
+        const pool = this.getPool(lambdaId);
+        if (pool.length > 0) {
+            const obj = pool.pop()!;
+            for (const key in defaults) {
+                obj[key] = defaults[key];
+            }
+            return obj;
+        }
+        return { ...defaults };
+    }
+
+    /**
+     * Return a component data object to the pool for reuse.
+     * @param lambdaId
+     * @param data
+     */
+    static release(lambdaId: string, data: Record<string, any>): void {
+        const pool = this.getPool(lambdaId);
+        const maxSize = this.poolSizes.get(lambdaId) ?? 100;
+        if (pool.length < maxSize) {
+            pool.push(data);
+        }
+    }
+
+    /**
+     * Schedule pool warm-up during browser idle time to avoid blocking scene load.
+     * @param lambdaId
+     * @param defaults
+     * @param count
+     */
+    static scheduleWarmUp(lambdaId: string, defaults: Record<string, any>, count: number = 50): void {
+        this.idleQueue.schedule(() => this.warmUp(lambdaId, defaults, count));
+    }
+
+    private static getPool(lambdaId: string): Array<Record<string, any>> {
+        let pool = this.pools.get(lambdaId);
+        if (!pool) {
+            pool = [];
+            this.pools.set(lambdaId, pool);
+        }
+        return pool;
+    }
+
+    static dispose(): void {
+        this.idleQueue.dispose();
+        this.pools.clear();
+        this.poolSizes.clear();
+    }
+}

@@ -1,0 +1,35 @@
+{
+    "id": "jointFixed",
+    "name": "Fixed Joint",
+    "isScript": false,
+    "description": "A physics constraint that rigidly connects two physics-enabled objects, preventing any relative motion between them. The objects maintain their initial relative position and orientation as if welded together. Useful for creating composite objects, attachments, or rigid connections in physics simulations. KEY FEATURES:",
+    "documentation": "## Fixed Joint\nRigidly connect two physics objects together.\n\n### Settings\n- **Other Object** - The object to attach to\n- **Collision Enabled** - Allow collisions between joined objects\n\n### Tips\n- Both objects need physics enabled\n- Creates a rigid, unbreakable connection\n- Use for attaching parts to vehicles or compound objects",
+    "author": "stemstudio",
+    "tags": ["motion"],
+    "main": "FixedJointBehavior.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "throttleConfig": {
+        "throttlePriority": "LOW",
+        "enableFrustumCulling": false,
+        "enableDistanceThrottling": false,
+        "requiresConsistentUpdates": false
+    },
+    "attributes": {
+        "customName": {
+            "name": "Custom Name",
+            "type": "string"
+        },
+        "objectB": {
+            "name": "Other object",
+            "type": "object",
+            "description": "The second physics-enabled object to rigidly attach to this object."
+        },
+        "collisionEnabled": {
+            "name": "Collision enabled",
+            "type": "boolean",
+            "default": true,
+            "description": "When enabled, the two joined objects can still collide with each other. Disable to allow them to overlap."
+        }
+    }
+}

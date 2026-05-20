@@ -1,0 +1,29 @@
+# Test Configuration for Middleware Tests
+
+[server]
+port = ":8080"
+keep_alive_enabled = true
+keep_alive_timeout = 600
+keep_alive_interval = 20
+
+[database]
+type = "mongo"
+host = "127.0.0.1"
+port = 27017
+database = "StemStudio"
+
+[authority]
+firebase_config_path= "../../../build/server/firebase-json-dev.json"
+
+[proxy]
+# No API map config for tests
+
+[upload]
+max_size = 1000000000
+
+[path]
+public_dir = "./public"
+log_dir = "./logs"
+
+[log]
+file = "./logs/test.txt"

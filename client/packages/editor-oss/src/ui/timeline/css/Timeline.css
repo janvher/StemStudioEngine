@@ -1,0 +1,270 @@
+.TimelineV2 {
+    height: 172px;
+    font-size: var(--theme-font-size-s);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    width: calc(100% - 16px);
+    left: 50%;
+    bottom: -172px;
+    transform: translateX(-50%);
+    box-sizing: border-box;
+    background: var(--theme-container-main-dark);
+    border: 1.5px solid var(--theme-container-stroke-color);
+    transition: all 0.4s;
+    border-radius: 24px;
+    padding: 0;
+    color: var(--theme-font-main-selected-color);
+    box-shadow: 0px 4px 15px 0px #000000;
+    z-index: 100;
+}
+
+.TimelineV2.opened {
+    bottom: 0;
+}
+
+.TimelineV2:after {
+    content: " ";
+    position: absolute;
+    bottom: 15px;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background-color: #8e8e8e;
+    z-index: -1;
+}
+
+.TimelineV2 > .timeline-button {
+    box-sizing: border-box;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: calc(100% + 1.5px);
+    width: 119px;
+    height: 38px;
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background: var(--theme-container-main-dark);
+    border: 1.5px solid var(--theme-container-stroke-color);
+    border-bottom: none;
+}
+
+.TimelineV2 > .controls {
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    border-bottom: 1px solid #8e8e8e;
+}
+
+.TimelineV2 > .controls > .IconButton {
+    border: none;
+    width: 17px;
+    height: 17px;
+    margin: 0;
+    padding: 0;
+}
+
+.TimelineV2 > .controls > .IconButton > .iconfont {
+    font-size: 18px;
+    color: white;
+}
+
+.TimelineV2 > .controls > .ToolbarSeparator {
+    margin: 0 8px;
+}
+
+.TimelineV2 > .box {
+    position: relative;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    overflow: auto;
+}
+
+.TimelineV2 > .box > .timeline {
+    position: relative;
+    height: 28px;
+    overflow: hidden;
+    border-bottom: 1px solid #8e8e8e;
+}
+
+.TimelineV2 > .box > .timeline > .mask {
+    position: absolute;
+    width: 100px;
+    height: 32px;
+    background: var(--theme-container-main-dark);
+    z-index: 10;
+}
+
+.TimelineV2 > .box > .timeline > canvas {
+    position: absolute;
+    left: 100px;
+}
+
+.TimelineV2 > .box > .layers {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: stretch;
+    overflow: hidden;
+}
+
+.TimelineV2 > .box > .layers > .left {
+    width: 100px;
+    height: calc(100% - 17px);
+    box-sizing: border-box;
+    overflow: hidden;
+    border-right: 1px solid #8e8e8e;
+    position: relative;
+}
+
+.TimelineV2 > .box > .layers > .left > .info {
+    padding-left: 7px;
+    height: 29px;
+    border-bottom: 1px solid var(--theme-container-secondary-dark);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    box-sizing: border-box;
+    color: var(--theme-font-unselected-color);
+    position: relative;
+}
+
+.TimelineV2 > .box > .layers > .left > .info.active {
+    background-color: var(--theme-container-secondary-dark);
+    color: var(--theme-font-main-selected-color);
+    font-weight: var(--theme-font-medium);
+}
+
+.TimelineV2 > .box > .layers > .left > .info .layer-name-edit {
+    background: transparent;
+    color: var(--theme-font-main-selected-color);
+    border: none;
+    outline: none;
+}
+
+.TimelineV2 > .box > .layers > .left > .info > .layer-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 10;
+    position: absolute;
+    top: 20px;
+    left: 25%;
+    text-align: center;
+    min-width: 70px;
+    padding: 2px 4px;
+    border-radius: 6px;
+    box-shadow: 0px 4px 15px 0px #000;
+    background-color: var(--theme-container-secondary-dark);
+    box-sizing: border-box;
+    font-size: var(--theme-font-size-s);
+}
+
+.TimelineV2 > .box > .layers > .left > .info > .layer-menu span {
+    transition: 0.3s ease-in-out;
+}
+
+.TimelineV2 > .box > .layers > .left > .info > .layer-menu span:hover {
+    color: white;
+    cursor: pointer;
+}
+
+.TimelineV2 > .box > .layers > .left > .empty-layer {
+    height: 100%;
+    min-height: 35px;
+    width: 100%;
+}
+
+.TimelineV2 > .box > .layers > .right {
+    position: relative;
+    width: 0;
+    height: 100%;
+    padding-bottom: 35px;
+    box-sizing: border-box;
+    flex: 1;
+    overflow: auto;
+}
+
+.TimelineV2 > .box > .layers > .right > .layer {
+    position: relative;
+    width: 3600px;
+    height: 29px;
+    border-bottom: 1px solid var(--theme-container-secondary-dark);
+    box-sizing: border-box;
+}
+
+.TimelineV2 > .box > .layers > .right > .layer.active {
+    background-color: var(--theme-container-secondary-dark);
+}
+
+.TimelineV2 > .box > .layers > .right > .layer > .animation {
+    position: absolute;
+    font-size: 12px;
+    line-height: 28px;
+    color: #fff;
+    background: #1296db;
+    padding: 0 4px;
+    border-radius: 2px;
+    box-sizing: border-box;
+    text-align: center;
+    white-space: nowrap;
+    word-break: break-all;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.TimelineV2 > .box > .layers > .right > .layer > .animation.selected {
+    background: #d4237a;
+}
+
+.TimelineV2 > .box > .layers > .right::-webkit-scrollbar,
+.TimelineV2 > .box > .layers > .right::-webkit-scrollbar-thumb,
+.TimelineV2 > .box > .layers > .right::-webkit-scrollbar-track {
+    border-radius: 0px;
+    height: 15px;
+}
+
+.TimelineV2 > .box > .layers > .right-padding {
+    width: 41px;
+    border-left: 1px solid #8e8e8e;
+    height: 100%;
+}
+
+.TimelineV2 > .box > .layers > .right-padding > div {
+    height: 29px;
+    border-bottom: 1px solid var(--theme-container-secondary-dark);
+    box-sizing: border-box;
+}
+
+.TimelineV2 > .box > .layers > .slider {
+    position: absolute;
+    left: 100px;
+    top: 30px;
+    width: 1px;
+    height: calc(100% - 45px);
+    background: #00a3ff;
+    box-sizing: border-box;
+}
+
+.TimelineV2 > .box > .layers > .slider:after {
+    width: 14px;
+    height: 17px;
+    z-index: 10;
+    content: " ";
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 100%;
+    background: #00a3ff;
+    box-sizing: border-box;
+}

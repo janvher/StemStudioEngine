@@ -1,0 +1,30 @@
+html,
+body,
+#container {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+
+.PlayerViewport {
+    --player-background: linear-gradient(180deg, #5b6474 0%, #485161 100%);
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: block;
+    overflow: hidden;
+    background: var(--player-background);
+}
+
+.PlayerViewport-scene {
+    position: absolute;
+    left: 0;
+    top: 48px;
+    width: 100%;
+    height: calc(100% - 48px);
+    z-index: 1;
+    background: var(--player-background);
+}

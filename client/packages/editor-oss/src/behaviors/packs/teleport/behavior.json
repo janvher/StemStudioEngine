@@ -1,0 +1,29 @@
+{
+    "id": "teleport",
+    "name": "Teleport",
+    "isScript": false,
+    "description": "Instant player transportation system that moves the player to a target location on collision. Transfers both position and rotation from the target object, with camera reset for smooth transitions. Currently player-only, integrates with CharacterBehavior for physics-accurate positioning and angle setting.",
+    "documentation": "## Teleport\nInstantly move objects to a target location.\n\n### Settings\n- **Target** - The destination object to teleport to\n\n### Tips\n- Place an invisible object at the destination as the target\n- Combine with a Trigger behavior for portal-like mechanics\n- Works with both the player character and other objects",
+    "author": "stemstudio",
+    "tags": ["teleport"],
+    "main": "TeleportBehavior.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "throttleConfig": {
+        "throttlePriority": "HIGH",
+        "enableFrustumCulling": false,
+        "enableDistanceThrottling": false,
+        "requiresConsistentUpdates": false
+    },
+    "attributes": {
+        "customName": {
+            "name": "Custom Name",
+            "type": "string"
+        },
+        "teleportTargetUuid": {
+            "name": "Target",
+            "type": "object",
+            "description": "The destination object the player will be teleported to. The player's position and rotation will match the target."
+        }
+    }
+}

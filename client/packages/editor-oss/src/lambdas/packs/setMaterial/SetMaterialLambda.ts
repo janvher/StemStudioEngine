@@ -1,0 +1,56 @@
+import { Material, Mesh } from "three";
+
+import { LambdaBase } from "../../LambdaBase";
+
+type SetMaterialData = {
+    color?: string;
+    emissive?: string;
+    opacity?: number;
+    includeChildren?: boolean;
+};
+
+export default class SetMaterialLambda extends LambdaBase {
+    private applyMaterial(material: Material, data: SetMaterialData): void {
+        const anyMaterial = material as any;
+        if (data.color && anyMaterial.color) {
+            anyMaterial.color.set(data.color);
+        }
+        if (data.emissive && anyMaterial.emissive) {
+            anyMaterial.emissive.set(data.emissive);
+        }
+
+        if (data.opacity !== undefined) {
+            const opacity = Math.max(0, Math.min(1, Number(data.opacity)));
+            anyMaterial.opacity = opacity;
+            anyMaterial.transparent = opacity < 1;
+        }
+
+        anyMaterial.needsUpdate = true;
+    }
+
+    private applyToObject(target: any, data: SetMaterialData): void {
+        const mesh = target as Mesh;
+        if (!mesh.isMesh || !mesh.material) {
+            return;
+        }
+
+        if (Array.isArray(mesh.material)) {
+            mesh.material.forEach(mat => this.applyMaterial(mat, data));
+            return;
+        }
+
+        this.applyMaterial(mesh.material, data);
+    }
+
+    update(deltaTime: number = 0.016): void {
+        this.processObjects(deltaTime, (object, data) => {
+            const cfg = data as SetMaterialData;
+            const includeChildren = cfg.includeChildren !== false;
+
+            this.applyToObject(object, cfg);
+            if (includeChildren) {
+                object.traverse(child => this.applyToObject(child, cfg));
+            }
+        });
+    }
+}

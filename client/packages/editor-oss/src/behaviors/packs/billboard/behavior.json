@@ -1,0 +1,94 @@
+{
+    "id": "billboard",
+    "name": "Billboard",
+    "isScript": false,
+    "isHidden": true,
+    "description": "Display dynamic media content in 3D space as billboards that can face the camera. Supports images, videos, animated GIFs, web pages, and YouTube videos with intelligent visibility management and occlusion detection.",
+    "documentation": "## Billboard\n\nDisplay dynamic media content in 3D space as billboards that can face the camera. Supports images, videos, animated GIFs, web pages, and YouTube videos with intelligent visibility management and occlusion detection.\n\n### Key Features\n- Multi-Media Support: Display static images, animated GIFs, videos, embedded web pages, or YouTube videos\n- Camera Facing: Optional billboard rotation to always face the camera for optimal viewing angles\n- Smart Visibility: Automatic occlusion detection - billboards hide when blocked by other objects in the scene\n- Behind-Camera Detection: Billboards automatically hide when positioned behind the camera\n- Transparency Support: Enable transparent backgrounds for PNG images with alpha channels\n- Two-Sided Rendering: Option to render billboards visible from both front and back sides\n- Video Controls: Loop playback control for YouTube videos\n- Dynamic Content: Supports runtime URL changes and asset swapping\n- Performance Optimized: Uses frustum culling and distance throttling for efficient rendering\n\n### How It Works\n1. Choose billboard mode: Image, Webpage, or YouTube Video\n2. Provide content source: upload image asset or enter URL for web/video content\n3. Configure display options: camera facing, transparency, two-sided rendering\n4. Billboard automatically manages visibility based on camera position and scene occlusion\n5. Web content rendered using CSS3D for full interactivity\n6. Raycasting system checks for objects blocking the view each frame\n\n### Common Use Cases\n- Informational displays: Tutorial screens, help panels, instruction boards\n- Interactive kiosks: Embedded web applications in 3D spaces\n- Video displays: In-world monitors, screens, TVs showing YouTube content\n- Signage: Store signs, directional indicators, menu boards\n- Gallery displays: Art exhibitions, photo galleries, presentation slides\n- Advertising: Promotional content, dynamic advertisements\n- UI elements: Floating interfaces, HUD elements in 3D space\n- Environmental storytelling: Posters, notices, screens in game worlds\n\n### Technical Details\n- Throttle Priority: MEDIUM - balanced performance\n- Rendering: CSS3DRenderer for web content, standard materials for images/videos\n- Occlusion Detection: Real-time raycasting to determine visibility\n- Content Types: Auto-detects video/gif/image from HTTP Content-Type headers\n- Visibility Management: Per-frame updates for camera-facing and occlusion checks\n- Hidden by default: Internal behavior typically used by billboard objects",
+    "author": "stemstudio",
+    "tags": ["display", "media", "billboard"],
+    "main": "BillboardBehavior.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "throttleConfig": {
+        "throttlePriority": "MEDIUM",
+        "enableFrustumCulling": true,
+        "enableDistanceThrottling": true,
+        "requiresConsistentUpdates": false
+    },
+    "attributes": {
+        "customName": {
+            "name": "Custom Name",
+            "type": "string"
+        },
+        "billboardMode": {
+            "name": "Billboard Mode",
+            "type": "enum",
+            "description": "Selects the type of media content to display. Choose Image for static images or GIFs, Webpage for embedded web content, or YouTube Video for video playback.",
+            "options": [
+                {
+                    "label": "Image",
+                    "value": "Image"
+                },
+                {
+                    "label": "Webpage",
+                    "value": "Webpage"
+                },
+                {
+                    "label": "YouTube Video",
+                    "value": "YouTube Video"
+                }
+            ],
+            "default": "Image"
+        },
+        "loop": {
+            "name": "Loop",
+            "type": "boolean",
+            "description": "When enabled, the YouTube video restarts automatically after finishing playback.",
+            "default": false,
+            "visibleIf": {
+                "billboardMode": ["YouTube Video"]
+            }
+        },
+        "twoSided": {
+            "name": "Two-Sided",
+            "type": "boolean",
+            "description": "When enabled, the billboard image is visible from both the front and back sides. When disabled, the back side is invisible.",
+            "default": false,
+            "visibleIf": {
+                "billboardMode": ["Image"]
+            }
+        },
+        "transparent": {
+            "name": "Transparent",
+            "type": "boolean",
+            "description": "When enabled, transparent areas in the image (alpha channel) are rendered as see-through. Useful for PNG images with transparent backgrounds.",
+            "default": false,
+            "visibleIf": {
+                "billboardMode": ["Image"]
+            }
+        },
+        "faceCamera": {
+            "name": "Face Camera",
+            "type": "boolean",
+            "description": "When enabled, the billboard automatically rotates to always face the camera for optimal viewing from any angle.",
+            "default": true
+        },
+        "assetFile": {
+            "name": "Asset File",
+            "type": "imageAsset",
+            "description": "The image file to display on the billboard. Supports static images, animated GIFs, and PNG files with transparency.",
+            "visibleIf": {
+                "billboardMode": ["Image"]
+            }
+        },
+        "urlLink": {
+            "name": "URL Link",
+            "type": "string",
+            "description": "The URL of the webpage or YouTube video to embed. For YouTube, paste the full video URL.",
+            "visibleIf": {
+                "billboardMode": ["YouTube Video", "Webpage"]
+            }
+        }
+    }
+}

@@ -1,0 +1,52 @@
+{
+    "id": "position",
+    "name": "Position",
+    "description": "Sets the position of registered objects",
+    "author": "stemstudio",
+    "version": "1.0.0",
+    "main": "PositionLambda.ts",
+    "tags": [
+        "transform"
+    ],
+    "attributes": {},
+    "readComponents": [
+        "mode",
+        "x",
+        "y",
+        "z"
+    ],
+    "writeComponents": [],
+    "componentSchema": {
+        "mode": {
+            "name": "Mode",
+            "type": "enum",
+            "options": [
+                {
+                    "label": "Set",
+                    "value": "set"
+                },
+                {
+                    "label": "Offset",
+                    "value": "offset"
+                }
+            ],
+            "default": "set"
+        },
+        "x": {
+            "name": "X",
+            "type": "number",
+            "default": 0
+        },
+        "y": {
+            "name": "Y",
+            "type": "number",
+            "default": 0
+        },
+        "z": {
+            "name": "Z",
+            "type": "number",
+            "default": 0
+        }
+    },
+    "documentation": "## Position\n\nSets the position of registered objects\n\n### Runtime Notes\n- Attach this lambda to objects via Lambda Components.\n- If Auto Apply is enabled, it runs every frame.\n- If Auto Apply is disabled, call `lambdaInstance.apply(deltaTime)` from behavior/lambda code.\n\n### Component Parameters\n| Key | Label | Type | Default | Options |\n| --- | --- | --- | --- | --- |\n| `mode` | Mode | `enum` | `set` | `Set` (`set`), `Offset` (`offset`) |\n| `x` | X | `number` | `0` | - |\n| `y` | Y | `number` | `0` | - |\n| `z` | Z | `number` | `0` | - |"
+}

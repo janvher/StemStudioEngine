@@ -1,0 +1,20 @@
+# StemStudio AI server configuration (subdir copy for tests / tools).
+
+[server]
+port = ":8081"
+
+[database]
+type = ""
+
+[authority]
+firebase_config_path = ""
+
+[proxy]
+api_map_config_path = ""
+
+[path]
+public_dir = "./public"
+log_dir = "./logs"
+
+[log]
+file = "./logs/StemStudio.txt"

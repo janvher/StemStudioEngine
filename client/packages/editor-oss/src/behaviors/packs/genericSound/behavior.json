@@ -1,0 +1,81 @@
+{
+    "id": "genericSound",
+    "name": "Generic Sound",
+    "isHidden": true,
+    "isScript": false,
+    "description": "A versatile audio playback system that attaches sounds to objects with spatial audio capabilities. Supports loading sound files from resources, configurable positional 3D audio with distance attenuation, looping, volume control, and event-driven playback. Integrates with the AudioController for centralized audio management. KEY FEATURES:",
+    "author": "stemstudio",
+    "tags": ["audio"],
+    "main": "GenericSoundBehavior.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "throttleConfig": {
+        "throttlePriority": "LOW",
+        "enableFrustumCulling": true,
+        "enableDistanceThrottling": true,
+        "requiresConsistentUpdates": false
+    },
+    "attributes": {
+        "customName": {
+            "name": "Custom Name",
+            "type": "string"
+        },
+        "startOnTrigger": {
+            "name": "Start On Trigger",
+            "type": "boolean",
+            "default": false,
+            "description": "When enabled, the sound will not play until activated by a trigger event."
+        },
+        "audioAsset": {
+            "name": "Audio Asset",
+            "type": "audioAsset",
+            "description": "The audio file from the scene asset library to play.",
+            "order": -1
+        },
+        "soundFile": {
+            "name": "Sound File (legacy)",
+            "type": "enum",
+            "autoFill": "resources.sounds",
+            "default": "none",
+            "invisible": true,
+            "description": "The audio file from the project resource library to play."
+        },
+        "positional": {
+            "name": "Positional",
+            "type": "boolean",
+            "default": false,
+            "description": "When enabled, the sound is spatialized in 3D so its volume and panning change based on the listener's distance and direction."
+        },
+        "rolloffFactor": {
+            "name": "Rolloff Factor",
+            "type": "number",
+            "min": 0,
+            "default": 1,
+            "visibleIf": {
+                "positional": true
+            },
+            "description": "Controls how quickly the sound volume decreases with distance. Higher values make the sound fade out faster."
+        },
+        "looping": {
+            "name": "Looping Sound",
+            "type": "boolean",
+            "default": false,
+            "description": "When enabled, the sound repeats continuously from the beginning after it finishes playing."
+        },
+        "autoPlay": {
+            "name": "Auto Play",
+            "type": "boolean",
+            "default": false,
+            "description": "When enabled, the sound starts playing automatically as soon as the scene loads."
+        },
+        "volume": {
+            "name": "Volume",
+            "type": "slider",
+            "min": 0,
+            "max": 1,
+            "default": 1,
+            "description": "The playback volume level, from 0 (silent) to 1 (full volume)."
+        }
+    },
+    "documentation": "## Generic Sound\n\nA versatile audio playback system that attaches sounds to objects with spatial audio capabilities. Supports loading sound files from resources, configurable positional 3D audio with distance attenuation, looping, volume control, and event-driven playback. Integrates with the AudioController for centralized audio management. KEY FEATURES:\n- Loads audio files from project resources via enum selection\n- Positional 3D spatial audio with distance-based rolloff\n- Configurable rolloff factor for distance attenuation control\n- Looping sound support for ambient or continuous effects\n- Auto-play option for immediate playback on scene start\n- Volume control via slider (0-1 range)\n- Event-driven control: play, stop, pause, resume, setVolume\n- Trigger-based activation/deactivation support\n- Automatically attaches audio to target object for spatial positioning\n- Runtime attribute updates without reloading audio\n\n### How It Works\n1. Behavior loads audio file URL from soundFile attribute on init\n2. AudioController.loadAudioClip() fetches and decodes audio\n3. Audio clip attached to target object via attachAudioClipToObject()\n4. Initial properties set: positional, rolloffFactor, loop, volume\n5. If autoPlay enabled, playback starts immediately\n6. Positional mode: sound volume/panning calculated based on listener distance/direction\n7. Rolloff factor controls how quickly volume decreases with distance\n8. Event messages control playback: play, stop, pause, resume\n9. Trigger events with actionType='activate' play sound, 'deactivate' stops it\n10. Volume changes via sound:setVolume event or attribute update\n11. Checks isAudioClipPlaying before play/stop to avoid redundant calls\n12. On removal, disposeAudioClip() cleans up audio resources\n\n### Common Use Cases\n- Ambient environmental sounds (wind, water, fire)\n- Interactive object sounds (doors opening, switches clicking)\n- Background music for specific areas\n- 3D positioned sound effects (explosions, gunfire, footsteps)\n- UI feedback sounds (button clicks, notifications)\n- NPC dialogue or voice lines\n- Vehicle engine sounds following moving objects\n- Alarm or alert systems\n- Wildlife or creature sounds in games\n- Musical instruments or interactive audio installations\n\n### When Not To Use\n- For player character sounds (use dedicated player audio system)\n- When you need complex audio mixing or effects chains\n- For music with precise timing/synchronization (use music manager)\n- When audio needs to blend between multiple sources\n- For voice chat or real-time communication\n- When you need audio occlusion or reverb zones\n- For procedurally generated or synthesized audio\n- When you need audio to persist across scene changes\n- For spatialized music that shouldn't attenuate with distance\n- When you need multi-channel or surround sound output\n\n### Technical Details\n- Uses AudioController singleton for centralized audio management\n- Audio clips identified by AudioClipId for lifecycle management\n- Positional audio uses Web Audio API's PannerNode for 3D spatialization\n- Rolloff factor default: 1.0 (linear distance model typically)\n- Volume range: 0.0 (silent) to 1.0 (full volume)\n- Looping implemented via AudioBufferSourceNode.loop property\n- Event messages: trigger, sound:play, sound:stop, sound:pause, sound:resume, sound:setVolume\n- isAudioClipPlaying check prevents multiple simultaneous playback instances\n- Resources loaded via autoFill: 'resources.sounds' enum\n- Throttle priority: LOW (no continuous updates needed)\n- Frustum culling and distance throttling enabled for performance\n- Audio automatically spatialized relative to active audio listener (usually camera)\n- Position updates handled by AudioController tracking attached object transforms"
+}

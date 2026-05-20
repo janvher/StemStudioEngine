@@ -1,0 +1,42 @@
+{
+    "id": "cinematicCamera",
+    "name": "Cinematic Camera",
+    "isScript": false,
+    "description": "Smoothly animate the camera through a sequence of positions and look targets for cutscenes and cinematic sequences. Supports smooth interpolation, wait pauses between steps, and looping.",
+    "documentation": "## Cinematic Camera\nAnimate the camera through waypoints for cutscenes.\n\n### Attributes\n- **Steps** - JSON array of camera waypoints (see format below)\n- **Auto Play** - Start automatically when the game begins\n- **Loop** - Restart from the beginning after completing all steps\n\n### Step Format\n```json\n[\n  { \"to\": {\"x\":0,\"y\":5,\"z\":10}, \"lookAt\": {\"x\":0,\"y\":0,\"z\":0}, \"duration\": 3, \"wait\": 1 },\n  { \"from\": {\"x\":0,\"y\":5,\"z\":10}, \"to\": {\"x\":10,\"y\":2,\"z\":0}, \"duration\": 2 }\n]\n```\n\n### Events\n- **play** - Start the cinematic sequence\n- **stop** - Stop and freeze at current position\n\n### Tips\n- Use `from` to override the starting position of a step (defaults to current camera position)\n- Use `lookAtFrom`/`lookAtTo` for animated look targets\n- Combine with Trigger behavior for interactive cutscenes",
+    "author": "stemstudio",
+    "tags": ["camera"],
+    "main": "CinematicCameraBehavior.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "throttleConfig": {
+        "throttlePriority": "HIGH",
+        "enableFrustumCulling": false,
+        "enableDistanceThrottling": false,
+        "requiresConsistentUpdates": true
+    },
+    "attributes": {
+        "customName": {
+            "name": "Custom Name",
+            "type": "string"
+        },
+        "steps": {
+            "name": "Steps",
+            "type": "string",
+            "default": "[]",
+            "description": "JSON array of cinematic steps. Each step has: to (required), from, lookAt, lookAtFrom, lookAtTo, duration (seconds), wait (seconds)."
+        },
+        "autoPlay": {
+            "name": "Auto Play",
+            "type": "boolean",
+            "default": false,
+            "description": "Start the cinematic sequence automatically when the game begins."
+        },
+        "loop": {
+            "name": "Loop",
+            "type": "boolean",
+            "default": false,
+            "description": "Loop the sequence from the beginning after all steps complete."
+        }
+    }
+}

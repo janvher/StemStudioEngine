@@ -1,0 +1,90 @@
+{
+    "id": "animationControl",
+    "name": "Animation Control",
+    "description": "Play/stop animation clips and set animation parameters on target objects.",
+    "author": "stemstudio",
+    "version": "1.0.0",
+    "main": "AnimationControlLambda.ts",
+    "tags": [
+        "common",
+        "animation",
+        "trigger"
+    ],
+    "attributes": {},
+    "readComponents": [
+        "action",
+        "clipName",
+        "loop",
+        "timeScale",
+        "paramName",
+        "paramType",
+        "paramValue"
+    ],
+    "writeComponents": [],
+    "componentSchema": {
+        "action": {
+            "name": "Action",
+            "type": "enum",
+            "default": "play",
+            "options": [
+                {
+                    "label": "Play",
+                    "value": "play"
+                },
+                {
+                    "label": "Stop",
+                    "value": "stop"
+                },
+                {
+                    "label": "Set Param",
+                    "value": "set_param"
+                }
+            ]
+        },
+        "clipName": {
+            "name": "Clip Name",
+            "type": "string",
+            "default": ""
+        },
+        "loop": {
+            "name": "Loop",
+            "type": "boolean",
+            "default": true
+        },
+        "timeScale": {
+            "name": "Time Scale",
+            "type": "number",
+            "default": 1
+        },
+        "paramName": {
+            "name": "Param Name",
+            "type": "string",
+            "default": ""
+        },
+        "paramType": {
+            "name": "Param Type",
+            "type": "enum",
+            "default": "number",
+            "options": [
+                {
+                    "label": "Number",
+                    "value": "number"
+                },
+                {
+                    "label": "Boolean",
+                    "value": "boolean"
+                },
+                {
+                    "label": "String",
+                    "value": "string"
+                }
+            ]
+        },
+        "paramValue": {
+            "name": "Param Value",
+            "type": "string",
+            "default": ""
+        }
+    },
+    "documentation": "## Animation Control\n\nPlay/stop animation clips and set animation parameters on target objects.\n\n### Runtime Notes\n- Attach this lambda to objects via Lambda Components.\n- If Auto Apply is enabled, it runs every frame.\n- If Auto Apply is disabled, call `lambdaInstance.apply(deltaTime)` from behavior/lambda code.\n\n### Component Parameters\n| Key | Label | Type | Default | Options |\n| --- | --- | --- | --- | --- |\n| `action` | Action | `enum` | `play` | `Play` (`play`), `Stop` (`stop`), `Set Param` (`set_param`) |\n| `clipName` | Clip Name | `string` | `` | - |\n| `loop` | Loop | `boolean` | `true` | - |\n| `timeScale` | Time Scale | `number` | `1` | - |\n| `paramName` | Param Name | `string` | `` | - |\n| `paramType` | Param Type | `enum` | `number` | `Number` (`number`), `Boolean` (`boolean`), `String` (`string`) |\n| `paramValue` | Param Value | `string` | `` | - |"
+}

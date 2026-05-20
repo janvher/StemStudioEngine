@@ -1,0 +1,25 @@
+{
+    "id": "showObject",
+    "name": "Show Object",
+    "description": "Makes the target object visible.",
+    "author": "stemstudio",
+    "version": "1.0.0",
+    "main": "ShowObjectLambda.ts",
+    "tags": [
+        "common",
+        "visibility"
+    ],
+    "attributes": {},
+    "readComponents": [
+        "includeChildren"
+    ],
+    "writeComponents": [],
+    "componentSchema": {
+        "includeChildren": {
+            "name": "Include Children",
+            "type": "boolean",
+            "default": true
+        }
+    },
+    "documentation": "## Show Object\n\nMakes the target object visible.\n\n### Runtime Notes\n- Attach this lambda to objects via Lambda Components.\n- If Auto Apply is enabled, it runs every frame.\n- If Auto Apply is disabled, call `lambdaInstance.apply(deltaTime)` from behavior/lambda code.\n\n### Component Parameters\n| Key | Label | Type | Default | Options |\n| --- | --- | --- | --- | --- |\n| `includeChildren` | Include Children | `boolean` | `true` | - |"
+}

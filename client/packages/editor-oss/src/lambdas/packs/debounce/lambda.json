@@ -1,0 +1,38 @@
+{
+    "id": "debounce",
+    "name": "Debounce",
+    "description": "Debounces a source key on object userData into an output key.",
+    "author": "stemstudio",
+    "version": "1.0.0",
+    "main": "DebounceLambda.ts",
+    "tags": [
+        "common",
+        "utility",
+        "trigger"
+    ],
+    "attributes": {},
+    "readComponents": [
+        "sourceKey",
+        "outputKey",
+        "delaySeconds"
+    ],
+    "writeComponents": [],
+    "componentSchema": {
+        "sourceKey": {
+            "name": "Source Key",
+            "type": "string",
+            "default": ""
+        },
+        "outputKey": {
+            "name": "Output Key",
+            "type": "string",
+            "default": "debouncedValue"
+        },
+        "delaySeconds": {
+            "name": "Delay Seconds",
+            "type": "number",
+            "default": 0.2
+        }
+    },
+    "documentation": "## Debounce\n\nDebounces a source key on object userData into an output key.\n\n### Runtime Notes\n- Attach this lambda to objects via Lambda Components.\n- If Auto Apply is enabled, it runs every frame.\n- If Auto Apply is disabled, call `lambdaInstance.apply(deltaTime)` from behavior/lambda code.\n\n### Component Parameters\n| Key | Label | Type | Default | Options |\n| --- | --- | --- | --- | --- |\n| `sourceKey` | Source Key | `string` | `` | - |\n| `outputKey` | Output Key | `string` | `debouncedValue` | - |\n| `delaySeconds` | Delay Seconds | `number` | `0.2` | - |"
+}

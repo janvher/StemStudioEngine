@@ -1,0 +1,86 @@
+{
+    "id": "image_billboard",
+    "name": "Image Billboard",
+    "isScript": false,
+    "isHidden": true,
+    "description": "Displays images from URLs or project library on mesh geometry with advanced scaling and fitting options. Replaces mesh material with custom node material that handles aspect ratio preservation, rotation, and fit modes (contain/cover). Supports static images and animated GIFs with proper aspect ratio calculation. KEY FEATURES:",
+    "author": "stemstudio",
+    "tags": ["billboard"],
+    "main": "ImageBillboardBehavior.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "visibilityConditions": [
+        {
+            "key": "isMesh",
+            "condition": "isEqual",
+            "value": true
+        }
+    ],
+    "throttleConfig": {
+        "throttlePriority": "MEDIUM",
+        "enableFrustumCulling": true,
+        "enableDistanceThrottling": true,
+        "requiresConsistentUpdates": false
+    },
+    "attributes": {
+        "customName": {
+            "name": "Custom Name",
+            "type": "string"
+        },
+        "imageAsset": {
+            "name": "Image Asset",
+            "type": "imageAsset",
+            "description": "An image asset to display on the billboard."
+        },
+        "external_url": {
+            "name": "Image URL",
+            "type": "string",
+            "description": "A URL pointing to an external image to display on the billboard."
+        },
+        "internal_url": {
+            "name": "Image from Library (legacy)",
+            "type": "enum",
+            "autoFill": "resources.images",
+            "invisible": true,
+            "description": "An image from the project resource library to display on the billboard."
+        },
+        "useLocalFile": {
+            "name": "Use asset over URL",
+            "type": "boolean",
+            "default": false,
+            "invisible": true,
+            "description": "Legacy toggle. When enabled, prefers internal_url over external_url. Superseded by imageAsset."
+        },
+        "rotate": {
+            "name": "Rotate image (in degrees)",
+            "type": "number",
+            "main": -360,
+            "max": 360,
+            "default": 0,
+            "description": "Rotates the displayed image by the specified number of degrees (-360 to 360)."
+        },
+        "aspect": {
+            "name": "Geometry aspect ratio",
+            "type": "number",
+            "default": 2,
+            "description": "The width-to-height ratio of the mesh geometry, used to scale the image correctly."
+        },
+        "fit": {
+            "name": "Fit",
+            "type": "enum",
+            "options": [
+                {
+                    "label": "Contain",
+                    "value": "contain"
+                },
+                {
+                    "label": "Cover",
+                    "value": "cover"
+                }
+            ],
+            "default": "contain",
+            "description": "How the image fits the geometry. Contain shows the full image with possible borders; Cover fills the geometry and may crop the image."
+        }
+    },
+    "documentation": "## Image Billboard\n\nDisplays images from URLs or project library on mesh geometry with advanced scaling and fitting options. Replaces mesh material with custom node material that handles aspect ratio preservation, rotation, and fit modes (contain/cover). Supports static images and animated GIFs with proper aspect ratio calculation. KEY FEATURES:\n- Dual source support: external URLs or internal library images\n- Animated GIF support with proper frame playback\n- Two fit modes: Contain (preserve full image) or Cover (fill geometry)\n- Configurable image rotation (-360° to +360°)\n- Aspect ratio preservation with geometry scaling\n- Custom ScalingImageMaterial node material for advanced rendering\n- Hot-reload on attribute changes without behavior restart\n- Automatic material disposal and cleanup\n- Preserves original mesh material for restoration\n- Editor preview support with live attribute updates\n\n### How It Works\n1. Attach to a Mesh object (or parent containing a Mesh child)\n2. Select image source: external URL or internal library file\n3. Behavior replaces mesh material with ScalingImageMaterial\n4. For GIFs: THREE_GetGifTexture() loads and decodes animated frames\n5. For static images: standard THREE.TextureLoader creates texture\n6. Aspect ratio calculated from image dimensions (width/height)\n7. ScalingImageMaterial.createMaterial() builds a NodeMaterial graph\n8. Rotation applied as uniform (degrees converted to radians)\n9. Fit mode (contain/cover) controls how image fills geometry\n10. Geometry aspect attribute scales mesh to match image proportions\n11. On attribute update: checks if reload needed (URL changed) or just material update\n12. On removal/dispose: restores original material, disposes textures\n\n### Common Use Cases\n- In-game posters, signs, or billboards\n- UI elements rendered in 3D space\n- Character portraits or avatars\n- Informational displays or kiosks\n- Album covers or movie posters in virtual spaces\n- Advertising boards or screens\n- Photo galleries or art exhibitions\n- Animated GIF displays for memes or reactions\n- Tutorial images or instructions in-game\n- Dynamic content displays (news feeds, scoreboards)\n\n### When Not To Use\n- For video playback (use video texture instead)\n- When you need interactive image manipulation (zoom, pan)\n- For sprite sheets or texture atlases (use sprite system)\n- When images need to respond to lighting (use standard materials)\n- For volumetric or 3D textures\n- When you need real-time camera feeds\n- For procedurally generated images requiring frequent updates\n- When images need transparency blending with scene\n- For particle effects or decals (use respective systems)\n- When you need mipmaps or texture filtering control\n\n### Technical Details\n- Material: ScalingImageMaterial (custom node material with aspect-aware UV transforms)\n- Texture loading: THREE.TextureLoader for static, THREE_GetGifTexture for animated\n- Aspect ratio: imgWidth / imgHeight, defaults to 1:1 if unavailable\n- Rotation: degrees * (Math.PI / 180) converted to radians for UV rotation\n- Fit modes: 'contain' preserves full image, 'cover' fills geometry (may crop)\n- GIF support: texture.gif.width and texture.gif.height for dimensions\n- Material disposal: disposes map texture and material on cleanup\n- Original material stored in originalMaterial property for restoration\n- Hot-reload logic: compares currentUrl to avoid unnecessary reloads\n- Throttle priority: MEDIUM, frustum culling enabled, distance throttling enabled\n- Requires isMesh visibility condition (only shows for mesh objects)\n- Double-sided rendering for visibility from all angles\n- Geometry aspect ratio adjusts mesh scale to match image proportions"
+}

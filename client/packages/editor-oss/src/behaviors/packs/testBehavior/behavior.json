@@ -1,0 +1,32 @@
+{
+    "id": "testBehavior",
+    "name": "TestBehavior",
+    "isScript": false,
+    "description": "Test behavior",
+    "debugOnly": true,
+    "author": "stemstudio",
+    "tags": [
+        "test"
+    ],
+    "main": "TestBehavior.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "attributes": {
+        "testAttribute": {
+            "name": "test",
+            "type": "boolean",
+            "default": false
+        },
+        "disableRuntimeUpdate": {
+            "name": "Disable Runtime Update",
+            "type": "boolean",
+            "default": false
+        },
+        "disableEditorUpdate": {
+            "name": "Disable Editor Update",
+            "type": "boolean",
+            "default": false
+        }
+    },
+    "documentation": "## TestBehavior\n\nTest behavior"
+}

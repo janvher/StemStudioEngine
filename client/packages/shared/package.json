@@ -1,0 +1,5 @@
+{
+  "name": "@stemstudio/web-shared",
+  "private": true,
+  "type": "module"
+}

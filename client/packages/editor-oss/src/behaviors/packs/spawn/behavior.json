@@ -1,0 +1,29 @@
+{
+    "id": "spawn",
+    "name": "Spawn",
+    "isScript": false,
+    "description": "A simple object spawner that instantiates a stem at the spawner's location. Supports collision-based automatic spawning or trigger-based manual activation. Essential for creating item spawns, enemy generators, or object placement systems.",
+    "documentation": "## Spawn\nSpawn a stem at this location during gameplay.\n\n### Settings\n- **Spawn Object** - The stem to spawn\n\n### Tips\n- Use **Start on Trigger** for event-driven spawning",
+    "author": "stemstudio",
+    "tags": ["spawn"],
+    "main": "SpawnBehavior.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "attributes": {
+        "customName": {
+            "name": "Custom Name",
+            "type": "string"
+        },
+        "startOnTrigger": {
+            "name": "Start on Trigger",
+            "type": "boolean",
+            "default": false,
+            "description": "When enabled, the object spawns only when activated by an event trigger instead of automatically on collision."
+        },
+        "stem": {
+            "name": "Spawn Object",
+            "type": "prefab",
+            "description": "The stem to spawn at this location."
+        }
+    }
+}

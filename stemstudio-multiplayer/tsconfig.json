@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": [
+      "ESNext"
+    ],
+    "types": ["node", "mocha"],
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "outDir": "build",
+    "strict": true,
+    "declaration": true,
+    "removeComments": true,
+    "esModuleInterop": true,
+    "emitDecoratorMetadata": true,
+    "allowImportingTsExtensions": false,
+    "allowSyntheticDefaultImports": true,
+    "noEmit": false,
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strictNullChecks": false,
+    "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "useDefineForClassFields": false,
+    "baseUrl": "./src"
+  },
+  "ts-node":{
+    "esm": true
+  },
+  "tsc-alias": {
+    "resolveFullPaths": true,
+    "verbose": false
+  },
+  "include": [
+    "./src/",
+    "./test/"
+  ],
+}

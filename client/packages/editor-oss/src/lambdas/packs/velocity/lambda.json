@@ -1,0 +1,55 @@
+{
+    "id": "velocity",
+    "name": "Velocity",
+    "description": "Applies linear velocity to object position each frame with optional damping",
+    "author": "stemstudio",
+    "version": "1.0.0",
+    "main": "VelocityLambda.ts",
+    "tags": [
+        "physics"
+    ],
+    "attributes": {},
+    "readComponents": [
+        "vx",
+        "vy",
+        "vz",
+        "damping",
+        "maxSpeed"
+    ],
+    "writeComponents": [
+        "vx",
+        "vy",
+        "vz"
+    ],
+    "componentSchema": {
+        "vx": {
+            "name": "Velocity X",
+            "type": "number",
+            "default": 0
+        },
+        "vy": {
+            "name": "Velocity Y",
+            "type": "number",
+            "default": 0
+        },
+        "vz": {
+            "name": "Velocity Z",
+            "type": "number",
+            "default": 0
+        },
+        "damping": {
+            "name": "Damping",
+            "type": "number",
+            "default": 0,
+            "min": 0,
+            "max": 1
+        },
+        "maxSpeed": {
+            "name": "Max Speed",
+            "type": "number",
+            "default": 100,
+            "min": 0
+        }
+    },
+    "documentation": "## Velocity\n\nApplies linear velocity to object position each frame with optional damping\n\n### Runtime Notes\n- Attach this lambda to objects via Lambda Components.\n- If Auto Apply is enabled, it runs every frame.\n- If Auto Apply is disabled, call `lambdaInstance.apply(deltaTime)` from behavior/lambda code.\n\n### Component Parameters\n| Key | Label | Type | Default | Options |\n| --- | --- | --- | --- | --- |\n| `vx` | Velocity X | `number` | `0` | - |\n| `vy` | Velocity Y | `number` | `0` | - |\n| `vz` | Velocity Z | `number` | `0` | - |\n| `damping` | Damping | `number` | `0` | - |\n| `maxSpeed` | Max Speed | `number` | `100` | - |"
+}

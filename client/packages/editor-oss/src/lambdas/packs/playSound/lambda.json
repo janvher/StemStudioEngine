@@ -1,0 +1,42 @@
+{
+    "id": "playSound",
+    "name": "Play Sound",
+    "description": "Plays or stops a game sound by sound ID.",
+    "author": "stemstudio",
+    "version": "1.0.0",
+    "main": "PlaySoundLambda.ts",
+    "tags": [
+        "common",
+        "audio",
+        "trigger"
+    ],
+    "attributes": {},
+    "readComponents": [
+        "soundId",
+        "action"
+    ],
+    "writeComponents": [],
+    "componentSchema": {
+        "soundId": {
+            "name": "Sound ID",
+            "type": "string",
+            "default": ""
+        },
+        "action": {
+            "name": "Action",
+            "type": "enum",
+            "default": "play",
+            "options": [
+                {
+                    "label": "Play",
+                    "value": "play"
+                },
+                {
+                    "label": "Stop",
+                    "value": "stop"
+                }
+            ]
+        }
+    },
+    "documentation": "## Play Sound\n\nPlays or stops a game sound by sound ID.\n\n### Runtime Notes\n- Attach this lambda to objects via Lambda Components.\n- If Auto Apply is enabled, it runs every frame.\n- If Auto Apply is disabled, call `lambdaInstance.apply(deltaTime)` from behavior/lambda code.\n\n### Component Parameters\n| Key | Label | Type | Default | Options |\n| --- | --- | --- | --- | --- |\n| `soundId` | Sound ID | `string` | `` | - |\n| `action` | Action | `enum` | `play` | `Play` (`play`), `Stop` (`stop`) |"
+}

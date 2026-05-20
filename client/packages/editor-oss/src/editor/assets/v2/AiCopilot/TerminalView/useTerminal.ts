@@ -1,0 +1,643 @@
+import {useCallback, useEffect, useRef, useState} from "react";
+
+import {IS_OSS} from "@stem/editor-oss/mode/buildMode";
+
+import {CommandsExecutor} from "@stem/editor-oss/agent/CommandsExecutor";
+import {CommandsRegistry} from "@stem/editor-oss/agent/CommandsRegistry";
+import {executeBuiltin, BuiltinContext, TerminalResult} from "@stem/editor-oss/agent/script-tool/builtins";
+import {formatCheckReport, runScriptCheck} from "@stem/editor-oss/agent/script-tool/checkScript";
+import {showBatchImportDialog, autoResolveImports} from "@stem/editor-oss/agent/script-tool/ImportBatchDialog";
+import type {AutoResolveResult} from "@stem/editor-oss/agent/script-tool/ImportBatchDialog";
+import {handleImport, processImportedFile} from "@stem/editor-oss/agent/script-tool/importHandler";
+import {ScriptCommandParser, ParsedCommand} from "@stem/editor-oss/agent/script-tool/ScriptCommandParser";
+import {ScriptExecutor} from "@stem/editor-oss/agent/script-tool/ScriptExecutor";
+import {consumeStemscriptImport} from "@stem/editor-oss/agent/script-tool/stemscriptImportStaging";
+import {saveScene} from "@stem/network/api/scene";
+import {refreshEditorAssets} from "../../../../../editor/asset-management/hooks/assets";
+import type EngineRuntime from "@stem/editor-oss/EngineRuntime";
+import global from "@stem/editor-oss/global";
+import {queryClient} from "@web-shared/queryClient";
+import {showToast} from "@stem/editor-oss/showToast";
+
+const DEFAULT_EXTENSION_BY_TYPE: Record<string, string> = {
+    model: ".glb",
+    image: ".png",
+    audio: ".mp3",
+    sound: ".mp3",
+    video: ".mp4",
+};
+
+const CONTENT_TYPE_BY_EXT: Record<string, string> = {
+    ".glb": "model/gltf-binary",
+    ".gltf": "model/gltf+json",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".webp": "image/webp",
+    ".svg": "image/svg+xml",
+    ".mp3": "audio/mpeg",
+    ".wav": "audio/wav",
+    ".ogg": "audio/ogg",
+    ".m4a": "audio/mp4",
+    ".mp4": "video/mp4",
+    ".webm": "video/webm",
+};
+
+const getEngineRuntime = (): EngineRuntime | undefined => global.app as EngineRuntime | undefined;
+
+/**
+ * Derive a usable filename from a URL, preserving the extension when present.
+ * @param url
+ * @param type
+ * @param name
+ */
+function filenameForUrlImport(url: string, type: string, name?: string): string {
+    try {
+        const parsed = new URL(url, typeof window !== "undefined" ? window.location.href : undefined);
+        const last = parsed.pathname.split("/").filter(Boolean).pop() || "";
+        if (last && /\.[a-z0-9]+$/i.test(last)) {
+            return last;
+        }
+    } catch {
+        // fall through to synthetic filename
+    }
+    const base = name || type || "asset";
+    return `${base}${DEFAULT_EXTENSION_BY_TYPE[type] || ""}`;
+}
+
+/**
+ *
+ * @param filename
+ */
+function inferContentType(filename: string): string {
+    const match = filename.match(/\.[a-z0-9]+$/i);
+    if (!match) return "";
+    return CONTENT_TYPE_BY_EXT[match[0].toLowerCase()] || "";
+}
+
+export interface TerminalHistoryEntry {
+    command: string;
+    result: string;
+    status: "success" | "error" | "info";
+    format?: "text" | "markdown";
+    timestamp: number;
+}
+
+export interface UseTerminalReturn {
+    history: TerminalHistoryEntry[];
+    commandBuffer: string[];
+    isExecuting: boolean;
+    executeInput: (input: string) => Promise<TerminalHistoryEntry[]>;
+    clearHistory: () => void;
+    historyIndex: number;
+    navigateHistory: (direction: "up" | "down") => string | null;
+}
+
+export interface UseTerminalOptions {
+    isAdmin?: boolean;
+}
+
+/**
+ *
+ * @param onExit
+ * @param options
+ */
+export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}): UseTerminalReturn {
+    const [history, setHistory] = useState<TerminalHistoryEntry[]>([]);
+    const [commandBuffer, setCommandBuffer] = useState<string[]>([]);
+    const [isExecuting, setIsExecuting] = useState(false);
+    const [historyIndex, setHistoryIndex] = useState(-1);
+
+    const registryRef = useRef<CommandsRegistry | null>(null);
+    const executorRef = useRef<CommandsExecutor | null>(null);
+    const importResultsRef = useRef<Map<number, {success: boolean; message: string}> | null>(null);
+    const importCounterRef = useRef(0);
+    const executionCollectorRef = useRef<TerminalHistoryEntry[] | null>(null);
+    const lastScriptRef = useRef<{content: string; label?: string} | null>(null);
+
+    const getExecutor = useCallback(() => {
+        if (!executorRef.current) {
+            registryRef.current = new CommandsRegistry();
+            executorRef.current = new CommandsExecutor(registryRef.current);
+        }
+        return executorRef.current;
+    }, []);
+
+    const addEntry = useCallback((
+        command: string,
+        result: string,
+        status: "success" | "error" | "info",
+        format: "text" | "markdown" = "text",
+    ) => {
+        const entry: TerminalHistoryEntry = {command, result, status, format, timestamp: Date.now()};
+        executionCollectorRef.current?.push(entry);
+        setHistory(prev => [...prev, entry]);
+    }, []);
+
+    const clearHistory = useCallback(() => {
+        setHistory([]);
+    }, []);
+
+    const executeRegistryCommand = useCallback(async (command: string, params: Record<string, unknown>) => {
+        const executor = getExecutor();
+        const result = await executor.executeCommand(command, params);
+        const commandStatus = result.result?.status;
+        const success = result.success && commandStatus !== "failed" && commandStatus !== "error";
+        return {
+            success,
+            message: result.result?.message || (result.success ? "OK" : undefined),
+            error: result.error || (!success ? result.result?.message : undefined),
+        };
+    }, [getExecutor]);
+
+    const executeGetterCommand = useCallback(async (command: string, params: Record<string, unknown>) => {
+        const executor = getExecutor();
+        const result = await executor.executeCommand(command, params);
+        const commandStatus = result.result?.status;
+        const success = result.success && commandStatus !== "failed" && commandStatus !== "error";
+        return {
+            success,
+            data: result.result?.data,
+            message: result.result?.message,
+            error: result.error || (!success ? result.result?.message : undefined),
+        };
+    }, [getExecutor]);
+
+    const runCheck = useCallback(async (content: string, label?: string): Promise<TerminalResult> => {
+        const report = await runScriptCheck(content, executeGetterCommand);
+        const heading = label ? `Checked ${label}.\n\n` : "";
+        return {
+            output: `${heading}${formatCheckReport(report)}`,
+            status: report.failed > 0 ? "error" : "success",
+            format: "markdown",
+        };
+    }, [executeGetterCommand]);
+
+    const executeScriptBuiltin = useCallback(async (command: string, params: Record<string, unknown>) => {
+        if (command === "import") {
+            const type = params.type as string | undefined;
+            const name = params.name as string | undefined;
+            const message = params.message as string | undefined;
+            const url = params.url as string | undefined;
+            if (!type) return {success: false, error: "import requires a type"};
+
+            // Use pre-processed results from runScript when available
+            const cachedResults = importResultsRef.current;
+            if (cachedResults) {
+                const idx = importCounterRef.current++;
+                const cached = cachedResults.get(idx);
+                if (cached) {
+                    return {success: cached.success, message: cached.message, error: cached.success ? undefined : cached.message};
+                }
+                const label = name || (message ? `${type} (${message})` : type);
+                return {success: true, message: `Import skipped: ${label}`};
+            }
+
+            if (!getEngineRuntime()?.editor?.assetSource) return {success: false, error: "No active editing context (scene or stem)"};
+
+            // Fallback A: URL-based single import (user typed `import model … url=…`).
+            // Fetch the URL directly; do NOT prompt for a file.
+            if (url) {
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        return {success: false, error: `HTTP ${response.status} while fetching ${url}`};
+                    }
+                    const blob = await response.blob();
+                    const filename = filenameForUrlImport(url, type, name);
+                    const file = new File([blob], filename, {type: blob.type || inferContentType(filename)});
+                    const result = await processImportedFile(file, type, name);
+                    return {success: result.success, message: result.message, error: result.success ? undefined : result.message};
+                } catch (err: unknown) {
+                    return {success: false, error: err instanceof Error ? err.message : String(err)};
+                }
+            }
+
+            // Fallback B: interactive file picker (single import command, not from script)
+            const pickResult = await handleImport(type, message || name);
+            if (pickResult.status !== "success" || !pickResult.file) {
+                return {success: pickResult.status === "success", message: pickResult.output, error: pickResult.status === "error" ? pickResult.output : undefined};
+            }
+            const result = await processImportedFile(pickResult.file, type, name, pickResult.companionFiles);
+            return {success: result.success, message: result.message, error: result.success ? undefined : result.message};
+        }
+        return {success: true, message: `Skipped built-in: ${command}`};
+    }, []);
+
+    const processResolvedImports = useCallback(async (
+        importRequests: ReturnType<typeof ScriptExecutor.extractImports>,
+        files: Map<number, File>,
+        companionFiles: Map<number, File[]>,
+    ) => {
+        const hasEditorContext = Boolean(getEngineRuntime()?.editor?.assetSource);
+        const ASSET_FIRST = new Set(["model", "audio", "sound", "image", "video"]);
+        const sorted = [...importRequests].sort((a, b) => {
+            const aFirst = ASSET_FIRST.has(a.type) ? 0 : 1;
+            const bFirst = ASSET_FIRST.has(b.type) ? 0 : 1;
+            return aFirst - bFirst;
+        });
+        const results = new Map<number, {success: boolean; message: string}>();
+        for (const req of sorted) {
+            const file = files.get(req.index);
+            if (file && hasEditorContext) {
+                const label = req.name || file.name;
+                addEntry(`import ${req.type} ${label}`, `Processing: ${file.name}...`, "info");
+                const companions = companionFiles?.get(req.index);
+                const result = await processImportedFile(file, req.type, req.name, companions);
+                results.set(req.index, result);
+            }
+        }
+        return results;
+    }, [addEntry]);
+
+    // The full runScript flow; exposed below on `window.__stemRunScript` in
+    // OSS dev so a Playwright test can drive the `exec` pipeline without
+    // going through the OS file picker.
+    const runScript = useCallback(async (content: string, folderFiles?: File[]) => {
+        let scriptExecutionFinished = false;
+
+        // Show persistent toasts for proxy requirements
+        const proxyRequirements = ScriptExecutor.extractProxyRequirements(content);
+        for (const req of proxyRequirements) {
+            const label = req.comment || req.alias;
+            showToast({
+                type: "info",
+                title: `Proxy required: ${label}`,
+                body: `Route "${req.alias}" → ${req.destination}`,
+                duration: 30000,
+            });
+        }
+
+        // Pre-scan for imports and show batch dialog if any found
+        const importRequests = ScriptExecutor.extractImports(content);
+
+        // Pre-resolve URL-based imports (export-mode bundles) by fetching each
+        // URL into a File. These go into the resolved map *before* the batch
+        // dialog / folder auto-resolve, so the user never has to hand-pick a
+        // file for an asset whose URL is already known.
+        const urlResolved = new Map<number, File>();
+        const urlFailures: {req: typeof importRequests[number]; message: string}[] = [];
+        for (const req of importRequests) {
+            if (!req.url) continue;
+            try {
+                const response = await fetch(req.url);
+                if (!response.ok) {
+                    urlFailures.push({req, message: `HTTP ${response.status}`});
+                    continue;
+                }
+                const blob = await response.blob();
+                const filename = filenameForUrlImport(req.url, req.type, req.name);
+                const file = new File([blob], filename, {type: blob.type || inferContentType(filename)});
+                urlResolved.set(req.index, file);
+            } catch (err: unknown) {
+                urlFailures.push({req, message: err instanceof Error ? err.message : String(err)});
+            }
+        }
+        for (const failure of urlFailures) {
+            const label = failure.req.name || failure.req.type;
+            addEntry(
+                `(prefetch)`,
+                `Failed to fetch asset URL for ${label}: ${failure.message}`,
+                "error",
+            );
+        }
+
+        if (importRequests.length > 0) {
+            let resolvedFiles: Map<number, File> = new Map(urlResolved);
+            let resolvedCompanions: Map<number, File[]> = new Map();
+            // Imports still needing a source (neither a URL we could fetch nor
+            // pre-picked) — these feed into folder auto-resolve / dialog.
+            const unresolvedRequests = importRequests.filter(r => !resolvedFiles.has(r.index));
+
+            if (unresolvedRequests.length === 0) {
+                // All imports resolved from URLs. Skip folder/dialog entirely.
+            } else if (folderFiles && folderFiles.length > 0) {
+                // Auto-resolve imports from the folder
+                const autoResult: AutoResolveResult = autoResolveImports(unresolvedRequests, folderFiles);
+                for (const [idx, file] of autoResult.files) resolvedFiles.set(idx, file);
+                for (const [idx, comps] of autoResult.companionFiles) resolvedCompanions.set(idx, comps);
+                const stillUnresolved = unresolvedRequests.filter(r => !resolvedFiles.has(r.index));
+
+                if (stillUnresolved.length > 0) {
+                    const dialogResult = await showBatchImportDialog(unresolvedRequests, autoResult);
+                    if (dialogResult.action === "cancel") {
+                        addEntry("(script)", "Script execution cancelled.", "info");
+                        return;
+                    }
+                    if (dialogResult.action === "import" && dialogResult.files.size > 0) {
+                        for (const [idx, file] of dialogResult.files) resolvedFiles.set(idx, file);
+                        for (const [idx, comps] of dialogResult.companionFiles) resolvedCompanions.set(idx, comps);
+                    } else {
+                        importResultsRef.current = new Map();
+                        importCounterRef.current = 0;
+                        resolvedFiles = new Map();
+                        resolvedCompanions = new Map();
+                    }
+                }
+            } else {
+                // No folder files — dialog for the unresolved ones.
+                const dialogResult = await showBatchImportDialog(unresolvedRequests);
+                if (dialogResult.action === "cancel") {
+                    addEntry("(script)", "Script execution cancelled.", "info");
+                    return;
+                }
+                if (dialogResult.action === "import" && dialogResult.files.size > 0) {
+                    for (const [idx, file] of dialogResult.files) resolvedFiles.set(idx, file);
+                    for (const [idx, comps] of dialogResult.companionFiles) resolvedCompanions.set(idx, comps);
+                } else {
+                    importResultsRef.current = new Map();
+                    importCounterRef.current = 0;
+                    resolvedFiles = new Map();
+                    resolvedCompanions = new Map();
+                }
+            }
+
+            if (resolvedFiles.size > 0) {
+                const results = await processResolvedImports(importRequests, resolvedFiles, resolvedCompanions);
+                importResultsRef.current = results;
+                importCounterRef.current = 0;
+            } else if (!importResultsRef.current) {
+                importResultsRef.current = new Map();
+                importCounterRef.current = 0;
+            }
+        }
+
+        // All import-resolution and cancellation paths above have already
+        // returned. Wipe previously-imported content now so the script runs
+        // against the same blank-scene baseline every time. Wrapping the
+        // execute() call in runInScriptImportContext tags every object the
+        // script adds with userData.isImported, which the next exec uses to
+        // wipe these same objects again.
+        const editor = getEngineRuntime()?.editor;
+        if (editor) {
+            try {
+                editor.clearImportedContent();
+            } catch (error: unknown) {
+                const message = error instanceof Error ? error.message : String(error);
+                addEntry("(script)", `Pre-exec wipe failed (continuing): ${message}`, "error");
+            }
+        }
+
+        try {
+            const result = editor
+                ? await editor.runInScriptImportContext(() =>
+                      ScriptExecutor.execute(
+                          content,
+                          executeRegistryCommand,
+                          (current: number, total: number, line: string) => {
+                              addEntry(line, `Executing ${current}/${total}...`, "info");
+                          },
+                          executeScriptBuiltin,
+                      ),
+                  )
+                : await ScriptExecutor.execute(
+                      content,
+                      executeRegistryCommand,
+                      (current: number, total: number, line: string) => {
+                          addEntry(line, `Executing ${current}/${total}...`, "info");
+                      },
+                      executeScriptBuiltin,
+                  );
+
+            const summary = `Script complete: ${result.successCount}/${result.executedCommands} succeeded, ${result.failCount} failed`;
+            addEntry("(script)", summary, result.failCount > 0 ? "error" : "success");
+            lastScriptRef.current = {content};
+
+            // Log individual failures
+            for (const r of result.results) {
+                if (!r.success && r.error) {
+                    const errText = r.error.length > 1024 ? r.error.slice(0, 1024) + '...' : r.error;
+                    addEntry(r.command, `Line ${r.lineNumber}: ${errText}`, "error");
+                }
+            }
+
+            scriptExecutionFinished = true;
+        } finally {
+            if (scriptExecutionFinished) {
+                try {
+                    await saveScene(false, false);
+                    const assetSource = getEngineRuntime()?.editor?.assetSource;
+                    if (assetSource) {
+                        await refreshEditorAssets(queryClient, assetSource);
+                    }
+                } catch (error: unknown) {
+                    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+                    addEntry("(script)", `Auto-save failed: ${errorMessage}`, "error");
+                }
+            }
+
+            importResultsRef.current = null;
+            importCounterRef.current = 0;
+        }
+    }, [executeRegistryCommand, addEntry, executeScriptBuiltin, processResolvedImports]);
+
+    const executeInput = useCallback(async (input: string): Promise<TerminalHistoryEntry[]> => {
+        const trimmed = input.trim();
+        if (!trimmed) return [];
+
+        const collectedEntries: TerminalHistoryEntry[] = [];
+        executionCollectorRef.current = collectedEntries;
+        setIsExecuting(true);
+        setCommandBuffer(prev => [...prev, trimmed]);
+        setHistoryIndex(-1);
+
+        try {
+            const parsed: ParsedCommand = ScriptCommandParser.parse(trimmed);
+
+            if (parsed.isBuiltin) {
+                const builtinContext: BuiltinContext = {
+                    isAdmin: options.isAdmin,
+                    commandBuffer: [...commandBuffer, trimmed],
+                    clearOutput: clearHistory,
+                    runScript,
+                    getLastScript: () => lastScriptRef.current,
+                    runCheck,
+                    triggerImport: async (type: string, message?: string, name?: string) => {
+                        if (!getEngineRuntime()?.editor?.assetSource) return {output: "No active editing context (scene or stem)", status: "error" as const};
+                        const pickResult = await handleImport(type, message || name);
+                        if (pickResult.status !== "success" || !pickResult.file) {
+                            return pickResult;
+                        }
+                        const result = await processImportedFile(pickResult.file, type, name, pickResult.companionFiles);
+                        return {
+                            output: result.message,
+                            status: result.success ? "success" as const : "error" as const,
+                        };
+                    },
+                    triggerExport: async (target: string, suggestedName?: string, mode: "dump" | "export" = "dump") => {
+                        if (target !== "scene") {
+                            const cmd = mode === "export" ? "export" : "dump";
+                            return {output: `Usage: ${cmd} scene [name=<bundle-name>]`, status: "error" as const};
+                        }
+                        const {exportCurrentSceneBundle} = await import("@stem/editor-oss/agent/script-tool/exportSceneBundle");
+                        const result = await exportCurrentSceneBundle({suggestedName, mode});
+                        return {
+                            output: result.message,
+                            status: result.success ? "success" as const : "error" as const,
+                        };
+                    },
+                };
+
+                const result: TerminalResult = await executeBuiltin(parsed.command, parsed.params, builtinContext);
+
+                if (result.shouldExit) {
+                    onExit();
+                } else if (result.output) {
+                    addEntry(trimmed, result.output, result.status, result.format);
+                }
+            } else {
+                // Execute via CommandsRegistry
+                const result = await executeRegistryCommand(parsed.command, parsed.params);
+                const output = result.success
+                    ? result.message || "OK"
+                    : result.error || "Command failed";
+                const status = result.success ? "success" : "error";
+
+                // Format data output if present
+                addEntry(trimmed, output, status);
+            }
+        } catch (err: any) {
+            addEntry(trimmed, `Error: ${err.message}`, "error");
+        } finally {
+            setIsExecuting(false);
+            executionCollectorRef.current = null;
+        }
+        return collectedEntries;
+    }, [commandBuffer, clearHistory, onExit, addEntry, executeRegistryCommand, runScript, runCheck, options.isAdmin]);
+
+    const navigateHistory = useCallback((direction: "up" | "down"): string | null => {
+        if (commandBuffer.length === 0) return null;
+
+        let newIndex: number;
+        if (direction === "up") {
+            newIndex = historyIndex === -1 ? commandBuffer.length - 1 : Math.max(0, historyIndex - 1);
+        } else {
+            newIndex = historyIndex === -1 ? -1 : historyIndex + 1;
+            if (newIndex >= commandBuffer.length) {
+                newIndex = -1;
+            }
+        }
+
+        setHistoryIndex(newIndex);
+        return newIndex === -1 ? "" : commandBuffer[newIndex] || "";
+    }, [historyIndex, commandBuffer]);
+
+    // Test hook: in OSS dev builds, expose runScript on `window` so
+    // Playwright (or any other automation harness) can drive the `exec`
+    // pipeline without invoking the OS file picker. Accepts the script
+    // body plus an optional `{name, mime, data}` array (base64-encoded
+    // file payloads) that are reconstructed as File objects for the
+    // import resolver. No-op in integrated mode.
+    useEffect(() => {
+        if (!IS_OSS) return;
+        const w = window as unknown as {
+            __stemRunScript?: (
+                content: string,
+                files?: Array<{name: string; mime?: string; data: string}>,
+            ) => Promise<void>;
+        };
+        w.__stemRunScript = async (content, files) => {
+            console.log("[__stemRunScript] start", {scriptBytes: content.length, fileCount: (files ?? []).length});
+            const folderFiles = (files ?? []).map(({name, mime, data}) => {
+                const binary = atob(data);
+                const bytes = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+                // `name` may include forward slashes to encode a subfolder
+                // path (e.g. "behaviors/chessGame/behavior.yaml"). Use the
+                // trailing segment as File.name and stamp the full path on
+                // webkitRelativePath so the script-tool's path-based import
+                // resolver can disambiguate identically named files across
+                // subfolders.
+                const segments = name.split("/");
+                const basename = segments[segments.length - 1]!;
+                const file = new File([bytes], basename, {type: mime ?? "application/octet-stream"});
+                if (segments.length > 1) {
+                    try {
+                        Object.defineProperty(file, "webkitRelativePath", {
+                            value: name,
+                            configurable: true,
+                        });
+                    } catch {
+                        // webkitRelativePath is read-only in some engines;
+                        // fall back to basename-only matching.
+                    }
+                }
+                return file;
+            });
+            // Cap the script run to a hard ceiling so test harnesses don't
+            // hang waiting on a step that's stuck inside an OSS-gated path
+            // we haven't covered yet. Real users hit the same flow through
+            // the UI dialogs and can dismiss; tests should fail loudly with
+            // the timeout breadcrumb.
+            const HARD_TIMEOUT_MS = 60_000;
+            try {
+                await Promise.race([
+                    runScript(content, folderFiles),
+                    new Promise((_, reject) =>
+                        setTimeout(() => reject(new Error(`__stemRunScript timed out after ${HARD_TIMEOUT_MS}ms`)), HARD_TIMEOUT_MS),
+                    ),
+                ]);
+                console.log("[__stemRunScript] done");
+            } catch (err) {
+                console.error("[__stemRunScript] threw", err);
+                throw err;
+            }
+        };
+        return () => {
+            delete (window as unknown as {__stemRunScript?: unknown}).__stemRunScript;
+        };
+    }, [runScript]);
+
+    // Test affordance: in OSS dev builds, expose a small scene-introspection
+    // helper on `window` so Playwright can verify the side-effects of
+    // running scripts without needing access to the in-module `global`
+    // singleton (which isn't reachable from page.evaluate).
+    useEffect(() => {
+        if (!IS_OSS) return;
+        const w = window as unknown as {
+            __stemGetScene?: () => {sceneName: string | null; objectNames: string[]};
+        };
+        w.__stemGetScene = () => {
+            const app = getEngineRuntime();
+            const scene = app?.editor?.scene;
+            if (!scene) return {sceneName: null, objectNames: []};
+            const names: string[] = [];
+            scene.traverse((o: {name?: string}) => {
+                if (o?.name) names.push(o.name);
+            });
+            return {sceneName: app?.editor?.sceneName ?? null, objectNames: names};
+        };
+        return () => {
+            delete (window as unknown as {__stemGetScene?: unknown}).__stemGetScene;
+        };
+    }, []);
+
+    // OSS dashboard "Import stemscript folder" handoff. When the user
+    // picks a folder on the dashboard we stage the script + base64 file
+    // payloads in sessionStorage and navigate to a fresh project route.
+    // The Create page auto-opens the Copilot panel on detection, which
+    // mounts this hook — at which point we consume the staged data and
+    // drive the same `runScript` flow as the inline `exec` command. The
+    // staging entry is removed on consume, so a reload doesn't replay it.
+    useEffect(() => {
+        if (!IS_OSS) return;
+        const w = window as unknown as {__stemRunScript?: (...args: any[]) => Promise<void>};
+        if (typeof w.__stemRunScript !== "function") return;
+        const staged = consumeStemscriptImport();
+        if (!staged) return;
+        // Fire-and-forget — runScript reports errors via inline terminal
+        // entries (addEntry), which is the surface the user is staring at
+        // while the import runs.
+        void w.__stemRunScript(staged.content, staged.files);
+    }, [runScript]);
+
+    return {
+        history,
+        commandBuffer,
+        isExecuting,
+        executeInput,
+        clearHistory,
+        historyIndex,
+        navigateHistory,
+    };
+}

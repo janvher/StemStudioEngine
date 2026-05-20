@@ -1,0 +1,147 @@
+{
+    "id": "rigidbody",
+    "name": "RigidBody",
+    "description": "Physics-driven body with mass, gravity, drag, and axis constraints",
+    "author": "stemstudio",
+    "version": "1.0.0",
+    "main": "RigidBodyLambda.ts",
+    "tags": [
+        "physics"
+    ],
+    "attributes": {
+        "gravity": {
+            "name": "Gravity",
+            "type": "number",
+            "default": 9.81,
+            "min": 0,
+            "max": 100
+        }
+    },
+    "readComponents": [
+        "mass",
+        "drag",
+        "angularDrag",
+        "gravityScale",
+        "useGravity",
+        "isKinematic",
+        "vx",
+        "vy",
+        "vz",
+        "avx",
+        "avy",
+        "avz",
+        "freezePositionX",
+        "freezePositionY",
+        "freezePositionZ",
+        "freezeRotationX",
+        "freezeRotationY",
+        "freezeRotationZ"
+    ],
+    "writeComponents": [
+        "vx",
+        "vy",
+        "vz",
+        "avx",
+        "avy",
+        "avz"
+    ],
+    "componentSchema": {
+        "mass": {
+            "name": "Mass",
+            "type": "number",
+            "default": 1,
+            "min": 0.01,
+            "max": 10000
+        },
+        "drag": {
+            "name": "Drag",
+            "type": "number",
+            "default": 0.05,
+            "min": 0,
+            "max": 1
+        },
+        "angularDrag": {
+            "name": "Angular Drag",
+            "type": "number",
+            "default": 0.05,
+            "min": 0,
+            "max": 1
+        },
+        "gravityScale": {
+            "name": "Gravity Scale",
+            "type": "number",
+            "default": 1
+        },
+        "useGravity": {
+            "name": "Use Gravity",
+            "type": "boolean",
+            "default": true
+        },
+        "isKinematic": {
+            "name": "Is Kinematic",
+            "type": "boolean",
+            "default": false
+        },
+        "vx": {
+            "name": "Velocity X",
+            "type": "number",
+            "default": 0
+        },
+        "vy": {
+            "name": "Velocity Y",
+            "type": "number",
+            "default": 0
+        },
+        "vz": {
+            "name": "Velocity Z",
+            "type": "number",
+            "default": 0
+        },
+        "avx": {
+            "name": "Angular Velocity X",
+            "type": "number",
+            "default": 0
+        },
+        "avy": {
+            "name": "Angular Velocity Y",
+            "type": "number",
+            "default": 0
+        },
+        "avz": {
+            "name": "Angular Velocity Z",
+            "type": "number",
+            "default": 0
+        },
+        "freezePositionX": {
+            "name": "Freeze Position X",
+            "type": "boolean",
+            "default": false
+        },
+        "freezePositionY": {
+            "name": "Freeze Position Y",
+            "type": "boolean",
+            "default": false
+        },
+        "freezePositionZ": {
+            "name": "Freeze Position Z",
+            "type": "boolean",
+            "default": false
+        },
+        "freezeRotationX": {
+            "name": "Freeze Rotation X",
+            "type": "boolean",
+            "default": false
+        },
+        "freezeRotationY": {
+            "name": "Freeze Rotation Y",
+            "type": "boolean",
+            "default": false
+        },
+        "freezeRotationZ": {
+            "name": "Freeze Rotation Z",
+            "type": "boolean",
+            "default": false
+        }
+    },
+    "documentation": "## RigidBody\n\nPhysics-driven body with mass, gravity, drag, and axis constraints\n\n### Runtime Notes\n- Attach this lambda to objects via Lambda Components.\n- If Auto Apply is enabled, it runs every frame.\n- If Auto Apply is disabled, call `lambdaInstance.apply(deltaTime)` from behavior/lambda code.\n\n### Component Parameters\n| Key | Label | Type | Default | Options |\n| --- | --- | --- | --- | --- |\n| `mass` | Mass | `number` | `1` | - |\n| `drag` | Drag | `number` | `0.05` | - |\n| `angularDrag` | Angular Drag | `number` | `0.05` | - |\n| `gravityScale` | Gravity Scale | `number` | `1` | - |\n| `useGravity` | Use Gravity | `boolean` | `true` | - |\n| `isKinematic` | Is Kinematic | `boolean` | `false` | - |\n| `vx` | Velocity X | `number` | `0` | - |\n| `vy` | Velocity Y | `number` | `0` | - |\n| `vz` | Velocity Z | `number` | `0` | - |\n| `avx` | Angular Velocity X | `number` | `0` | - |\n| `avy` | Angular Velocity Y | `number` | `0` | - |\n| `avz` | Angular Velocity Z | `number` | `0` | - |\n| `freezePositionX` | Freeze Position X | `boolean` | `false` | - |\n| `freezePositionY` | Freeze Position Y | `boolean` | `false` | - |\n| `freezePositionZ` | Freeze Position Z | `boolean` | `false` | - |\n| `freezeRotationX` | Freeze Rotation X | `boolean` | `false` | - |\n| `freezeRotationY` | Freeze Rotation Y | `boolean` | `false` | - |\n| `freezeRotationZ` | Freeze Rotation Z | `boolean` | `false` | - |\n\n### Instance Attributes\n| Key | Label | Type | Default |\n| --- | --- | --- | --- |\n| `gravity` | Gravity | `number` | `9.81` |"
+}

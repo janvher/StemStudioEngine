@@ -1,0 +1,52 @@
+{
+    "id": "spawnpoint",
+    "name": "Spawn Point",
+    "isScript": false,
+    "description": "A spawn point marker system that defines player spawn locations in the game world. Marks objects as spawn points with visual editor representation showing position and forward direction. Supports multiple spawn slots and team-based spawning. Editor-only visualization with human-like marker and directional arrow. The actual spawn logic is handled by the player system which queries spawn points at game start.",
+    "author": "stemstudio",
+    "tags": ["spawn"],
+    "main": "SpawnPointBehavior.ts",
+    "version": "1.0.0",
+    "isHidden": true,
+    "dependencies": {},
+    "throttleConfig": {
+        "throttlePriority": "MEDIUM",
+        "enableFrustumCulling": true,
+        "enableDistanceThrottling": true,
+        "requiresConsistentUpdates": false
+    },
+    "objectSettings": {
+        "physics": {
+            "enabled": false
+        }
+    },
+    "attributes": {
+        "customName": {
+            "name": "Custom Name",
+            "type": "string"
+        },
+        "slot": {
+            "name": "Spawn Number",
+            "type": "number",
+            "min": 0,
+            "description": "The spawn slot index used to assign players to specific spawn points in a defined order."
+        },
+        "spawnType": {
+            "name": "Spawn Type",
+            "type": "enum",
+            "options": [
+                {
+                    "label": "Normal",
+                    "value": "normal"
+                },
+                {
+                    "label": "Team",
+                    "value": "team"
+                }
+            ],
+            "default": "normal",
+            "description": "Determines whether this spawn point is available to all players (Normal) or reserved for a specific team (Team)."
+        }
+    },
+    "documentation": "## Spawn Point\n\nA spawn point marker system that defines player spawn locations in the game world. Marks objects as spawn points with visual editor representation showing position and forward direction. Supports multiple spawn slots and team-based spawning. Editor-only visualization with human-like marker and directional arrow. The actual spawn logic is handled by the player system which queries spawn points at game start.\n\n### Key Features\n- Visual spawn point marker in editor (human figure + arrow)\n- Configurable spawn slot numbers for ordered spawning\n- Team-based spawn type support\n- Forward direction indicator via blue arrow\n- Editor-only visualization (hidden at runtime)\n- Transparent selection box for easy editor picking\n- Position and rotation tracking\n- userData flag for spawn point identification\n- No runtime overhead (empty update loop)\n- Automatic cleanup on editor removal\n\n### How It Works\n1. Attach to empty object or mesh in scene\n2. Configure spawn slot number (0, 1, 2, etc.)\n3. Select spawn type: Normal or Team\n4. Position object at desired spawn location\n5. Rotate object to set player facing direction (forward = +Z)\n6. In editor:\n   - Sets target.userData.isSpawnPoint = true\n   - Creates SpawnPointMarker visual representation\n   - Marker shows white human figure (sphere head + cone body)\n   - Blue arrow indicates forward direction (3 units long)\n   - Adds transparent selection box for editor interaction\n   - Marker added to editor.sceneHelpers layer\n7. Marker structure:\n   - Head: white sphere (0.1 radius) at y=1.5\n   - Body: white inverted cone (0.2 radius, 1 height) at y=0.75\n   - Arrow: THREE.ArrowHelper pointing forward (+Z) in blue\n8. Editor updates:\n   - onEditorUpdate() syncs marker position/rotation with target\n   - Called every frame (TODO: optimize with change detection)\n9. Runtime behavior:\n   - Empty update() - no performance cost during gameplay\n   - Player system queries objects with userData.isSpawnPoint\n   - Spawn logic handled externally by character controller\n10. Cleanup:\n    - onEditorRemoved() clears userData flag\n    - Removes and disposes selection box geometry\n    - Removes marker from sceneHelpers\n\n### Common Use Cases\n- Player initial spawn location\n- Respawn points after death\n- Checkpoint spawn positions\n- Team-based spawn areas in multiplayer\n- Multiple spawn locations for variety\n- Teleport destination markers\n- Level start positions\n- Co-op player spawn points\n- Arena spawn slots for battle modes\n- Racing game starting grid positions\n\n### When Not To Use\n- For enemy spawn points (use different system)\n- When spawn should be dynamic/procedural\n- For continuous spawning (waves, etc.)\n- When spawn logic needs custom behavior\n- For object/item spawning (not player spawning)\n- When spawn should be invisible to player system\n- For complex spawn conditions or prerequisites\n- When spawn should have enter/exit animations\n- For networked multiplayer spawn (needs sync layer)\n- When spawn position should change at runtime\n\n### Technical Details\n- userData flag: target.userData.isSpawnPoint = true\n- Marker class: SpawnPointMarker extends THREE.Group\n- Head geometry: THREE.SphereGeometry(0.1, 32, 32)\n- Body geometry: THREE.ConeGeometry(0.2, 1, 32) rotated 180°\n- Arrow: THREE.ArrowHelper(dir, origin, length, color)\n- Arrow direction: Vector3(0, 0, 1) forward in local space\n- Arrow length: 3 units\n- Arrow color: 0x0000ff (blue)\n- Selection box: BoxGeometry(1, 1, 1) transparent\n- Material: MeshBasicMaterial {transparent: true, opacity: 0.0, depthWrite: false}\n- Editor layer: editor.sceneHelpers (not rendered in game)\n- Position sync: marker.position.copy(target.position)\n- Rotation sync: marker.rotation.copy(target.rotation)\n- Update frequency: every frame in editor (onEditorUpdate)\n- Cleanup: geometry.dispose() on selection box removal\n- Spawn slot attribute: number type, min: 0, no max\n- Spawn type attribute: enum [\"normal\", \"team\"] default: \"normal\"\n- Runtime methods: empty (init, update, onAdded, onRemoved, onReset)\n- Throttle config: MEDIUM priority, frustum culling enabled\n- isHidden: true (hidden from behavior picker by default)\n- Player integration: external system queries isSpawnPoint flag\n- TODO: Add spawn point list structure for game management\n- TODO: Optimize onEditorUpdate to only update on transform changes"
+}

@@ -1,0 +1,136 @@
+import {useEffect, useRef} from "react";
+import * as THREE from "three";
+
+import {HERO_CODE} from "../content/features";
+
+// Lightweight, syntax-class-only highlighter. Not a real parser — produces
+// the same colour buckets as the prose around the showcase. Good enough for a
+// static snippet, avoids pulling in a megabyte of Prism / Shiki.
+function highlight(code: string): string {
+    return code
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/(\/\/[^\n]*)/g, '<span class="tok-comment">$1</span>')
+        .replace(/("[^"]*"|'[^']*')/g, '<span class="tok-string">$1</span>')
+        .replace(
+            /\b(import|export|from|class|extends|return|const|let|var|if|else|new|this|async|await)\b/g,
+            '<span class="tok-keyword">$1</span>',
+        )
+        .replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="tok-num">$1</span>')
+        .replace(/\b([A-Za-z_$][A-Za-z0-9_$]*)\(/g, '<span class="tok-fn">$1</span>(');
+}
+
+export function CodeShowcase() {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const renderer = new THREE.WebGLRenderer({canvas, alpha: true, antialias: true});
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+        camera.position.set(0, 1.2, 4.2);
+
+        scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+        const key = new THREE.DirectionalLight(0xffffff, 1.2);
+        key.position.set(3, 5, 2);
+        scene.add(key);
+        const rim = new THREE.DirectionalLight(0x7c5cff, 0.9);
+        rim.position.set(-3, 1, -2);
+        scene.add(rim);
+
+        const floor = new THREE.Mesh(
+            new THREE.PlaneGeometry(20, 20),
+            new THREE.MeshStandardMaterial({color: 0x121626, roughness: 0.9}),
+        );
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.y = -0.7;
+        scene.add(floor);
+
+        const box = new THREE.Mesh(
+            new THREE.BoxGeometry(1.2, 1.2, 1.2),
+            new THREE.MeshStandardMaterial({color: 0x39d4a8, roughness: 0.35, metalness: 0.15}),
+        );
+        scene.add(box);
+
+        const torus = new THREE.Mesh(
+            new THREE.TorusGeometry(0.45, 0.16, 16, 48),
+            new THREE.MeshStandardMaterial({color: 0xff8a4c, roughness: 0.3, metalness: 0.4}),
+        );
+        scene.add(torus);
+
+        const resize = () => {
+            const w = canvas.clientWidth;
+            const h = canvas.clientHeight;
+            renderer.setSize(w, h, false);
+            camera.aspect = w / h;
+            camera.updateProjectionMatrix();
+        };
+        resize();
+        const ro = new ResizeObserver(resize);
+        ro.observe(canvas);
+
+        let raf = 0;
+        const clock = new THREE.Clock();
+        const tick = () => {
+            const t = clock.getElapsedTime();
+            const dt = clock.getDelta();
+            box.rotation.y += dt * 1.4;
+            box.position.y = Math.sin(t * 1.6) * 0.18;
+            torus.position.x = Math.cos(t * 0.9) * 1.6;
+            torus.position.z = Math.sin(t * 0.9) * 1.6;
+            torus.rotation.x += dt * 0.8;
+            torus.rotation.y += dt * 1.1;
+            renderer.render(scene, camera);
+            raf = requestAnimationFrame(tick);
+        };
+        tick();
+
+        return () => {
+            cancelAnimationFrame(raf);
+            ro.disconnect();
+            scene.traverse((obj) => {
+                const mesh = obj as THREE.Mesh;
+                if (mesh.geometry) mesh.geometry.dispose();
+                const mat = mesh.material;
+                if (Array.isArray(mat)) mat.forEach((m) => m.dispose());
+                else if (mat) (mat as THREE.Material).dispose();
+            });
+            renderer.dispose();
+        };
+    }, []);
+
+    return (
+        <section className="section">
+            <div className="container">
+                <div className="section-head">
+                    <h2>One behavior. A live scene.</h2>
+                    <p>
+                        Write a behavior, attach it to any object, and it runs every frame
+                        inside the editor and in your shipped game. The same code drives
+                        previews, exports, and the player.
+                    </p>
+                </div>
+                <div className="showcase">
+                    <div className="code-pane">
+                        <div className="code-pane-head">
+                            <span className="code-pane-dots">
+                                <span />
+                                <span />
+                                <span />
+                            </span>
+                            SpinBehavior.ts
+                        </div>
+                        <pre dangerouslySetInnerHTML={{__html: highlight(HERO_CODE)}} />
+                    </div>
+                    <div className="preview-pane">
+                        <canvas ref={canvasRef} aria-label="Live 3D preview" />
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
+}

@@ -1,0 +1,22 @@
+.TextInput {
+    width: 120px;
+    height: 24px;
+    border: none;
+    border-radius: 8px !important;
+    background-color: var(--theme-input-background-color);
+    font-size: var(--theme-font-size-s) !important;
+    font-weight: var(--theme-font-regular);
+    color: var(--theme-font-unselected-color);
+    line-height: 120%;
+    padding: 6px 8px;
+    box-sizing: border-box;
+}
+
+.TextInput.dark-input {
+    background-color: var(--theme-editor-box-bg);
+    height: 24px;
+    color: var(--theme-font-input-color);
+    border-radius: 0;
+    width: 100%;
+    box-sizing: border-box;
+}

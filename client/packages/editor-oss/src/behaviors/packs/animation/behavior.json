@@ -1,0 +1,58 @@
+{
+    "id": "animation",
+    "name": "Animation",
+    "isScript": false,
+    "description": "Play and control animations embedded in 3D models with configurable playback settings. This behavior enables you to bring life to your 3D models by playing their built-in animations such as character movements, mechanical operations, or environmental effects.",
+    "documentation": "## Animation\nPlay animations embedded in 3D models.\n\n### Settings\n- **Animation** - Select from the model's available animations\n- **Loop** - Repeat the animation continuously\n- **Speed** - Playback speed multiplier (0-100)\n\n### Tips\n- Only visible for objects that have animations\n- Use **Start on Trigger** to play animations on events\n- Great for ambient animations (spinning fans, waving flags)\n- Combine with Trigger for interactive animated objects",
+    "author": "stemstudio",
+    "tags": ["motion"],
+    "main": "AnimationBehavior.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "visibilityConditions": [
+        {
+            "key": "_obj.animations.length",
+            "condition": "isGreater",
+            "value": 0
+        }
+    ],
+    "throttleConfig": {
+        "throttlePriority": "MEDIUM",
+        "enableFrustumCulling": true,
+        "enableDistanceThrottling": true,
+        "requiresConsistentUpdates": false
+    },
+    "attributes": {
+        "customName": {
+            "name": "Custom Name",
+            "type": "string"
+        },
+        "startOnTrigger": {
+            "name": "Start on Trigger",
+            "type": "boolean",
+            "description": "When enabled, the animation only plays when activated by a trigger event instead of playing automatically on load.",
+            "default": false
+        },
+        "animation": {
+            "name": "Animation",
+            "type": "enum",
+            "description": "Selects which animation clip from the 3D model to play. The list is auto-populated from the model's embedded animations.",
+            "autoFill": "object.animations",
+            "default": ""
+        },
+        "loop": {
+            "name": "Loop",
+            "type": "boolean",
+            "description": "When enabled, the animation repeats continuously. When disabled, the animation plays once and stops on the last frame.",
+            "default": true
+        },
+        "speed": {
+            "name": "Speed",
+            "type": "number",
+            "min": 0,
+            "max": 100,
+            "description": "Playback speed multiplier for the animation. 1 is normal speed, 0.5 is half speed, and 2 is double speed.",
+            "default": 1
+        }
+    }
+}

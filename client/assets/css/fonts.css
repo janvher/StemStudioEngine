@@ -1,0 +1,127 @@
+@font-face {
+    font-family: "Lilita One";
+    src: url("../fonts/lilita-one/LilitaOne-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Inter";
+    src: url("../fonts/Inter/Inter-VariableFont_opsz,wght.ttf") format("truetype");
+    font-weight: 100 900;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Inter-Italic";
+    src: url("../fonts/Inter/Inter-Italic-VariableFont_opsz,wght.ttf") format("truetype");
+    font-weight: 100 900;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "OpenSans";
+    src: url("../fonts/Open_Sans/OpenSans-VariableFont_wdth,wght.ttf") format("truetype");
+    font-weight: 100 900;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Jockey One";
+    src: url("../fonts/Jockey_One/JockeyOne-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Montserrat";
+    src: url("../fonts/Montserrat/Montserrat-VariableFont_wght.ttf") format("truetype");
+    font-weight: 100 900;
+    font-display: swap;
+}
+
+/* src/styles/lato-font.css */
+@font-face {
+    font-family: "Lato";
+    src: url("../fonts/Lato/Lato-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* src/styles/roboto-font.css */
+@font-face {
+    font-family: "Roboto";
+    src: url("../fonts/Roboto/Roboto-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Roboto";
+    src: url("../fonts/Roboto/Roboto-Medium.ttf") format("truetype");
+    font-weight: var(--theme-font-medium-plus);
+    font-display: swap;
+}
+
+/* Balsamiq_Sans */
+
+@font-face {
+    font-family: "Balsamiq_Sans";
+    src: url("../fonts/Balsamiq_Sans/BalsamiqSans-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Balsamiq_Sans";
+    src: url("../fonts/Balsamiq_Sans/BalsamiqSans-Bold.ttf") format("truetype");
+    font-weight: 700;
+    font-display: swap;
+}
+
+/* Balsamiq_Sans Italic */
+@font-face {
+    font-family: "Balsamiq_Sans";
+    src: url("../fonts/Balsamiq_Sans/BalsamiqSans-Italic.ttf") format("truetype");
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Balsamiq_Sans";
+    src: url("../fonts/Balsamiq_Sans/BalsamiqSans-BoldItalic.ttf") format("truetype");
+    font-weight: 700;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Lexend */
+@font-face {
+    font-family: "Lexend";
+    src: url("../fonts/Lexend/Lexend-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-display: swap;
+    font-style: normal;
+}
+@font-face {
+    font-family: "Lexend";
+    src: url("../fonts/Lexend/Lexend-Medium.ttf") format("truetype");
+    font-weight: 500;
+    font-display: swap;
+    font-style: normal;
+}
+@font-face {
+    font-family: "Lexend";
+    src: url("../fonts/Lexend/Lexend-SemiBold.ttf") format("truetype");
+    font-weight: 600;
+    font-display: swap;
+    font-style: normal;
+}
+@font-face {
+    font-family: "Lexend";
+    src: url("../fonts/Lexend/Lexend-Bold.ttf") format("truetype");
+    font-weight: 700;
+    font-display: swap;
+    font-style: normal;
+}

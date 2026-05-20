@@ -1,0 +1,38 @@
+# Basic local stack: site + editor + player. No AI copilot, no multiplayer.
+#
+# This is the deployment shape used by Cloudflare Pages / Render Static
+# Sites — a single static nginx container serving the full multi-shell
+# build. The Copilot panel hides itself when no provider is registered,
+# so the editor still works end-to-end here.
+#
+# Bring up:
+#   docker compose up --build
+#
+# Visit:
+#   http://localhost:8080/             landing
+#   http://localhost:8080/docs         docs
+#   http://localhost:8080/playground   playground iframe
+#   http://localhost:8080/dashboard    app shell (project list)
+
+services:
+    site:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        image: buildwithstem-site:latest
+        container_name: buildwithstem-site
+        ports:
+            - "8080:80"
+        # The Dockerfile already bakes nginx.basic.conf as the default,
+        # but mounting it explicitly here makes the choice visible in the
+        # compose file and lets you iterate on the routing without
+        # rebuilding the image.
+        volumes:
+            - ./docker/nginx.basic.conf:/etc/nginx/conf.d/default.conf:ro
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD", "wget", "-qO-", "http://localhost/healthz"]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 10s

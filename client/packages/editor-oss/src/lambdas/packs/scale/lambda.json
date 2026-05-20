@@ -1,0 +1,45 @@
+{
+    "id": "scale",
+    "name": "Scale",
+    "description": "Sets the scale of registered objects with optional uniform scaling",
+    "author": "stemstudio",
+    "version": "1.0.0",
+    "main": "ScaleLambda.ts",
+    "tags": [
+        "transform"
+    ],
+    "attributes": {},
+    "readComponents": [
+        "x",
+        "y",
+        "z",
+        "uniform"
+    ],
+    "writeComponents": [],
+    "componentSchema": {
+        "x": {
+            "name": "X",
+            "type": "number",
+            "default": 1,
+            "min": 0.001
+        },
+        "y": {
+            "name": "Y",
+            "type": "number",
+            "default": 1,
+            "min": 0.001
+        },
+        "z": {
+            "name": "Z",
+            "type": "number",
+            "default": 1,
+            "min": 0.001
+        },
+        "uniform": {
+            "name": "Uniform",
+            "type": "boolean",
+            "default": false
+        }
+    },
+    "documentation": "## Scale\n\nSets the scale of registered objects with optional uniform scaling\n\n### Runtime Notes\n- Attach this lambda to objects via Lambda Components.\n- If Auto Apply is enabled, it runs every frame.\n- If Auto Apply is disabled, call `lambdaInstance.apply(deltaTime)` from behavior/lambda code.\n\n### Component Parameters\n| Key | Label | Type | Default | Options |\n| --- | --- | --- | --- | --- |\n| `x` | X | `number` | `1` | - |\n| `y` | Y | `number` | `1` | - |\n| `z` | Z | `number` | `1` | - |\n| `uniform` | Uniform | `boolean` | `false` | - |"
+}

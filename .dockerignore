@@ -1,0 +1,17 @@
+.git
+.github
+.dual-graph
+.memsearch
+.claude
+build/
+client/node_modules
+node_modules
+stemstudio-multiplayer/node_modules
+stemstudio-multiplayer/build
+stemstudio-copilot/node_modules
+server/build
+**/.DS_Store
+**/*.log
+scripts/playwright/**/*-output
+docs/planning
+blog

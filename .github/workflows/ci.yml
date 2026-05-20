@@ -1,0 +1,41 @@
+name: CI
+
+# Runs the project's checks on every pull request and whenever a branch
+# is merged to main (the merge lands as a push to main).
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A newer push to the same ref cancels an in-flight run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: typecheck · lint · test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Unit tests
+        run: bun run test
+
+      - name: Deploy-routing smoke
+        run: node scripts/playwright/site-deploy-routing.mjs

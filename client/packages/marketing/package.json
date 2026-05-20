@@ -1,0 +1,6 @@
+{
+  "name": "@stemstudio/web-marketing",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts"
+}

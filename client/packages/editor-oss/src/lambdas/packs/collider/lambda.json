@@ -1,0 +1,56 @@
+{
+    "id": "collider",
+    "name": "Collider",
+    "description": "Defines collision shapes and performs basic intersection detection between registered objects",
+    "author": "stemstudio",
+    "version": "1.0.0",
+    "main": "ColliderLambda.ts",
+    "tags": [
+        "physics"
+    ],
+    "attributes": {},
+    "readComponents": [
+        "shape",
+        "sizeX",
+        "sizeY",
+        "sizeZ",
+        "isTrigger"
+    ],
+    "writeComponents": [],
+    "componentSchema": {
+        "shape": {
+            "name": "Shape",
+            "type": "string",
+            "default": "box",
+            "options": [
+                "box",
+                "sphere",
+                "capsule"
+            ]
+        },
+        "sizeX": {
+            "name": "Size X / Radius",
+            "type": "number",
+            "default": 1,
+            "min": 0.001
+        },
+        "sizeY": {
+            "name": "Size Y / Height",
+            "type": "number",
+            "default": 1,
+            "min": 0.001
+        },
+        "sizeZ": {
+            "name": "Size Z",
+            "type": "number",
+            "default": 1,
+            "min": 0.001
+        },
+        "isTrigger": {
+            "name": "Is Trigger",
+            "type": "boolean",
+            "default": false
+        }
+    },
+    "documentation": "## Collider\n\nDefines collision shapes and performs basic intersection detection between registered objects\n\n### Runtime Notes\n- Attach this lambda to objects via Lambda Components.\n- If Auto Apply is enabled, it runs every frame.\n- If Auto Apply is disabled, call `lambdaInstance.apply(deltaTime)` from behavior/lambda code.\n\n### Component Parameters\n| Key | Label | Type | Default | Options |\n| --- | --- | --- | --- | --- |\n| `shape` | Shape | `string` | `box` | `box`, `sphere`, `capsule` |\n| `sizeX` | Size X / Radius | `number` | `1` | - |\n| `sizeY` | Size Y / Height | `number` | `1` | - |\n| `sizeZ` | Size Z | `number` | `1` | - |\n| `isTrigger` | Is Trigger | `boolean` | `false` | - |"
+}

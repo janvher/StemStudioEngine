@@ -1,0 +1,30 @@
+/* Playground mode visibility rules.
+ *
+ * Components mark their root element with `data-playground-hide` to opt out
+ * of being rendered when the editor is loaded inside the public-site
+ * playground iframe. See `playgroundMode.ts` for the gating contract.
+ *
+ * Allowed surfaces in playground mode:
+ *   - Dashboard (project list at /dashboard)
+ *   - Editor (scene tree, viewport, inspector)
+ *   - AI copilot panel
+ *   - Player (/play/:projectID)
+ *
+ * Hidden surfaces (annotate with data-playground-hide):
+ *   - Settings panel and its menu entry
+ *   - BYOK key management panel
+ *   - Export menu items that publish externally
+ *   - Multiplayer room setup panel
+ *   - Asset upload / asset library admin
+ *   - Account / login / signup surfaces
+ */
+
+html[data-playground-mode="true"] [data-playground-hide] {
+    display: none !important;
+}
+
+/* Hide the OSS bootstrap modal in playground mode — visitors should not
+ * need to pick a persistence backend; the iframe defaults to IndexedDB. */
+html[data-playground-mode="true"] [data-oss-bootstrap-modal] {
+    display: none !important;
+}

@@ -1,0 +1,346 @@
+:root {
+    --theme-blue: #6366f1;
+    --theme-blue-secondary: #818cf8;
+    --theme-green: #22c55e;
+    --theme-orange: #f97316;
+    --theme-black: #ffffff;
+    user-select: none;
+
+    /* Container colors - deep navy palette */
+    --theme-container-main-dark: #141729;
+    --theme-container-minor-dark: #121525;
+    --theme-container-secondary-dark: #2a2e42;
+    --theme-container-milky: #c8d0e833;
+    --theme-container-milky-hover: #c8d0e866;
+    --theme-container-stroke-color: #6366f1;
+    --theme-container-unselected-tap-color: #0d0f1a;
+    --theme-container-selected-tap-color: #2a2e42;
+    --theme-editor-box-bg: #1a1d30;
+    --theme-grey-bg: #1e2235;
+    --theme-grey-bg-secondary: #2a2e42;
+    --theme-grey-bg-tertiary: #12152a;
+    --theme-grey-bg-button: #353952;
+    --theme-grey-bg-button-hover: #454a66;
+    --theme-grey-bg-button-active: #5b6178;
+    --theme-grey-bg-secondary-button: #2a2e42;
+    --theme-grey-bg-secondary-button-hover: #353952;
+    --theme-grey-bg-secondary-button-active: #454a66;
+    --theme-grey-bg-tertiary-button: #1e2235;
+    --theme-grey-bg-tertiary-button-hover: #2a2e42;
+    --theme-grey-bg-tertiary-button-active: #353952;
+    --theme-container-divider: #1e2235;
+
+    /* Dialog theme - orange primary CTA */
+    --theme-dialog-bg: #181b2e;
+    --theme-dialog-border-radius: 8px;
+    --theme-dialog-shadow: 0px 8px 32px rgba(0, 0, 0, 0.6);
+    --theme-dialog-button-primary: #f97316;
+    --theme-dialog-button-primary-hover: #ea580c;
+    --theme-dialog-button-primary-active: #fb923c;
+    --theme-dialog-button-secondary: transparent;
+    --theme-dialog-button-secondary-border: #353952;
+    --theme-dialog-button-secondary-hover: #1e2235;
+    --theme-dialog-button-secondary-active: #2a2e42;
+
+    --theme-dialog-button-purple: #5b21b6;
+    --theme-dialog-button-purple-hover: #531fa5;
+    --theme-dialog-button-purple-active: #5632a9;
+    --theme-dialog-button-purple-light: #8b5cf6;
+    --theme-dialog-button-purple-light-border: #5b21b6;
+    --theme-dialog-button-purple-green: #10b981;
+    --theme-dialog-button-purple-green-border: #1a3a42;
+
+    --theme-container-main-pink: #d946ef;
+    --theme-container-main-pink-border: #e879f9;
+    --theme-container-hover-pink: #c026d3;
+    --theme-container-hover-pink-border: #e879f9;
+    --theme-container-active-pink: #f0abfc;
+    --theme-container-active-pink-border: #f5d0fe;
+
+    --theme-container-main-blue: #4338ca;
+    --theme-container-main-blue-border: #6366f1;
+    --theme-container-hover-blue: #3730a3;
+    --theme-container-hover-blue-border: #4f46e5;
+    --theme-container-active-blue: #6366f1;
+    --theme-container-active-blue-border: #818cf8;
+    --theme-container-active-blue-secondary: #4f46e5;
+
+    --theme-container-selected-border: #818cf8;
+
+    --theme-input-background-color: #1e2235;
+    --theme-red-button: #ef4444;
+    --theme-red-button-hover: #dc2626;
+    --theme-red-button-active: #f87171;
+
+    --theme-tag-bg: #6366f126;
+    --theme-tag-bg-hover: #6366f140;
+    --theme-tag-border: #6366f14d;
+    --theme-tag-border-hover: #6366f180;
+
+    /* Icons */
+    --theme-icon-selected-color: #fff;
+    --theme-icon-properties-selected-color: #818cf8;
+
+    /* Font - blue-tinted muted tones */
+    --theme-font-main-selected-color: #fafafa;
+    --theme-font-unselected-color: #8b93a7;
+    --theme-font-unselected-secondary-color: #c8d0e8;
+    --theme-font-unselected-tertiary-color: #9ba3bd;
+    --theme-font-unselected-tab-color: #4a5068;
+    --theme-font-disabled: #5b6178;
+    --theme-font-input-color: #c8d0e8;
+    --theme-font-red: #fb7185;
+
+    --theme-font-bold: 600;
+    --theme-font-medium-plus: 600;
+    --theme-font-medium: 500;
+    --theme-font-regular: 400;
+
+    --theme-font-size-s: 12px;
+    --theme-font-size-extra-small: 10px;
+    --theme-font-size-xs: 11px;
+    --theme-font-size-sm: 13px;
+    --theme-font-size-m: 14px;
+    --theme-font-size-base: 15px;
+    --theme-font-size-l: 16px;
+    --theme-font-size-xl: 18px;
+    --theme-font-size-2xl: 20px;
+    --theme-font-size-3xl: 24px;
+    --theme-font-size-4xl: 28px;
+
+    /* Semantic status colors */
+    --theme-color-success: #34d399;
+    --theme-color-success-bg: #064e3b;
+    --theme-color-error: #fb7185;
+    --theme-color-error-bg: #7f1d1d;
+    --theme-color-error-strong: #ef4444;
+    --theme-color-warning: #f0c674;
+
+    /* Dashboard text colors */
+    --theme-font-primary: #e5e7eb;
+    --theme-font-secondary: #9ca3af;
+    --theme-font-tertiary: #6b7280;
+
+    /* Dashboard backgrounds */
+    --theme-dashboard-bg: #141728;
+    --theme-card-bg: #1a2236;
+
+    /* Overlay/opacity */
+    --theme-overlay-white-3: rgba(255, 255, 255, 0.03);
+    --theme-overlay-white-5: rgba(255, 255, 255, 0.05);
+    --theme-overlay-white-8: rgba(255, 255, 255, 0.08);
+    --theme-overlay-white-15: rgba(255, 255, 255, 0.15);
+    --theme-overlay-black-20: rgba(0, 0, 0, 0.2);
+    --theme-overlay-black-60: rgba(0, 0, 0, 0.6);
+
+    /* Borders */
+    --theme-border-selected: #ff0000;
+
+    /* scroll */
+    --theme-scroll-list-thumb: #4a5068;
+
+    /* Game Overview page */
+    --theme-overview-card-bg: #1e2238;
+    --theme-overview-action-button-bg: #414979;
+    --theme-overview-action-gradient: linear-gradient(94.96deg, #62ebf0, #c7d846 50%, #d9621d);
+    --theme-overview-title-color: #f8fafc;
+    --theme-overview-label-color: rgba(248, 250, 252, 0.8);
+    --theme-overview-value-color: #b2b2b9;
+    --theme-overview-tag-color: #7c8adb;
+    --theme-overview-accent-yellow: #c8d144;
+    --theme-overview-admin-color: #f59e0b;
+    --theme-overview-thumbnail-overlay: rgba(8, 11, 21, 0.72);
+    --theme-overview-thumbnail-overlay-hover: rgba(8, 11, 21, 0.9);
+    --theme-overview-danger-border: rgba(239, 68, 68, 0.4);
+
+    /* Homepage colors - DON NOT USE IN EDITOR */
+    --theme-homepage-main-bg: #0a0d1a;
+    --theme-homepage-box-bg-primary: #1a1d30;
+    --theme-homepage-box-bg-secondary: #141729;
+    --theme-homepage-box-bg-tertiary: #141729;
+    --theme-homepage-button-primary: linear-gradient(90deg, #f97316 0%, #ea580c 100%);
+    --theme-homepage-user-profile-details-color: #0d0f1a;
+    --theme-homepage-user-profile-item-box-color: #1e2235;
+    --theme-homepage-user-profile-quest-bg: #6366f11a;
+    --theme-homepage-color-completed: #22c55e;
+    --theme-homepage-progress-bar: #f87171;
+    --theme-homepage-progress-bar-secondary: #8b5cf6;
+
+    --theme-homepage-font-family-secondary: "Staatliches";
+
+    --theme-button-text-size: var(--theme-font-size-l);
+    --theme-homepage-font-color-secondary: var(--theme-homepage-color-completed);
+    --theme-homepage-link-color: #818cf8;
+    --theme-homepage-grey-bg-primary: #1e2235;
+    --theme-homepage-grey-bg-secondary: #2a2e42;
+    --theme-homepage-placeholder-color: #5b6178;
+    --theme-homepage-main-blue: #4f46e5;
+}
+
+* {
+    font-family: "Lexend";
+    box-sizing: border-box;
+}
+
+html,
+body {
+    background-color: var(--theme-container-main-dark);
+    /* iOS safe area handling for webview */
+    padding-top: env(safe-area-inset-top);
+    padding-top: constant(safe-area-inset-top); /* iOS 11.0-11.2 fallback */
+}
+
+:focus {
+    outline: none;
+}
+
+::-webkit-scrollbar {
+    width: 5px;
+}
+
+::-webkit-scrollbar:horizontal {
+    height: 0.5em;
+}
+
+::-webkit-scrollbar-track {
+    box-shadow: none;
+    border-radius: 0;
+    background-color: var(--theme-container-main-dark);
+}
+
+::-webkit-scrollbar-thumb {
+    border-radius: 0;
+    background: var(--theme-scroll-list-thumb);
+    box-shadow: none;
+}
+
+::-webkit-scrollbar-thumb:window-inactive {
+    background-color: var(--theme-container-main-dark);
+}
+
+@supports (-moz-appearance: none) {
+    html {
+        scrollbar-width: thin;
+        scrollbar-color: var(--theme-scroll-list-thumb) var(--theme-container-main-dark);
+    }
+}
+
+button:disabled {
+    cursor: not-allowed !important;
+}
+
+button.reset-css {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.hidden-scroll {
+    overflow-x: hidden;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+}
+.hidden-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+a {
+    text-decoration: none;
+}
+
+.Toastify__toast-container {
+    top: calc(48px + 4px) !important;
+}
+
+.monaco-editor-breakpoint,
+.monaco-editor-breakpoint-preview {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding-left: 4px;
+    cursor: pointer;
+}
+
+.monaco-editor-breakpoint::before,
+.monaco-editor-breakpoint-preview::before {
+    content: "";
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: red;
+}
+
+.monaco-editor-breakpoint-preview::before {
+    background-color: darkred;
+}
+
+.no-interaction * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+}
+.no-interaction *:not([draggable="true"]):not([scrollable="true"]) {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -webkit-user-drag: none;
+    touch-action: none;
+}
+
+.no-interaction *[draggable="true"][scrollable="true"] {
+    touch-action: pan-y;
+}
+
+.no-interaction ::selection {
+    background: transparent;
+}
+
+.no-interaction ::-moz-selection {
+    background: transparent;
+}
+
+.no-interaction ::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+.no-interaction html {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.custom-scroll {
+    overflow-y: auto; /* enable vertical scroll if needed */
+    overflow-x: hidden; /* enable vertical scroll if needed */
+}
+
+/* width of the scrollbar */
+.custom-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+/* scrollbar track */
+.custom-scroll::-webkit-scrollbar-track {
+    background: transparent; /* or any background you want */
+}
+
+/* scrollbar thumb */
+.custom-scroll::-webkit-scrollbar-thumb {
+    background: #2a2e42;
+    border-radius: 4px;
+    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+}
+
+/* optional: hover effect for the thumb */
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+    background: #353952;
+}
+
+.my-toaster {
+    user-select: text;
+}

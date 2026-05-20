@@ -1,0 +1,38 @@
+{
+    "id": "cooldownGate",
+    "name": "Cooldown Gate",
+    "description": "Maintains a cooldown-ready flag and consumes it when triggered.",
+    "author": "stemstudio",
+    "version": "1.0.0",
+    "main": "CooldownGateLambda.ts",
+    "tags": [
+        "common",
+        "utility",
+        "trigger"
+    ],
+    "attributes": {},
+    "readComponents": [
+        "cooldownSeconds",
+        "flagKey",
+        "consumeOnPass"
+    ],
+    "writeComponents": [],
+    "componentSchema": {
+        "cooldownSeconds": {
+            "name": "Cooldown Seconds",
+            "type": "number",
+            "default": 1
+        },
+        "flagKey": {
+            "name": "Flag Key",
+            "type": "string",
+            "default": "cooldownReady"
+        },
+        "consumeOnPass": {
+            "name": "Consume On Pass",
+            "type": "boolean",
+            "default": true
+        }
+    },
+    "documentation": "## Cooldown Gate\n\nMaintains a cooldown-ready flag and consumes it when triggered.\n\n### Runtime Notes\n- Attach this lambda to objects via Lambda Components.\n- If Auto Apply is enabled, it runs every frame.\n- If Auto Apply is disabled, call `lambdaInstance.apply(deltaTime)` from behavior/lambda code.\n\n### Component Parameters\n| Key | Label | Type | Default | Options |\n| --- | --- | --- | --- | --- |\n| `cooldownSeconds` | Cooldown Seconds | `number` | `1` | - |\n| `flagKey` | Flag Key | `string` | `cooldownReady` | - |\n| `consumeOnPass` | Consume On Pass | `boolean` | `true` | - |"
+}

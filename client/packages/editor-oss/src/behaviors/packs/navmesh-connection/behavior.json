@@ -1,0 +1,71 @@
+{
+    "id": "navmesh-connection",
+    "name": "NavMesh Connection",
+    "isScript": false,
+    "description": "Creates specialized off-mesh connections in NavMesh that enable AI agents to traverse gaps, climb ledges, jump across chasms, or use teleporters. These connections define paths that aren't part of the regular walkable surface, essential for creating dynamic multi-level navigation. Requires active NavMesh behavior in scene and integrates with Recast/Detour pathfinding system.",
+    "documentation": "## NavMesh Connection\nCreate off-mesh links for AI agents to traverse gaps, jumps, or teleports.\n\n### Settings\n- **Target Object** - Destination of this connection\n- **Bidirectional** - Allow travel in both directions\n- **Connection Radius** - Search radius for connecting to NavMesh\n- **Show Connection** - Visualize the connection in editor\n\n### Tips\n- Requires an active NavMesh behavior in the scene\n- Use for jumps, ladders, teleporters, or shortcuts\n- Disable bidirectional for one-way drops or vaults\n- Place connection objects at the start and end points",
+    "author": "stemstudio",
+    "tags": ["navigation", "ai", "pathfinding", "connection"],
+    "main": "NavMeshConnectionBehavior.ts",
+    "priority": -400,
+    "version": "1.0.0",
+    "dependencies": {
+        "navmesh": "^1.0.0"
+    },
+    "isSingleton": false,
+    "throttleConfig": {
+        "throttlePriority": "LOW",
+        "enableFrustumCulling": false,
+        "enableDistanceThrottling": false,
+        "requiresConsistentUpdates": false
+    },
+    "isThrottlingLocked": true,
+    "objectSettings": {
+        "physics": {
+            "enabled": false
+        }
+    },
+    "attributes": {
+        "customName": {
+            "name": "Custom Name",
+            "type": "string"
+        },
+        "enabled": {
+            "name": "Enable Connection",
+            "type": "boolean",
+            "description": "Enable or disable this off-mesh connection",
+            "default": true
+        },
+        "targetObject": {
+            "name": "Target Object",
+            "type": "object",
+            "description": "The destination object for this connection (like TeleportBehavior)",
+            "default": null
+        },
+        "bidirectional": {
+            "name": "Bidirectional",
+            "type": "boolean",
+            "default": true,
+            "description": "Allow navigation in both directions. Disable for one-way connections (drops, vaults)"
+        },
+        "radius": {
+            "name": "Connection Radius",
+            "type": "slider",
+            "min": 0.1,
+            "max": 2,
+            "step": 0.1,
+            "default": 0.5,
+            "description": "Search radius for connecting to nearby navmesh polygons"
+        },
+        "visualizationLabel": {
+            "name": "Visualization",
+            "type": "label"
+        },
+        "showConnection": {
+            "name": "Show Connection",
+            "type": "boolean",
+            "default": true,
+            "description": "Show visual arrow/line between start and end points"
+        }
+    }
+}

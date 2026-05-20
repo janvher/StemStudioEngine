@@ -1,0 +1,62 @@
+{
+    "id": "dayNightCycle",
+    "name": "Day Night Cycle",
+    "isScript": false,
+    "isHidden": false,
+    "description": "Advanced day-night cycle system with realistic atmospheric scattering that simulates the passage of time by rotating the sun and updating sky appearance. Attach to a DirectionalLight to create dynamic lighting conditions that change from sunrise through noon, sunset, and night. Uses three.js SkyMesh for physically-based sky rendering.",
+    "documentation": "## Day Night Cycle\nSimulate a day-night cycle by rotating a directional light.\n\n### Settings\n- **Enable Sun Rotation** - Toggle the cycle on/off\n- **Initial Time (Hours)** - Starting time of day (0-24)\n- **Rotation Speed** - How fast time passes\n- **Pause Rotation** - Freeze the current time\n\n### Tips\n- Attach to a **Directional Light** object only\n- Set initial time to 6 for sunrise, 12 for noon, 18 for sunset\n- Use low rotation speed for subtle ambient changes\n- Pause rotation to lock the lighting at a specific time",
+    "author": "stemstudio",
+    "tags": ["day night cycle"],
+    "main": "DayNightCycleBehavior.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "visibilityConditions": [
+        {
+            "key": "isDirectionalLight",
+            "condition": "isEqual",
+            "value": true
+        }
+    ],
+    "throttleConfig": {
+        "throttlePriority": "LOW",
+        "enableFrustumCulling": true,
+        "enableDistanceThrottling": true,
+        "requiresConsistentUpdates": false
+    },
+    "attributes": {
+        "customName": {
+            "name": "Custom Name",
+            "type": "string"
+        },
+        "enableDayNightCycle": {
+            "name": "Enable Sun Rotation",
+            "type": "boolean",
+            "default": true,
+            "description": "Toggle the day-night cycle on or off. When enabled, the sun rotates and the sky appearance updates over time."
+        },
+        "initialTimeHours": {
+            "name": "Initial Time (Hours)",
+            "type": "number",
+            "default": 6,
+            "min": 0,
+            "max": 24,
+            "step": 0.5,
+            "description": "Starting time of day in 24-hour format. Use 6 for sunrise, 12 for noon, or 18 for sunset."
+        },
+        "rotationSpeed": {
+            "name": "Rotation Speed",
+            "type": "number",
+            "default": 1,
+            "min": 0,
+            "max": 10,
+            "step": 0.1,
+            "description": "How fast time passes in the cycle. Higher values make the sun move faster across the sky."
+        },
+        "isPaused": {
+            "name": "Pause Rotation",
+            "type": "boolean",
+            "default": false,
+            "description": "Freeze the cycle at the current time of day. Useful for locking lighting to a specific moment."
+        }
+    }
+}

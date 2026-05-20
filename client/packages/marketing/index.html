@@ -1,0 +1,36 @@
+﻿<!doctype html>
+<html lang="en-US">
+    <head>
+        <meta charset="utf-8" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <title>StemStudio</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+        <link href="/assets/css/fonts.css" rel="stylesheet" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+        <meta name="referrer" content="no-referrer" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="apple-touch-fullscreen" content="yes" />
+        <script>
+          //add process.nextTick needed by copilot multiplexer
+          window.process = window.process || {};
+          window.process.nextTick = window.process.nextTick || function (fn) {
+            window.setTimeout(fn, 0); // Or requestAnimationFrame for higher priority
+          };
+          //add _t
+          function _t(str) {
+                return str;
+            }
+        </script>
+    </head>
+
+    <body>
+        <div id="container" tabindex="10"></div>
+        <script type="module" src="/packages/marketing/src/index.ts"></script>
+    </body>
+</html>

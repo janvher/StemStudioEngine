@@ -1,0 +1,76 @@
+{
+    "id": "uiAction",
+    "name": "UI Action",
+    "description": "Open UI, close UI, or show a toast message.",
+    "author": "stemstudio",
+    "version": "1.0.0",
+    "main": "UIActionLambda.ts",
+    "tags": [
+        "common",
+        "ui",
+        "trigger"
+    ],
+    "attributes": {},
+    "readComponents": [
+        "action",
+        "uiTargetId",
+        "message",
+        "toastType"
+    ],
+    "writeComponents": [],
+    "componentSchema": {
+        "action": {
+            "name": "Action",
+            "type": "enum",
+            "default": "toast",
+            "options": [
+                {
+                    "label": "Open UI",
+                    "value": "open_ui"
+                },
+                {
+                    "label": "Close UI",
+                    "value": "close_ui"
+                },
+                {
+                    "label": "Toast",
+                    "value": "toast"
+                }
+            ]
+        },
+        "uiTargetId": {
+            "name": "UI Element ID",
+            "type": "string",
+            "default": ""
+        },
+        "message": {
+            "name": "Message",
+            "type": "string",
+            "default": ""
+        },
+        "toastType": {
+            "name": "Toast Type",
+            "type": "enum",
+            "default": "info",
+            "options": [
+                {
+                    "label": "Info",
+                    "value": "info"
+                },
+                {
+                    "label": "Success",
+                    "value": "success"
+                },
+                {
+                    "label": "Warning",
+                    "value": "warning"
+                },
+                {
+                    "label": "Error",
+                    "value": "error"
+                }
+            ]
+        }
+    },
+    "documentation": "## UI Action\n\nOpen UI, close UI, or show a toast message.\n\n### Runtime Notes\n- Attach this lambda to objects via Lambda Components.\n- If Auto Apply is enabled, it runs every frame.\n- If Auto Apply is disabled, call `lambdaInstance.apply(deltaTime)` from behavior/lambda code.\n\n### Component Parameters\n| Key | Label | Type | Default | Options |\n| --- | --- | --- | --- | --- |\n| `action` | Action | `enum` | `toast` | `Open UI` (`open_ui`), `Close UI` (`close_ui`), `Toast` (`toast`) |\n| `uiTargetId` | UI Element ID | `string` | `` | - |\n| `message` | Message | `string` | `` | - |\n| `toastType` | Toast Type | `enum` | `info` | `Info` (`info`), `Success` (`success`), `Warning` (`warning`), `Error` (`error`) |"
+}

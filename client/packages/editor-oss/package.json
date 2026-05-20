@@ -1,0 +1,7 @@
+{
+  "name": "@stem/editor-oss",
+  "private": true,
+  "type": "module",
+  "description": "OSS-safe editor + player + runtime core for StemStudio. Code in this package must run with no proprietary backend (no cloud storage, no managed AI keys, no community gallery).",
+  "license": "MIT"
+}

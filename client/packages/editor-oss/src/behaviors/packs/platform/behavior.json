@@ -1,0 +1,75 @@
+{
+    "id": "platform",
+    "name": "Platform",
+    "isScript": false,
+    "description": "An animated kinematic platform system that creates moving floors, elevators, and transport surfaces. Uses tween-based animation to smoothly move objects along a defined path while automatically carrying players standing on the platform. Supports multiple loop modes and orientation-aware movement with multiplayer synchronization.",
+    "documentation": "## Platform\nCreate moving platforms that carry the player and objects.\n\n### Settings\n- **Move** - Direction and distance to move (X, Y, Z)\n- **Speed** - Movement speed (default: 10)\n- **Loop Mode** - None (one-way), Repeat, or Mirror (back-and-forth)\n\n### Tips\n- Physics is auto-configured as kinematic\n- Use **Start on Trigger** to activate with a Trigger behavior\n- Mirror mode creates elevator-like motion\n- The player rides the platform automatically via physics",
+    "author": "stemstudio",
+    "tags": ["motion"],
+    "main": "PlatformBehavior.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "throttleConfig": {
+        "throttlePriority": "CRITICAL",
+        "enableFrustumCulling": false,
+        "enableDistanceThrottling": false,
+        "requiresConsistentUpdates": false
+    },
+    "objectSettings": {
+        "physics": {
+            "enabled": true,
+            "type": "kinematic",
+            "mass": 0,
+            "restitution": 0
+        }
+    },
+    "attributes": {
+        "customName": {
+            "name": "Custom Name",
+            "type": "string"
+        },
+        "startOnTrigger": {
+            "name": "Start on trigger",
+            "type": "boolean",
+            "description": "When enabled, the platform stays still until activated by a Trigger behavior.",
+            "default": false
+        },
+        "move": {
+            "name": "Move",
+            "type": "vector3",
+            "description": "Direction and distance the platform travels from its starting position, in world units along each axis.",
+            "default": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            }
+        },
+        "speed": {
+            "name": "Speed",
+            "type": "number",
+            "min": 0,
+            "description": "How fast the platform moves along its path. Higher values make the platform travel faster.",
+            "default": 10
+        },
+        "loopMode": {
+            "name": "Loop Mode",
+            "type": "enum",
+            "description": "Controls what happens when the platform reaches its destination. None stops at the end, Repeat teleports back to the start, and Mirror reverses direction.",
+            "options": [
+                {
+                    "label": "None",
+                    "value": "Play Once"
+                },
+                {
+                    "label": "Repeat",
+                    "value": "Repeat"
+                },
+                {
+                    "label": "Mirror",
+                    "value": "Loop"
+                }
+            ],
+            "default": "Loop"
+        }
+    }
+}

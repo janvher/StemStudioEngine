@@ -1,0 +1,119 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "ES2022",
+        "strict": true,
+        "jsx": "react-jsx",
+        "moduleResolution": "bundler",
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "baseUrl": ".",
+        "ignoreDeprecations": "6.0",
+        "skipLibCheck": true,
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "noEmit": true,
+        "incremental": true,
+        "tsBuildInfoFile": ".tsbuildinfo",
+        "allowSyntheticDefaultImports": true,
+        "allowJs": true,
+        "lib": [
+            "ES2022",
+            "DOM"
+        ],
+        "types": [
+            "vite/client",
+            "vitest/globals",
+            "@testing-library/jest-dom"
+        ],
+        "noUncheckedIndexedAccess": true,
+        "noImplicitAny": true,
+        "strictNullChecks": true,
+        "strictFunctionTypes": true,
+        "strictBindCallApply": true,
+        "strictPropertyInitialization": true,
+        "noImplicitThis": true,
+        "alwaysStrict": true,
+        "paths": {
+            "ammo": [
+                "assets/js/ammo/ammo.wasm.d.ts"
+            ],
+            "autolod": [
+                "packages/shared/src/package/autolod/packages/core/src"
+            ],
+            "src/api/*": [
+                "packages/network/src/adapters/remote-go/*"
+            ],
+            "src/*": [
+                "packages/shared/src/*"
+            ],
+            "@web-shared/*": [
+                "packages/shared/src/*"
+            ],
+            "@web-dashboard/*": [
+                "packages/dashboard/src/*"
+            ],
+            "@stem/network": [
+                "packages/network/src/index.ts"
+            ],
+            "@stem/network/api/*": [
+                "packages/network/src/adapters/remote-go/*"
+            ],
+            "@stem/network/*": [
+                "packages/network/src/*"
+            ],
+            "@web-shared/api/*": [
+                "packages/network/src/adapters/remote-go/*"
+            ],
+            "@web-backend/*": [
+                "packages/network/src/*"
+            ],
+            "@stem/copilot": [
+                "packages/copilot/src/index.ts"
+            ],
+            "@stem/copilot/*": [
+                "packages/copilot/src/*"
+            ],
+            "@stem/copilot-stemstudio": [
+                "oss-stubs/copilot-stemstudio.ts"
+            ],
+            "@stem/copilot-stemstudio/*": [
+                "oss-stubs/copilot-stemstudio.ts"
+            ],
+            "@stem/auth-firebase": [
+                "oss-stubs/auth-firebase.ts"
+            ],
+            "@stem/auth-firebase/*": [
+                "oss-stubs/auth-firebase.ts"
+            ],
+            "@stem/editor-oss": [
+                "packages/editor-oss/src/index.ts"
+            ],
+            "@stem/editor-oss/*": [
+                "packages/editor-oss/src/*"
+            ],
+            "ktx2-encoder/gltf-transform": [
+                "../node_modules/ktx2-encoder/types/gltf-transform/index.d.ts"
+            ],
+            "firebase/app": [
+                "oss-stubs/firebase-app.ts"
+            ],
+            "firebase/auth": [
+                "oss-stubs/firebase-auth.ts"
+            ],
+            "firebase/firestore": [
+                "oss-stubs/firebase-firestore.ts"
+            ],
+            "firebase/analytics": [
+                "oss-stubs/firebase-analytics.ts"
+            ]
+        }
+    },
+    "include": [
+        "packages/**/*",
+        "assets/**/*.d.ts"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}

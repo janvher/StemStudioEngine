@@ -1,0 +1,7 @@
+{
+    "name": "@stem/network",
+    "private": true,
+    "type": "module",
+    "main": "src/index.ts",
+    "description": "Pluggable network layer for the StemStudio editor. Routes API traffic to either the canonical Go backend or a local Node reference server, with one selection point that consumers (apps + shared library) read through."
+}

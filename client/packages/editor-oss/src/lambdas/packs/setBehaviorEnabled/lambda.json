@@ -1,0 +1,60 @@
+{
+    "id": "setBehaviorEnabled",
+    "name": "Set Behavior Enabled",
+    "description": "Enables or disables a behavior on the target object.",
+    "author": "stemstudio",
+    "version": "1.0.0",
+    "main": "SetBehaviorEnabledLambda.ts",
+    "tags": [
+        "common",
+        "behavior",
+        "trigger"
+    ],
+    "attributes": {},
+    "readComponents": [
+        "behaviorRef",
+        "matchBy",
+        "enabled",
+        "includeChildren",
+        "applyOnce"
+    ],
+    "writeComponents": [],
+    "componentSchema": {
+        "behaviorRef": {
+            "name": "Behavior ID/UUID",
+            "type": "string",
+            "default": ""
+        },
+        "matchBy": {
+            "name": "Match By",
+            "type": "enum",
+            "options": [
+                {
+                    "label": "Behavior ID",
+                    "value": "id"
+                },
+                {
+                    "label": "Behavior UUID",
+                    "value": "uuid"
+                }
+            ],
+            "default": "id"
+        },
+        "enabled": {
+            "name": "Enabled",
+            "type": "boolean",
+            "default": true
+        },
+        "includeChildren": {
+            "name": "Include Children",
+            "type": "boolean",
+            "default": false
+        },
+        "applyOnce": {
+            "name": "Apply Once",
+            "type": "boolean",
+            "default": true
+        }
+    },
+    "documentation": "## Set Behavior Enabled\n\nEnables or disables a behavior on the target object.\n\n### Runtime Notes\n- Attach this lambda to objects via Lambda Components.\n- If Auto Apply is enabled, it runs every frame.\n- If Auto Apply is disabled, call `lambdaInstance.apply(deltaTime)` from behavior/lambda code.\n\n### Component Parameters\n| Key | Label | Type | Default | Options |\n| --- | --- | --- | --- | --- |\n| `behaviorRef` | Behavior ID/UUID | `string` | `` | - |\n| `matchBy` | Match By | `enum` | `id` | `Behavior ID` (`id`), `Behavior UUID` (`uuid`) |\n| `enabled` | Enabled | `boolean` | `true` | - |\n| `includeChildren` | Include Children | `boolean` | `false` | - |\n| `applyOnce` | Apply Once | `boolean` | `true` | - |"
+}

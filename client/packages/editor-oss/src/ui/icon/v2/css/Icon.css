@@ -1,0 +1,5 @@
+.ImageListV2 > .content > .item > .no-img > .Icon {
+    font-size: 50px;
+    margin: 2px;
+    display: inline-block;
+}

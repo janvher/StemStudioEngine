@@ -1,0 +1,44 @@
+<svg width="1200" height="480" viewBox="0 0 1200 480" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="docsGlow" x1="760" y1="66" x2="1130" y2="408" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#34D399" stop-opacity="0.38"/>
+      <stop offset="1" stop-color="#22D3EE" stop-opacity="0.18"/>
+    </linearGradient>
+    <linearGradient id="bookA" x1="804" y1="140" x2="930" y2="312" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F766E"/>
+      <stop offset="1" stop-color="#164E63"/>
+    </linearGradient>
+    <linearGradient id="bookB" x1="930" y1="140" x2="1056" y2="312" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#115E59"/>
+      <stop offset="1" stop-color="#166534"/>
+    </linearGradient>
+    <filter id="docsBlur" x="681" y="-13" width="520" height="520" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="30"/>
+    </filter>
+  </defs>
+  <g filter="url(#docsBlur)" opacity="0.8">
+    <circle cx="941" cy="247" r="170" fill="url(#docsGlow)"/>
+  </g>
+  <path d="M796 142C846 122 890 122 930 142V322C892 302 848 302 796 322V142Z" fill="url(#bookA)" stroke="#6EE7B7" stroke-width="3"/>
+  <path d="M930 142C970 122 1014 122 1064 142V322C1012 302 968 302 930 322V142Z" fill="url(#bookB)" stroke="#6EE7B7" stroke-width="3"/>
+  <path d="M930 142V322" stroke="#A7F3D0" stroke-width="3"/>
+  <path d="M832 186H896" stroke="#D1FAE5" stroke-width="6" stroke-linecap="round"/>
+  <path d="M832 214H904" stroke="#99F6E4" stroke-width="6" stroke-linecap="round"/>
+  <path d="M832 242H888" stroke="#D1FAE5" stroke-width="6" stroke-linecap="round"/>
+  <path d="M960 186H1028" stroke="#D1FAE5" stroke-width="6" stroke-linecap="round"/>
+  <path d="M960 214H1020" stroke="#99F6E4" stroke-width="6" stroke-linecap="round"/>
+  <path d="M960 242H1034" stroke="#D1FAE5" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="1088" cy="138" r="18" fill="#0F172A" fill-opacity="0.88" stroke="#67E8F9" stroke-width="3"/>
+  <path d="M1081 138H1095" stroke="#67E8F9" stroke-width="4" stroke-linecap="round"/>
+  <path d="M1088 131V145" stroke="#67E8F9" stroke-width="4" stroke-linecap="round"/>
+  <path d="M1026 100L1042 112L1058 100" stroke="#6EE7B7" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M1068 358L1084 370L1100 358" stroke="#67E8F9" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M770 348C810 322 854 310 902 312" stroke="#34D399" stroke-width="4" stroke-linecap="round" stroke-dasharray="4 10"/>
+  <path d="M960 312C1006 312 1046 322 1088 350" stroke="#67E8F9" stroke-width="4" stroke-linecap="round" stroke-dasharray="4 10"/>
+  <circle cx="770" cy="348" r="8" fill="#34D399"/>
+  <circle cx="902" cy="312" r="8" fill="#A7F3D0"/>
+  <circle cx="960" cy="312" r="8" fill="#A7F3D0"/>
+  <circle cx="1088" cy="350" r="8" fill="#67E8F9"/>
+  <circle cx="1116" cy="94" r="4" fill="#D1FAE5"/>
+  <circle cx="1048" cy="70" r="3" fill="#A7F3D0"/>
+</svg>

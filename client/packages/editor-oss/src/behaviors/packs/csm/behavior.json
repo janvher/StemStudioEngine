@@ -1,0 +1,67 @@
+{
+    "id": "csm",
+    "name": "Cascaded Shadow Maps",
+    "isScript": false,
+    "isHidden": true,
+    "description": "Advanced shadow rendering technique that provides high-quality shadows at varying distances from the camera by dividing the view frustum into multiple cascades. Attach to a DirectionalLight to dramatically improve shadow quality across large scenes.",
+    "author": "stemstudio",
+    "tags": ["lighting", "shadow", "csm", "directionalLight"],
+    "main": "CSMBehavior.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "throttleConfig": {
+        "throttlePriority": "MEDIUM",
+        "enableFrustumCulling": true,
+        "enableDistanceThrottling": true,
+        "requiresConsistentUpdates": false
+    },
+    "attributes": {
+        "customName": {
+            "name": "Custom Name",
+            "type": "string"
+        },
+        "fade": {
+            "name": "Fade Between Cascades",
+            "type": "boolean",
+            "default": false,
+            "description": "Smoothly blend shadows at cascade boundaries to hide visible seams between cascade levels"
+        },
+        "mode": {
+            "name": "Mode",
+            "type": "enum",
+            "options": [
+                {
+                    "label": "Uniform",
+                    "value": "uniform"
+                },
+                {
+                    "label": "Logarithmic",
+                    "value": "logarithmic"
+                },
+                {
+                    "label": "Practical",
+                    "value": "practical"
+                }
+            ],
+            "default": "practical",
+            "description": "How shadow cascades are distributed across the view distance. Practical mode balances uniform and logarithmic for the best overall quality."
+        },
+        "cascades": {
+            "name": "Cascades",
+            "type": "number",
+            "min": 1,
+            "max": 8,
+            "default": 3,
+            "description": "Number of shadow map cascades. More cascades improve shadow quality at different distances but increase rendering cost."
+        },
+        "lightMargin": {
+            "name": "Light Margin",
+            "type": "number",
+            "min": 0,
+            "max": 1000,
+            "default": 100,
+            "description": "Extra padding around each shadow cascade frustum. Higher values prevent shadow clipping on tall objects but reduce shadow resolution."
+        }
+    },
+    "documentation": "## Cascaded Shadow Maps\n\nAdvanced shadow rendering technique that provides high-quality shadows at varying distances from the camera by dividing the view frustum into multiple cascades. Attach to a DirectionalLight to dramatically improve shadow quality across large scenes.\n\n### Key Features\n- Multiple shadow cascades (1-8) for optimal quality at different distances\n- Three distribution modes: Uniform, Logarithmic, and Practical\n- Configurable shadow map resolution (512-4096)\n- Optional fade between cascades for smooth transitions\n- Automatic material setup for all meshes in scene\n- Dynamic camera-based shadow frustum updates\n- Only one DirectionalLight can have CSM enabled at a time\n- Automatically disables other directional light shadows to prevent conflicts\n- Adaptive shadow bias per cascade for reduced artifacts\n\n### How It Works\n1. Attach CSM behavior to a DirectionalLight in your scene\n2. CSMManager takes exclusive control, disabling CSM on other lights\n3. View frustum is divided into multiple cascades (near to far)\n4. Each cascade gets its own shadow map with appropriate resolution\n5. Closer cascades have higher detail, distant ones cover larger areas\n6. Automatically patches all materials in scene to use CSM shaders\n7. Shadow cameras update each frame based on main camera position\n8. Optional fade parameter smooths transitions between cascade boundaries\n9. When disabled, original light shadow state is restored\n\n### Common Use Cases\n- Large outdoor environments with distant terrain and close objects\n- Open-world games requiring high-quality shadows at all distances\n- Architectural visualization with both interior and exterior views\n- Racing games with long viewing distances\n- First-person games where close-up shadow detail is critical\n- Any scene where standard shadow maps show pixelation or peter-panning\n- Scenes with significant depth variation (mountains, valleys, buildings)\n\n### When Not To Use\n- Indoor scenes with limited depth range (standard shadows sufficient)\n- Mobile or low-end platforms (performance cost too high)\n- Scenes with multiple important directional lights (only one supported)\n- When using point lights or spot lights as primary shadow casters\n- Projects where shadow quality is not a priority\n- Scenes with primarily small, enclosed spaces\n- When targeting very high frame rates on modest hardware\n- VR applications where performance budget is extremely tight\n\n### Technical Details\n- Uses three.js CSM implementation with custom enhancements\n- Monkey-patches Object3D.add() to auto-setup materials on new meshes\n- Modifies material onBeforeCompile for CSM shader injection\n- Shadow bias adapts per cascade: closer = lower bias, farther = higher bias\n- CSMManager singleton ensures only one active CSM instance\n- Practical mode (default) balances uniform and logarithmic distribution\n- Each cascade light intensity matches original directional light\n- Shadow cameras positioned to center target between near/far planes\n- Frustum culling enabled, distance throttling supported\n- Medium throttle priority for balanced performance\n- Helper visualization available for debugging cascade boundaries"
+}

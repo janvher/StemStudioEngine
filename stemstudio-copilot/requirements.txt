@@ -1,0 +1,10 @@
+# Python dependencies for vercel-rest/standalone/skills/stemstudio-3d/scripts
+# Install with: pip install -r requirements.txt
+
+# HTTP requests library
+# Used by all scripts for API communication with the 3D Studio server
+
+requests>=2.31.0,<3.0.0
+
+# --- auto-detected by scripts/generate_requirements.py ---
+pytest

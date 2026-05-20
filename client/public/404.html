@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>StemStudio</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #0b0d14; }
+  </style>
+</head>
+<body>
+  <!--
+    GitHub Pages SPA fallback router.
+
+    Static GitHub Pages cannot honour `client/public/_redirects` (used by
+    Cloudflare / Render). It only serves a single global 404.html. The
+    build emits four SPA shells — index.html (public site), shell.html
+    (app shell), editor.html, play.html — so this script classifies the
+    requested path the same way _redirects does, fetches the matching
+    shell, and swaps it in WITHOUT changing the URL. The SPA router then
+    takes over against the real pathname.
+
+    Keep the prefix lists below in sync with client/public/_redirects.
+  -->
+  <script>
+    (function () {
+      var path = window.location.pathname;
+
+      function isMatch(prefixes) {
+        for (var i = 0; i < prefixes.length; i++) {
+          var p = prefixes[i];
+          if (path === p || path.indexOf(p + "/") === 0) return true;
+        }
+        return false;
+      }
+
+      function pickShell() {
+        // Player runtime.
+        if (isMatch(["/play"])) return "/play.html";
+        // Editor runtime.
+        if (isMatch(["/create/project", "/stem-editor"])) return "/editor.html";
+        // App shell (dashboard, project list, account routes).
+        if (
+          isMatch([
+            "/dashboard", "/discover", "/browse", "/game", "/my-avatars",
+            "/settings", "/search", "/legal", "/3rd-party-attributions",
+            "/contact-us", "/about", "/login", "/signup", "/register",
+            "/forgot-password", "/waitlist", "/admin-panel", "/forum",
+            "/news", "/learn", "/remix", "/view-more",
+          ])
+        ) {
+          return "/shell.html";
+        }
+        // Everything else (including /docs and /playground) → public site.
+        return "/index.html";
+      }
+
+      var target = pickShell();
+
+      fetch(target, { cache: "no-cache" })
+        .then(function (res) {
+          if (!res.ok) throw new Error("shell fetch failed: " + res.status);
+          return res.text();
+        })
+        .then(function (html) {
+          var doc = new DOMParser().parseFromString(html, "text/html");
+          document.documentElement.replaceWith(doc.documentElement);
+          // Nodes inserted via replaceWith/innerHTML do not execute their
+          // scripts — re-create each <script> so the bundle actually runs.
+          var scripts = document.querySelectorAll("script");
+          for (var i = 0; i < scripts.length; i++) {
+            var old = scripts[i];
+            var fresh = document.createElement("script");
+            for (var a = 0; a < old.attributes.length; a++) {
+              fresh.setAttribute(old.attributes[a].name, old.attributes[a].value);
+            }
+            fresh.text = old.textContent;
+            old.parentNode.replaceChild(fresh, old);
+          }
+        })
+        .catch(function () {
+          // Last-resort: hard-navigate to the site root.
+          if (target !== "/index.html") window.location.replace("/");
+        });
+    })();
+  </script>
+</body>
+</html>

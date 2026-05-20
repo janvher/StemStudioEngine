@@ -1,0 +1,528 @@
+{
+    "id": "visualEffect",
+    "name": "Visual Effect",
+    "isScript": false,
+    "description": "A comprehensive particle effect system using three.quarks for GPU-accelerated particle emitters. Supports event-driven triggering, parent-relative positioning, duration-based auto-stop, and multiplayer synchronization. Automatically moves VFX to scene root while tracking parent transforms. Ideal for explosions, magic effects, environmental particles, and impact visuals.",
+    "documentation": "## Visual Effect\nPlay particle effects in response to game events.\n\n### Trigger Modes\n- **Start On Trigger** - Activated by a Trigger behavior\n- **Trigger on Added** - Play when object enters the game\n- **Trigger by Parent Event** - Activated by parent object events\n- **Restart on Trigger** - Restart effect on each trigger\n\n### Events\n- **Trigger Events** - Game events that start the effect\n- **Stop Events** - Game events that stop the effect\n- Supports character, enemy, game, consumable, and platform events\n- **Custom Events** - Define your own event names\n\n### Tips\n- Attach to particle emitter objects only\n- Use for hit effects, pickups, footsteps, explosions\n- Chain with Consumable events for collection feedback",
+    "author": "stemstudio",
+    "tags": ["motion", "vfx", "particles"],
+    "main": "VisualEffectBehavior.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "throttleConfig": {
+        "throttlePriority": "MEDIUM",
+        "enableFrustumCulling": true,
+        "enableDistanceThrottling": true,
+        "requiresConsistentUpdates": false
+    },
+    "attributes": {
+        "customName": {
+            "name": "Custom Name",
+            "type": "string"
+        },
+        "startOnTrigger": {
+            "name": "Start On Trigger",
+            "type": "boolean",
+            "default": false,
+            "description": "When enabled, the visual effect only plays when activated by a Trigger behavior instead of starting automatically."
+        },
+        "triggerOnAdded": {
+            "name": "Trigger on Added to Game",
+            "type": "boolean",
+            "default": false,
+            "description": "If true, the visual effect will be triggered when the object is added"
+        },
+        "triggerByParent": {
+            "name": "Trigger by Parent Event",
+            "type": "boolean",
+            "default": false,
+            "description": "If true, the visual effect will be triggered by the parent object"
+        },
+        "restartOnTrigger": {
+            "name": "Restart on Trigger",
+            "type": "boolean",
+            "default": false,
+            "description": "When enabled, the effect restarts from the beginning each time a trigger event is received instead of being ignored while playing."
+        },
+        "triggerEvents": {
+            "name": "Trigger Events",
+            "width": "240px",
+            "type": "enum",
+            "array": true,
+            "description": "Events that will trigger the visual effect",
+            "options": [
+                {
+                    "label": "none",
+                    "value": "none"
+                },
+                {
+                    "label": "game.lives.inc",
+                    "value": "game.lives.inc"
+                },
+                {
+                    "label": "game.lives.dec",
+                    "value": "game.lives.dec"
+                },
+                {
+                    "label": "game.health.inc",
+                    "value": "game.health.inc"
+                },
+                {
+                    "label": "game.health.dec",
+                    "value": "game.health.dec"
+                },
+                {
+                    "label": "game.score.inc",
+                    "value": "game.score.inc"
+                },
+                {
+                    "label": "game.score.dec",
+                    "value": "game.score.dec"
+                },
+                {
+                    "label": "game.time.inc",
+                    "value": "game.time.inc"
+                },
+                {
+                    "label": "game.time.dec",
+                    "value": "game.time.dec"
+                },
+                {
+                    "label": "enemy.spawned",
+                    "value": "enemy.spawned"
+                },
+                {
+                    "label": "enemy.died",
+                    "value": "enemy.died"
+                },
+                {
+                    "label": "enemy.got.hit",
+                    "value": "enemy.got.hit"
+                },
+                {
+                    "label": "enemy.state.changed",
+                    "value": "enemy.state.changed"
+                },
+                {
+                    "label": "enemy.player.detected",
+                    "value": "enemy.player.detected"
+                },
+                {
+                    "label": "enemy.player.lost",
+                    "value": "enemy.player.lost"
+                },
+                {
+                    "label": "enemy.attack.started",
+                    "value": "enemy.attack.started"
+                },
+                {
+                    "label": "enemy.attack",
+                    "value": "enemy.attack"
+                },
+                {
+                    "label": "enemy.attack.ended",
+                    "value": "enemy.attack.ended"
+                },
+                {
+                    "label": "character.motion.none",
+                    "value": "character.motion.none"
+                },
+                {
+                    "label": "character.action.fall_back",
+                    "value": "character.action.fall_back"
+                },
+                {
+                    "label": "character.action.dead",
+                    "value": "character.action.dead"
+                },
+                {
+                    "label": "character.motion_start",
+                    "value": "character.motion_start"
+                },
+                {
+                    "label": "character.motion",
+                    "value": "character.motion"
+                },
+                {
+                    "label": "character.motion.end",
+                    "value": "character.motion_end"
+                },
+                {
+                    "label": "character.motion.walk_start",
+                    "value": "character.motion.walk_start"
+                },
+                {
+                    "label": "character.motion.walk",
+                    "value": "character.motion.walk"
+                },
+                {
+                    "label": "character.motion.walk_end",
+                    "value": "character.motion.walk_end"
+                },
+                {
+                    "label": "character.motion.run_start",
+                    "value": "character.motion.run_start"
+                },
+                {
+                    "label": "character.motion.run",
+                    "value": "character.motion.run"
+                },
+                {
+                    "label": "character.motion.run_end",
+                    "value": "character.motion.run_end"
+                },
+                {
+                    "label": "character.action.jump_start",
+                    "value": "character.action.jump_start"
+                },
+                {
+                    "label": "character.action.jump",
+                    "value": "character.action.jump"
+                },
+                {
+                    "label": "character.action.land",
+                    "value": "character.action.land"
+                },
+                {
+                    "label": "character.action.climb_start",
+                    "value": "character.action.climb_start"
+                },
+                {
+                    "label": "character.action.climb",
+                    "value": "character.action.climb"
+                },
+                {
+                    "label": "character.action.climb_end",
+                    "value": "character.action.climb_end"
+                },
+                {
+                    "label": "character.action.crouch_start",
+                    "value": "character.action.crouch_start"
+                },
+                {
+                    "label": "character.action.crouch",
+                    "value": "character.action.crouch"
+                },
+                {
+                    "label": "character.action.crouch_end",
+                    "value": "character.action.crouch_end"
+                },
+                {
+                    "label": "character.action.fall_start",
+                    "value": "character.action.fall_start"
+                },
+                {
+                    "label": "character.action.fall",
+                    "value": "character.action.fall"
+                },
+                {
+                    "label": "character.action.fall_end",
+                    "value": "character.action.fall_end"
+                },
+                {
+                    "label": "character.action.interact",
+                    "value": "character.action.interact"
+                },
+                {
+                    "label": "consumable.in.range",
+                    "value": "consumable.in.range"
+                },
+                {
+                    "label": "consumable.not.in.range",
+                    "value": "consumable.not.in.range"
+                },
+                {
+                    "label": "consumable.collected",
+                    "value": "consumable.collected"
+                },
+                {
+                    "label": "consumable.collided",
+                    "value": "consumable.collided"
+                },
+                {
+                    "label": "jumppad.activated",
+                    "value": "jumppad.activated"
+                },
+                {
+                    "label": "platform.activated",
+                    "value": "platform.activated"
+                },
+                {
+                    "label": "platform.moving",
+                    "value": "platform.moving"
+                },
+                {
+                    "label": "platform.deactivated",
+                    "value": "platform.deactivated"
+                },
+                {
+                    "label": "volume.activated",
+                    "value": "volume.activated"
+                },
+                {
+                    "label": "randomized.spawner.activated",
+                    "value": "randomized.spawner.activated"
+                },
+                {
+                    "label": "spawner.activated",
+                    "value": "spawner.activated"
+                },
+                {
+                    "label": "teleport.activated",
+                    "value": "teleport.activated"
+                }
+            ],
+            "default": ["none"]
+        },
+        "stopEvents": {
+            "name": "Stop Events",
+            "type": "enum",
+            "width": "240px",
+            "array": true,
+            "description": "Events that will stop the visual effect",
+            "options": [
+                {
+                    "label": "none",
+                    "value": "none"
+                },
+                {
+                    "label": "game.lives.inc",
+                    "value": "game.lives.inc"
+                },
+                {
+                    "label": "game.lives.dec",
+                    "value": "game.lives.dec"
+                },
+                {
+                    "label": "game.health.inc",
+                    "value": "game.health.inc"
+                },
+                {
+                    "label": "game.health.dec",
+                    "value": "game.health.dec"
+                },
+                {
+                    "label": "game.score.inc",
+                    "value": "game.score.inc"
+                },
+                {
+                    "label": "game.score.dec",
+                    "value": "game.score.dec"
+                },
+                {
+                    "label": "game.time.inc",
+                    "value": "game.time.inc"
+                },
+                {
+                    "label": "game.time.dec",
+                    "value": "game.time.dec"
+                },
+                {
+                    "label": "enemy.spawned",
+                    "value": "enemy.spawned"
+                },
+                {
+                    "label": "enemy.died",
+                    "value": "enemy.died"
+                },
+                {
+                    "label": "enemy.got.hit",
+                    "value": "enemy.got.hit"
+                },
+                {
+                    "label": "enemy.state.changed",
+                    "value": "enemy.state.changed"
+                },
+                {
+                    "label": "enemy.player.detected",
+                    "value": "enemy.player.detected"
+                },
+                {
+                    "label": "enemy.player.lost",
+                    "value": "enemy.player.lost"
+                },
+                {
+                    "label": "enemy.attack.started",
+                    "value": "enemy.attack.started"
+                },
+                {
+                    "label": "enemy.attack",
+                    "value": "enemy.attack"
+                },
+                {
+                    "label": "enemy.attack.ended",
+                    "value": "enemy.attack.ended"
+                },
+                {
+                    "label": "character.motion.none",
+                    "value": "character.motion.none"
+                },
+                {
+                    "label": "character.action.fall_back",
+                    "value": "character.action.fall_back"
+                },
+                {
+                    "label": "character.action.dead",
+                    "value": "character.action.dead"
+                },
+                {
+                    "label": "character.motion_start",
+                    "value": "character.motion_start"
+                },
+                {
+                    "label": "character.motion",
+                    "value": "character.motion"
+                },
+                {
+                    "label": "character.motion.end",
+                    "value": "character.motion_end"
+                },
+                {
+                    "label": "character.motion.walk_start",
+                    "value": "character.motion.walk_start"
+                },
+                {
+                    "label": "character.motion.walk",
+                    "value": "character.motion.walk"
+                },
+                {
+                    "label": "character.motion.walk_end",
+                    "value": "character.motion.walk_end"
+                },
+                {
+                    "label": "character.motion.run_start",
+                    "value": "character.motion.run_start"
+                },
+                {
+                    "label": "character.motion.run",
+                    "value": "character.motion.run"
+                },
+                {
+                    "label": "character.motion.run_end",
+                    "value": "character.motion.run_end"
+                },
+                {
+                    "label": "character.action.jump_start",
+                    "value": "character.action.jump_start"
+                },
+                {
+                    "label": "character.action.jump",
+                    "value": "character.action.jump"
+                },
+                {
+                    "label": "character.action.land",
+                    "value": "character.action.land"
+                },
+                {
+                    "label": "character.action.climb_start",
+                    "value": "character.action.climb_start"
+                },
+                {
+                    "label": "character.action.climb",
+                    "value": "character.action.climb"
+                },
+                {
+                    "label": "character.action.climb_end",
+                    "value": "character.action.climb_end"
+                },
+                {
+                    "label": "character.action.crouch_start",
+                    "value": "character.action.crouch_start"
+                },
+                {
+                    "label": "character.action.crouch",
+                    "value": "character.action.crouch"
+                },
+                {
+                    "label": "character.action.crouch_end",
+                    "value": "character.action.crouch_end"
+                },
+                {
+                    "label": "character.action.fall_start",
+                    "value": "character.action.fall_start"
+                },
+                {
+                    "label": "character.action.fall",
+                    "value": "character.action.fall"
+                },
+                {
+                    "label": "character.action.fall_end",
+                    "value": "character.action.fall_end"
+                },
+                {
+                    "label": "character.action.interact",
+                    "value": "character.action.interact"
+                },
+                {
+                    "label": "consumable.in.range",
+                    "value": "consumable.in.range"
+                },
+                {
+                    "label": "consumable.not.in.range",
+                    "value": "consumable.not.in.range"
+                },
+                {
+                    "label": "consumable.collected",
+                    "value": "consumable.collected"
+                },
+                {
+                    "label": "consumable.collided",
+                    "value": "consumable.collided"
+                },
+                {
+                    "label": "jumppad.activated",
+                    "value": "jumppad.activated"
+                },
+                {
+                    "label": "platform.activated",
+                    "value": "platform.activated"
+                },
+                {
+                    "label": "platform.moving",
+                    "value": "platform.moving"
+                },
+                {
+                    "label": "platform.deactivated",
+                    "value": "platform.deactivated"
+                },
+                {
+                    "label": "volume.activated",
+                    "value": "volume.activated"
+                },
+                {
+                    "label": "randomized.spawner.activated",
+                    "value": "randomized.spawner.activated"
+                },
+                {
+                    "label": "spawner.activated",
+                    "value": "spawner.activated"
+                },
+                {
+                    "label": "teleport.activated",
+                    "value": "teleport.activated"
+                }
+            ],
+            "default": ["none"]
+        },
+        "useCustomEvents": {
+            "name": "Use Custom Events",
+            "type": "boolean",
+            "default": false,
+            "description": "When enabled, allows defining custom event names for triggering and stopping the effect instead of using the predefined event list."
+        },
+        "customTriggerEvents": {
+            "name": "Custom Trigger Events",
+            "type": "string",
+            "array": true,
+            "default": [""],
+            "description": "A list of custom event names that will start the visual effect when broadcast. Requires 'Use Custom Events' to be enabled."
+        },
+        "customStopEvents": {
+            "name": "Custom Stop Events",
+            "type": "string",
+            "array": true,
+            "default": [""],
+            "description": "A list of custom event names that will stop the visual effect when broadcast. Requires 'Use Custom Events' to be enabled."
+        }
+    }
+}

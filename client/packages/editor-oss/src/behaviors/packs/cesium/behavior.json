@@ -1,0 +1,133 @@
+{
+    "id": "cesium",
+    "name": "Cesium Globe",
+    "isScript": false,
+    "isHidden": true,
+    "description": "Scene-wide Cesium globe and terrain renderer. Mounts a lazy-loaded Cesium viewer behind the Three.js canvas so scenes can opt into streamed globe terrain only when needed.",
+    "author": "stemstudio",
+    "tags": [
+        "terrain",
+        "map",
+        "globe",
+        "cesium"
+    ],
+    "main": "CesiumBehavior.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "isSingleton": true,
+    "throttleConfig": {
+        "throttlePriority": "MEDIUM",
+        "enableFrustumCulling": false,
+        "enableDistanceThrottling": false,
+        "requiresConsistentUpdates": true
+    },
+    "attributes": {
+        "useWorldTerrain": {
+            "name": "Use World Terrain",
+            "type": "boolean",
+            "default": true,
+            "description": "Enable Cesium World Terrain. This usually requires a valid Cesium Ion access token."
+        },
+        "apiKey": {
+            "name": "Ion Access Token",
+            "type": "string",
+            "default": "",
+            "description": "Optional Cesium Ion access token used for Cesium-hosted terrain and imagery."
+        },
+        "imagerySource": {
+            "name": "Imagery Source",
+            "type": "enum",
+            "default": "osm",
+            "options": [
+                {
+                    "label": "OpenStreetMap",
+                    "value": "osm"
+                },
+                {
+                    "label": "Ion Default",
+                    "value": "ion"
+                },
+                {
+                    "label": "None",
+                    "value": "none"
+                }
+            ],
+            "description": "Base imagery shown by Cesium. Ion imagery uses Cesium defaults; OSM works without an Ion token."
+        },
+        "imageryUrl": {
+            "name": "Imagery URL",
+            "type": "string",
+            "default": "https://tile.openstreetmap.org/",
+            "visibleIf": {
+                "imagerySource": "osm"
+            },
+            "description": "OpenStreetMap-compatible tile endpoint for the Cesium base layer."
+        },
+        "capturePointerEvents": {
+            "name": "Capture Pointer Events",
+            "type": "boolean",
+            "default": false,
+            "description": "Allow the Cesium canvas to receive mouse/touch input. Keep this disabled when Three.js controls should stay in charge."
+        },
+        "enableLighting": {
+            "name": "Enable Globe Lighting",
+            "type": "boolean",
+            "default": true,
+            "description": "Use Cesium's terrain lighting model for day/night shading."
+        },
+        "showAtmosphere": {
+            "name": "Show Atmosphere",
+            "type": "boolean",
+            "default": true,
+            "description": "Render Cesium sky atmosphere around the globe."
+        },
+        "showCredits": {
+            "name": "Show Credits",
+            "type": "boolean",
+            "default": true,
+            "description": "Display the Cesium credits overlay."
+        },
+        "longitude": {
+            "name": "Longitude",
+            "type": "number",
+            "default": 0,
+            "description": "Initial camera longitude in degrees."
+        },
+        "latitude": {
+            "name": "Latitude",
+            "type": "number",
+            "default": 20,
+            "description": "Initial camera latitude in degrees."
+        },
+        "height": {
+            "name": "Height",
+            "type": "number",
+            "default": 18000000,
+            "description": "Initial camera height in meters."
+        },
+        "heading": {
+            "name": "Heading",
+            "type": "number",
+            "default": 0,
+            "description": "Initial camera heading in degrees."
+        },
+        "pitch": {
+            "name": "Pitch",
+            "type": "number",
+            "default": -45,
+            "description": "Initial camera pitch in degrees."
+        },
+        "roll": {
+            "name": "Roll",
+            "type": "number",
+            "default": 0,
+            "description": "Initial camera roll in degrees."
+        },
+        "baseUrl": {
+            "name": "Asset Base URL",
+            "type": "string",
+            "default": "/cesium",
+            "description": "Public base URL used for Cesium workers, widgets, and assets."
+        }
+    }
+}

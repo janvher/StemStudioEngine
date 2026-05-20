@@ -1,0 +1,52 @@
+export const TriggerDiagramIcon = () => {
+    return (
+        <svg
+            width="14"
+            height="14"
+            viewBox="0 0 16 16"
+            fill="none"
+        >
+            <rect
+                x="1"
+                y="1"
+                width="5"
+                height="3"
+                rx="1"
+                stroke="currentColor"
+                strokeWidth="1.2"
+            />
+            <rect
+                x="10"
+                y="1"
+                width="5"
+                height="3"
+                rx="1"
+                stroke="currentColor"
+                strokeWidth="1.2"
+            />
+            <rect
+                x="1"
+                y="12"
+                width="5"
+                height="3"
+                rx="1"
+                stroke="currentColor"
+                strokeWidth="1.2"
+            />
+            <rect
+                x="10"
+                y="12"
+                width="5"
+                height="3"
+                rx="1"
+                stroke="currentColor"
+                strokeWidth="1.2"
+            />
+            <path
+                d="M3.5 4V7.5H8M12.5 4V7.5H8M8 7.5V8.5M3.5 12V8.5H8M12.5 12V8.5H8"
+                stroke="currentColor"
+                strokeWidth="1.2"
+            />
+        </svg>
+    );
+};

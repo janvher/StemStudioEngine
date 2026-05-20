@@ -1,0 +1,576 @@
+{
+  "CollisionBehavior": {
+    "Ghost": "ghost",
+    "Regular": "regular"
+  },
+  "BodyShapeType": {
+    "BOX": "btBoxShape",
+    "SPHERE": "btSphereShape",
+    "CAPSULE": "btCapsuleShape",
+    "CONVEX_HULL": "btConvexHullShape",
+    "CONCAVE_HULL": "btConcaveHullShape",
+    "HEIGHTFIELD": "btHeightfieldTerrainShape"
+  },
+  "PhysicsEngineType": {
+    "Ammo": "ammo",
+    "Rapier": "rapier",
+    "Jolt": "jolt",
+    "PhysX": "physx"
+  },
+  "OBJECT_INTERACTION_OPTIONS": {
+    "PICKUP_DROP": "Pickup and Drop",
+    "PUSH_PULL": "Push and Pull"
+  },
+  "NPC_MOVEMENT_TYPES": {
+    "STANDING": "Standing",
+    "ROAM": "Roam"
+  },
+  "NPC_TYPES": {
+    "WAITER": "Waiter",
+    "FIREMAN": "Fireman",
+    "DOCTOR": "Doctor",
+    "SOLDIER": "Soldier",
+    "BAKER": "Baker",
+    "POLICEMAN": "Policeman",
+    "FARMER": "Farmer",
+    "SCIENTIST": "Scientist",
+    "TEACHER": "Teacher",
+    "ARTIST": "Artist",
+    "ENGINEER": "Engineer",
+    "NURSE": "Nurse",
+    "DRIVER": "Driver",
+    "SOLDIER_ELITE": "Elite Soldier",
+    "JOCK": "Jock",
+    "MERCHANT": "Merchant",
+    "GUARD": "Guard",
+    "COOK": "Cook",
+    "STUDENT": "Student",
+    "PAINTER": "Painter"
+  },
+  "SPRITE_TYPES": {
+    "TWO_D": "2D",
+    "THREE_D": "3D",
+    "ANIMATED": "ANIMATED"
+  },
+  "ANIMATION_TYPES": {
+    "REPEAT": "Repeat",
+    "LOOP": "Loop",
+    "PLAY_ONCE": "Play Once"
+  },
+  "PROP_ANIMATION_TYPES": {
+    "LOOP": "Loop",
+    "PLAY_ONCE": "Play Once"
+  },
+  "EASE_TYPES": {
+    "LINEAR": "linear",
+    "QUAD_IN": "quadIn",
+    "QUAD_OUT": "quadOut",
+    "QUAD_IN_OUT": "quadInOut",
+    "CUBIC_IN": "cubicIn",
+    "CUBIC_OUT": "cubicOut",
+    "CUBIC_IN_OUT": "cubicInOut",
+    "QUART_IN": "quartIn",
+    "QUART_OUT": "quartOut",
+    "QUART_IN_OUT": "quartInOut",
+    "QUINT_IN": "quintIn",
+    "QUINT_OUT": "quintOut",
+    "QUINT_IN_OUT": "quintInOut",
+    "SINE_IN": "sineIn",
+    "SINE_OUT": "sineOut",
+    "SINE_IN_OUT": "sineInOut",
+    "BACK_IN": "backIn",
+    "BACK_OUT": "backOut",
+    "BACK_IN_OUT": "backInOut",
+    "CIRC_IN": "circIn",
+    "CIRC_OUT": "circOut",
+    "CIRC_IN_OUT": "circInOut",
+    "BOUNCE_IN": "bounceIn",
+    "BOUNCE_OUT": "bounceOut",
+    "BOUNCE_IN_OUT": "bounceInOut",
+    "ELASTIC_IN": "elasticIn",
+    "ELASTIC_OUT": "elasticOut",
+    "ELASTIC_IN_OUT": "elasticInOut"
+  },
+  "CUSTOM_BLOCK_VOLUME_TYPES": {
+    "BLOCK_ENEMIES": "Block Enemies",
+    "BLOCK_THROWABLE": "Block Throwables",
+    "BLOCK_CHARACTERS": "Block Characters"
+  },
+  "ENEMY_TYPES": {
+    "AGGRESIVE": "Aggressive",
+    "DEFENSIVE": "Defensive",
+    "PATROLS": "Patrols",
+    "CUSTOM": "Custom"
+  },
+  "PLATFORM_RESPAWN_TYPES": {
+    "LOOP": "Loop",
+    "REPEAT": "Respawn",
+    "PLAY_ONCE": "Play Once"
+  },
+  "SPAWNPOINT_TYPES": {
+    "CLONE": "Clone",
+    "MOVE": "Move"
+  },
+  "RANDOMIZED_SPAWNER_TYPES": {
+    "CLONE": "Clone",
+    "MOVE": "Move"
+  },
+  "WEAPON_TYPES": {
+    "MACHINE_GUN": "Machine Gun",
+    "SUB_MACHINE_GUN": "Sub Machine Gun",
+    "RIFLE": "Rifle",
+    "SNIPER_RIFLE": "Sniper Rifle",
+    "SCIFI_SNIPER_RIFLE": "SciFi Sniper Rifle",
+    "SHOT_GUN": "Shot Gun",
+    "PISTOL": "Pistol",
+    "BOW": "Bow",
+    "HANDS": "Hands",
+    "SWORD": "Sword",
+    "KNIFE": "Knife",
+    "STAFF": "Staff",
+    "GRENADE": "Grenade",
+    "BUTTON_PRESS": "Button Press"
+  },
+  "INVENTORY_TYPES": {
+    "PRIMARY": "Primary",
+    "SECONDARY": "Secondary",
+    "MELEE": "Melee",
+    "THROWABLE": "Throwable",
+    "CONSUMABLE": "Consumable",
+    "WEAPON": "Weapon",
+    "WEAPON_AMMO": "Weapon Ammo"
+  },
+  "INVENTORY_UI_CONTAINERS": {
+    "MAIN": "main-game-ui-container",
+    "MAIN_ACTIVE": "selected-object-container",
+    "ICONS": "inventory-container",
+    "ACTIVE_OBJECT": "active-object-container",
+    "AMMO": "ammo-container-2",
+    "SECTION_PREFIX": "inv-cat-",
+    "IMAGE_PREFIX": "inv-img-container-",
+    "ICON_PREFIX": "inv-icon-",
+    "AMMO_COUNT": "weapon-ammo-count"
+  },
+  "RESPAWN_TYPES": {
+    "ONCE": "Once",
+    "CAN_RESPAWN": "Can Respawn"
+  },
+  "HARVEST_TYPES": {
+    "HIT": "Hit",
+    "PRESS_E_KEY": "Press E Key"
+  },
+  "PROCEDURAL_PLANT_TYPES": {
+    "GRASS": "Grass",
+    "FLOWER": "Flower",
+    "CAT_TAIL": "Cat Tail",
+    "SHRUB": "Shrub",
+    "TREE": "Tree",
+    "MOSS": "Moss"
+  },
+  "PROCEDURAL_TERRAIN_TYPES": {
+    "MOUNTAINS": "Mountains",
+    "VALLEY": "Valleys",
+    "PLAIN": "Plains",
+    "HILLS": "Hills",
+    "DESERT": "Desert",
+    "SWAMP": "Swamp",
+    "COASTLINE": "Coastline",
+    "FOREST": "Forest",
+    "JUNGLE": "Jungle",
+    "TUNDRA": "Tundra",
+    "SAVANNAH": "Savannah",
+    "CANYON": "Canyon",
+    "PLATEAU": "Plateau",
+    "WETLANDS": "Wetlands",
+    "GLACIER": "Glacier",
+    "MEADOW": "Meadow",
+    "STEPPE": "Steppe",
+    "BADLANDS": "Badlands",
+    "ARCHIPELAGO": "Archipelago"
+  },
+  "CAMERA_OBJECT_INTERACTION": {
+    "TRANSPARENT": "Transparent",
+    "ZOOM": "Zoom"
+  },
+  "TRIGGER_ACTIVATION_TYPES": {
+    "PLAYER_TOUCHES": "player_touches",
+    "OBJECT_TOUCHES": "object_touches",
+    "PRESS_E": "pressE",
+    "PRESS_F": "pressF",
+    "ON_ENTER": "on_enter",
+    "ON_EXIT": "on_exit",
+    "WHILE_INSIDE": "while_inside",
+    "KEY_BUTTON_PRESSED": "key_button_pressed",
+    "TIMER_ELAPSED": "timer_elapsed",
+    "DISTANCE_COMPARE": "distance_compare",
+    "HAS_TAG_TEAM_FACTION": "has_tag_team_faction",
+    "VARIABLE_COMPARE": "variable_compare",
+    "BEHAVIOR_STATE": "behavior_state",
+    "ANIMATION_EVENT_REACHED": "animation_event_reached",
+    "LINE_OF_SIGHT": "line_of_sight",
+    "RANDOM_CHANCE": "random_chance",
+    "COOLDOWN_READY": "cooldown_ready",
+    "ON_INTERACT": "on_interact",
+    "OBJECT_STATE_COMPARE": "object_state_compare",
+    "TIME_WINDOW": "time_window",
+    "MULTIPLAYER_ROLE": "multiplayer_role",
+    "PHYSICS_COLLISION_EVENT": "physics_collision_event",
+    "AI_PROXIMITY": "ai_proximity"
+  },
+  "CONSUMABLE_TYPES": {
+    "INSTANT": "INSTANT",
+    "PRESS_E": "PRESS E",
+    "BUTTON_PRESS": "Button Press"
+  },
+  "DEVICE_TYPES": {
+    "MOBILE": "Mobile",
+    "DESKTOP": "Desktop"
+  },
+  "OPERATING_SYSTEM_TYPES": {
+    "MAC_OS": "macOS",
+    "WINDOWS_OS": "Windows",
+    "ANDROID_OS": "Android",
+    "I_OS": "iOS",
+    "LINUX_OS": "Linux"
+  },
+  "MOVEMENT_STATES": {
+    "FORWARD": "Forward",
+    "STRAIGHT_FORWARD": "Straight Forward",
+    "BACKWARD": "Backward",
+    "STRAIGHT_BACKWARD": "Straight Backward",
+    "STOPPED": "Stopped",
+    "RIGHT": "Right",
+    "LEFT": "Left",
+    "FORWARD_LEFT": "Forward Left",
+    "FORWARD_RIGHT": "Forward Right",
+    "BACKWARD_LEFT": "Backward Left",
+    "BACKWARD_RIGHT": "BackWwrd Right",
+    "JUMP_RIGHT": "Jump Right",
+    "JUMP_LEFT": "Jump Left"
+  },
+  "MOBILE_BUTTON_ACTION_UI_STATES": {
+    "SHOW": "Show",
+    "HIDE": "Hide",
+    "MOBILE_BUTTON_ACTION_CONTAINER_CLASS_NAME": ".character-state-control-button"
+  },
+  "MOBILE_JOYSTICK_CONTROL_UI": {
+    "MOBILE_JOYSTICK_CONTROL_NAME": "character-joystick-control"
+  },
+  "PHYSICS_PROXY_UI": {
+    "PHYSICS_MESSAGE_ELEMENT": "physics-loading-message"
+  },
+  "TRANSFORM_CONTROLS_MODE": {
+    "TRANSLATE": "translate",
+    "ROTATE": "rotate",
+    "SCALE": "scale"
+  },
+  "CUSTOM_VOLUME_TYPES": {
+    "LEVEL_CHANGER": "Level Changer",
+    "CUSTOM": "Custom"
+  },
+  "BILLBOARD_TYPES": {
+    "WEB": "Webpage",
+    "YT_VIDEO": "YouTube Video",
+    "IMAGE": "Image"
+  },
+  "SHADER_EFFECTS": {
+    "BOKEH": "Bokeh Effect",
+    "PIXEL": "Pixel Effect",
+    "RGB": "RGB",
+    "NONE": "None"
+  },
+  "CAMERA_EFFECTS": {
+    "BOKEH": "Bokeh",
+    "PIXEL": "Pixel",
+    "RGB": "RGB",
+    "NONE": "None"
+  },
+  "OCCLUSION_TYPES": {
+    "DISTANCE": "Distance",
+    "TRANSPARENCY": "Transparency"
+  },
+  "CAMERA_TYPES": {
+    "FIRST_PERSON": "First Person",
+    "THIRD_PERSON": "Third Person",
+    "FORTNITE": "FortNite",
+    "TOP_DOWN": "Top Down",
+    "SIDE_SCROLLER": "Side Scroller",
+    "VEHICLE": "Vehicle",
+    "SPECTATOR": "Spectator",
+    "FIXED": "Fixed",
+    "NONE": "NONE"
+  },
+  "CAMERA_TYPES_NEW": {
+    "THIRD_PERSON": "Third Person",
+    "FIRST_PERSON": "First Person",
+    "TOP_DOWN": "Top Down",
+    "SIDE_SCROLLER": "Side Scroller"
+  },
+  "WEAPON_EFFECTS": {
+    "GUN_MUZZLE_FLASH_PLANE_NAME": "gun_muzzle_flash_plane",
+    "WEAPON_HUD_AIMER_IMG_NAME": "weapon-hud-aimer-"
+  },
+  "MATERIAL_TYPES": {
+    "SPECULAR": "specular",
+    "METALLIC": "metallic",
+    "PBR": "PBR"
+  },
+  "SHADER_EFFECTS_PROPS": {
+    "BOKEH": "bokeh",
+    "PIXEL": "pixel",
+    "RGB": "rgbShift",
+    "NONE": "none"
+  },
+  "COLLISION_MATERIAL_TYPE": {
+    "CUSTOM": "Custom",
+    "METAL": "Metal",
+    "DIRT": "Dirt",
+    "GROUND": "Ground",
+    "PLASTIC": "Plastic",
+    "SNOW": "Snow",
+    "WOOD": "Wood",
+    "CONCRETE": "Concrete",
+    "MUD": "Mud",
+    "ICE": "Ice",
+    "SLIME": "Slime",
+    "WATER": "Water",
+    "SLIPPERY_GROUND": "Slippery ground",
+    "RUBBER": "Rubber",
+    "SAND": "Sand"
+  },
+  "IFRAME_MESSAGES": {
+    "GAME_STARTED": "gameStarted",
+    "GAME_RESUMED": "gameResumed",
+    "GAME_PAUSED": "gamePaused",
+    "GAME_ENDED": "gameEnded",
+    "GAME_CLOSED": "gameClosed",
+    "GAME_CLOSE_AND_SAVE": "gameCloseAndSave",
+    "GAME_CREATED": "gameCreated",
+    "GAME_PLAYER_ERROR": "gamePlayerError",
+    "GAME_ERROR": "gameError",
+    "GAME_MULTIPLAYER_ERROR": "gameMultiplayerError",
+    "PLAYER_ADDED_LISTENER": "playerAddedListener",
+    "HEALTH_UPDATE": "healthUpdate"
+  },
+  "BEHAVIOR_EVENTS": {
+    "DAY_NIGHT_CYCLE": "DayNightCycle"
+  },
+  "IN_GAME_EVENTS": {
+    "GAME_LIVES_INC": "game.lives.inc",
+    "GAME_LIVES_DEC": "game.lives.dec",
+    "GAME_HEALTH_INC": "game.health.inc",
+    "GAME_HEALTH_DEC": "game.health.dec",
+    "GAME_SCORE_INC": "game.score.inc",
+    "GAME_SCORE_DEC": "game.score.dec",
+    "GAME_TIME_INC": "game.time.inc",
+    "GAME_TIME_DEC": "game.time.dec",
+    "GAME_LOGIN_SUCCESS": "game.loginSuccess",
+    "ENEMY_SPAWNED": "enemy.spawned",
+    "ENEMY_DIED": "enemy.died",
+    "ENEMY_GOT_HIT": "enemy.got.hit",
+    "ENEMY_STATE_CHANGED": "enemy.state.changed",
+    "ENEMY_PLAYER_DETECTED": "enemy.player.detected",
+    "ENEMY_PLAYER_LOST": "enemy.player.lost",
+    "ENEMY_ATTACK_STARTED": "enemy.attack.started",
+    "ENEMY_ATTACK": "enemy.attack",
+    "ENEMY_ATTACK_ENDED": "enemy.attack.ended",
+    "CHARACTER_IDLE": "character.motion.none",
+    "CHARACTER_ACTION_FALL_BACK": "character.action.fall_back",
+    "CHARACTER_ACTION_DEAD": "character.action.dead",
+    "CHARACTER_MOTION_START": "character.motion_start",
+    "CHARACTER_MOTION": "character.motion",
+    "CHARACTER_MOTION_END": "character.motion_end",
+    "CHARACTER_MOTION_WALK_START": "character.motion.walk_start",
+    "CHARACTER_MOTION_WALK": "character.motion.walk",
+    "CHARACTER_MOTION_WALK_END": "character.motion.walk_end",
+    "CHARACTER_MOTION_RUN_START": "character.motion.run_start",
+    "CHARACTER_MOTION_RUN": "character.motion.run",
+    "CHARACTER_MOTION_RUN_END": "character.motion.run_end",
+    "CHARACTER_ACTION_JUMP_START": "character.action.jump_start",
+    "CHARACTER_ACTION_JUMP": "character.action.jump",
+    "CHARACTER_ACTION_LAND": "character.action.land",
+    "CHARACTER_ACTION_CLIMB_START": "character.action.climb_start",
+    "CHARACTER_ACTION_CLIMB": "character.action.climb",
+    "CHARACTER_ACTION_CLIMB_END": "character.action.climb_end",
+    "CHARACTER_ACTION_CROUCH_START": "character.action.crouch_start",
+    "CHARACTER_ACTION_CROUCH": "character.action.crouch",
+    "CHARACTER_ACTION_CROUCH_END": "character.action.crouch_end",
+    "CHARACTER_ACTION_FALL_START": "character.action.fall_start",
+    "CHARACTER_ACTION_FALL": "character.action.fall",
+    "CHARACTER_ACTION_FALL_END": "character.action.fall_end",
+    "CHARACTER_ACTION_INTERACT": "character.action.interact",
+    "CHARACTER_ANIMATION_TRIGGER": "character.animation.trigger",
+    "CHARACTER_ANIMATION_STOP": "character.animation.stop",
+    "CHARACTER_ANIMATION_COMPLETE": "character.animation.complete",
+    "CONSUMABLE_IN_RANGE": "consumable.in.range",
+    "CONSUMABLE_NOT_IN_RANGE": "consumable.not.in.range",
+    "CONSUMABLE_COLLECTED": "consumable.collected",
+    "CONSUMABLE_COLLIDED": "consumable.collided",
+    "JUMPPAD_ACTIVATED": "jumppad.activated",
+    "PLATFORM_ACTIVATED": "platform.activated",
+    "PLATFORM_MOVING": "platform.moving",
+    "PLATFORM_DEACTIVATED": "platform.deactivated",
+    "VOLUME_ACTIVATED": "volume.activated",
+    "RANDOMIZED_SPAWNER_ACTIVATED": "randomized.spawner.activated",
+    "SPAWN_ACTIVATED": "spawner.activated",
+    "TELEPORT_ACTIVATED": "teleport.activated",
+    "NPC_INTERACTION_STARTED": "npc.interaction.started",
+    "NPC_INTERACTION_ENDED": "npc.interaction.ended",
+    "NPC_ACTION_STARTED": "npc.action.started",
+    "NPC_ACTION_ENDED": "npc.action.ended"
+  },
+  "AI_OPERATION": {
+    "DECISION_PROMPT": "decision_prompt",
+    "COMMANDS_PROMPT": "commands_prompt",
+    "ENHANCE_MODEL_PROMPT": "enhance_model_prompt",
+    "ENHANCE_IMAGE_PROMPT": "enhance_image_prompt",
+    "GENERATE_STEPS_PROMPT": "generate_steps_prompt",
+    "SEARCH_TAGS_PROMPT": "search_tags_prompt",
+    "EDIT_CODE_PROMPT": "edit_code_prompt"
+  },
+  "GENERATION_STEPS": {
+    "ENCHANCE_PROMPT": "Enchancing prompt",
+    "GENERATE_IMAGE": "Generating image",
+    "REMOVE_BACKGROUND": "Removing background",
+    "UPLOAD_IMAGE": "Uploading image",
+    "GENERATING_MODEL": "Generating model",
+    "ANIMATING_MODEL": "Animating model",
+    "UPLOADING_MODEL": "Uploading model",
+    "ADDING_MODEL_TO_SCENE": "Adding model to scene"
+  },
+  "GENERATION_STEPS_FUNCTIONS": {
+    "ENCHANCE_PROMPT": "enchancePrompt",
+    "GENERATE_MODEL": "generate3dObject",
+    "ATTACH_BEHAVIORS": "attachBehaviors",
+    "MODIFY_MODEL": "modifyModelByCopilot"
+  },
+  "IMAGE_TYPES": {
+    "CHARACTER": "Character",
+    "OBJECT": "Object",
+    "BACKDROP": "Backdrop",
+    "SKYBOX": "Skybox"
+  },
+  "TEXTURE_QUALITY": {
+    "STANDARD": "standard",
+    "DETAILED": "detailed"
+  },
+  "MODEL_VERSION": {
+    "V_25": "v2.5-20250123",
+    "V_20": "v2.0-20240919",
+    "V_14": "v1.4-20240625"
+  },
+  "AI_DECISION_TYPE": {
+    "CONVERSATION": "Conversation",
+    "COMMANDS": "Commands"
+  },
+  "COMMANDS": {
+    "ADD_OBJECT": "AddObject",
+    "REMOVE_OBJECT": "RemoveObject",
+    "SET_POSITION": "SetPosition",
+    "SET_ROTATION": "SetRotation",
+    "SET_SCALE": "SetScale",
+    "SET_MATERIAL_COLOR": "SetMaterialColor",
+    "SET_MATERIAL_VALUE": "SetMaterialValue",
+    "SET_GEOMETRY": "SetGeometry",
+    "MUTLI_CMDS": "MultiCmds",
+    "ATTACH_BEHAVIOR": "AttachBehavior",
+    "DETACH_BEHAVIOR": "DetachBehavior",
+    "UPDATE_BEHAVIOR": "UpdateBehavior",
+    "GENERATE_3D_OBJECT": "Generate3dObject",
+    "ADD_3D_OBJECT": "Add3dObject",
+    "GENERATE_ERTH_MODEL": "GenerateErthModel",
+    "SET_MATERIAL_TEXTURE": "SetMaterialTexture",
+    "COMPLETE": "Complete",
+    "GET_PLAYER_DATA": "GetPlayerData",
+    "GET_SCENE_DATA": "GetSceneData",
+    "GET_SELECTED_OBJECT_DATA": "GetSelectedObjectData",
+    "GET_OBJECT_DATA": "GetObjectData",
+    "GET_LOOK_AT_POINT": "GetLookAtPoint",
+    "GET_SEARCH_RESULTS": "GetSearchResults",
+    "GET_BEHAVIORS_CONFIG": "GetBehaviorsConfig"
+  },
+  "AI_AGENT_MODE": {
+    "EDITOR": "editor",
+    "SANDBOX_GENERATION": "sandbox_generation"
+  },
+  "_allUsedEvents": [
+    "DayNightCycle",
+    "character.action.climb",
+    "character.action.climb_end",
+    "character.action.climb_start",
+    "character.action.crouch",
+    "character.action.crouch_end",
+    "character.action.crouch_start",
+    "character.action.dead",
+    "character.action.fall",
+    "character.action.fall_back",
+    "character.action.fall_end",
+    "character.action.fall_start",
+    "character.action.interact",
+    "character.action.jump",
+    "character.action.jump_start",
+    "character.action.land",
+    "character.animation.complete",
+    "character.animation.stop",
+    "character.animation.trigger",
+    "character.motion",
+    "character.motion.none",
+    "character.motion.run",
+    "character.motion.run_end",
+    "character.motion.run_start",
+    "character.motion.walk",
+    "character.motion.walk_end",
+    "character.motion.walk_start",
+    "character.motion_end",
+    "character.motion_start",
+    "consumable.collected",
+    "consumable.collided",
+    "consumable.in.range",
+    "consumable.not.in.range",
+    "device.orientation",
+    "enemy.attack",
+    "enemy.attack.ended",
+    "enemy.attack.started",
+    "enemy.died",
+    "enemy.got.hit",
+    "enemy.player.detected",
+    "enemy.player.lost",
+    "enemy.spawned",
+    "enemy.state.changed",
+    "game.health.dec",
+    "game.health.inc",
+    "game.lives.dec",
+    "game.lives.inc",
+    "game.loginSuccess",
+    "game.pause",
+    "game.score.dec",
+    "game.score.inc",
+    "game.time.dec",
+    "game.time.inc",
+    "gameCloseAndSave",
+    "gameClosed",
+    "gameCreated",
+    "gameEnded",
+    "gameError",
+    "gameMultiplayerError",
+    "gamePaused",
+    "gamePlayerError",
+    "gameResumed",
+    "gameServices.authenticated",
+    "gameStarted",
+    "healthUpdate",
+    "jumppad.activated",
+    "npc.action.ended",
+    "npc.action.started",
+    "npc.interaction.ended",
+    "npc.interaction.started",
+    "platform.activated",
+    "platform.deactivated",
+    "platform.moving",
+    "playerAddedListener",
+    "randomized.spawner.activated",
+    "spawner.activated",
+    "teleport.activated",
+    "volume.activated"
+  ]
+}

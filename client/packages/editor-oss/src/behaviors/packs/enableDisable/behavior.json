@@ -1,0 +1,85 @@
+{
+    "id": "enableDisable",
+    "name": "Enable/Disable",
+    "isScript": false,
+    "description": "A control behavior that activates, deactivates, or toggles the state of game objects and their attached behaviors during runtime. Acts as a state management system that responds to events from other behaviors, enabling dynamic object visibility, behavior activation, and performance optimization through selective component control.",
+    "documentation": "## Enable/Disable\nControl the active state of objects and behaviors at runtime.\n\n### Action\n- **Enable** - Activate the target\n- **Disable** - Deactivate the target\n- **Toggle** - Switch the current state\n\n### Target Type\n- **Game Object** - Affect the entire object (visibility + all behaviors)\n- **Specific Behaviors** - Only affect selected behaviors on an object\n\n### Tips\n- Defaults to **Start on Trigger** (designed for use with Trigger)\n- Use Toggle for on/off switches (lights, doors, traps)\n- Target specific behaviors to selectively disable functionality\n- Great for puzzle mechanics and dynamic environments",
+    "author": "stemstudio",
+    "tags": ["utility", "state", "control"],
+    "main": "EnableDisableBehavior.ts",
+    "version": "1.0.0",
+    "dependencies": {},
+    "throttleConfig": {
+        "throttlePriority": "LOW",
+        "enableFrustumCulling": false,
+        "enableDistanceThrottling": false,
+        "requiresConsistentUpdates": false
+    },
+    "attributes": {
+        "customName": {
+            "name": "Custom Name",
+            "type": "string"
+        },
+        "startOnTrigger": {
+            "name": "Start on Trigger",
+            "type": "boolean",
+            "default": true,
+            "description": "When enabled, the action only executes after receiving a trigger event from another behavior instead of running immediately on start."
+        },
+        "action": {
+            "name": "Action",
+            "type": "enum",
+            "default": "toggle",
+            "options": [
+                {
+                    "label": "Enable",
+                    "value": "enable"
+                },
+                {
+                    "label": "Disable",
+                    "value": "disable"
+                },
+                {
+                    "label": "Toggle",
+                    "value": "toggle"
+                }
+            ],
+            "description": "Whether to activate, deactivate, or switch the target's current state"
+        },
+        "targetType": {
+            "name": "Target Type",
+            "type": "enum",
+            "default": "gameObject",
+            "options": [
+                {
+                    "label": "Game Object",
+                    "value": "gameObject"
+                },
+                {
+                    "label": "Specific Behaviors",
+                    "value": "behavior"
+                }
+            ],
+            "description": "Choose to modify the entire game object or specific behaviors"
+        },
+        "targetObject": {
+            "name": "Target Object",
+            "type": "object",
+            "defaultToSelf": true,
+            "visibleIf": {
+                "targetType": "gameObject"
+            },
+            "description": "The game object whose state will be modified"
+        },
+        "targetObjectBehaviors": {
+            "name": "Target Object Behaviors",
+            "type": "objectBehaviors",
+            "defaultToSelf": true,
+            "selectAllByDefault": false,
+            "visibleIf": {
+                "targetType": "behavior"
+            },
+            "description": "The game object and its specific behaviors whose state will be modified"
+        }
+    }
+}
