@@ -2,6 +2,7 @@ import {useEffect, useState} from "react";
 import styled from "styled-components";
 
 import {IS_OSS} from "@stem/editor-oss/mode/buildMode";
+import {useHomepageContext} from "@stem/editor-oss/context";
 import {
     getOSSPersistenceMode,
     getProjectStore,
@@ -44,6 +45,7 @@ export const ReconnectFolderBanner = () => {
     const [needsReconnect, setNeedsReconnect] = useState(false);
     const [busy, setBusy] = useState(false);
     const [hint, setHint] = useState<string | null>(null);
+    const {setShouldRefreshDashboard} = useHomepageContext();
 
     useEffect(() => {
         if (!IS_OSS) return;
@@ -67,10 +69,14 @@ export const ReconnectFolderBanner = () => {
         setBusy(false);
         if (result === "reconnected") {
             setNeedsReconnect(false);
-            // Force a dashboard refresh; consumers read the list via React
-            // Query, so dropping the location triggers a refetch path the
-            // existing HomepageContext already invalidates on focus.
-            window.location.reload();
+            // Refresh the dashboard in-place — do NOT reload the page. The
+            // File System Access API does not persist folder permission
+            // across page loads, so a reload would land back on boot's
+            // gesture-less verifyPermission(), fall back to IndexedDB, and
+            // re-show this banner. The store has already been swapped to the
+            // FileSystemProjectStore by reconnectFilesystemFolder(); a forced
+            // dashboard refresh re-reads the project list from disk.
+            setShouldRefreshDashboard(true);
             return;
         }
         if (result === "no-handle") {

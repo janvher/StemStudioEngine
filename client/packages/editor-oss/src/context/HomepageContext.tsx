@@ -370,8 +370,7 @@ const HomepageContextProvider: React.FC<HomepageContextProviderProps> = ({childr
         let attempts = 0;
         const maxAttempts = 20;
 
-        const handler = (payload?: {sceneId?: string; action?: string}) => {
-            console.debug("[DOT-7545] HomepageContext: scenePublished received", payload);
+        const handler = (_payload?: {sceneId?: string; action?: string}) => {
             void updateCommunityGamesRef.current({force: true});
             void updateMyGamesRef.current({force: true});
             void updateTopPicksGamesRef.current({force: true});
@@ -382,7 +381,6 @@ const HomepageContextProvider: React.FC<HomepageContextProviderProps> = ({childr
             if (!app?.on) return false;
             app.on("scenePublished.HomepageContext", handler);
             unsubscribe = () => app.on?.("scenePublished.HomepageContext", null);
-            console.debug("[DOT-7545] HomepageContext: subscribed to scenePublished");
             return true;
         };
 
@@ -392,13 +390,6 @@ const HomepageContextProvider: React.FC<HomepageContextProviderProps> = ({childr
             attempts++;
             if (tryBind() || attempts >= maxAttempts) {
                 window.clearInterval(interval);
-                if (!unsubscribe) {
-                    console.debug(
-                        "[DOT-7545] HomepageContext: gave up waiting for global.app after",
-                        attempts,
-                        "attempts — initial React Query fetch still loads games",
-                    );
-                }
             }
         }, 500);
 

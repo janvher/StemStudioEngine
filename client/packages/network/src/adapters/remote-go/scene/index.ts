@@ -1288,7 +1288,6 @@ export async function fetchMyScenes(params?: FetchScenesParams): Promise<Paginat
     }
     try {
         const query = buildPaginationQuery(params);
-        console.debug("[DOT-7545] fetchMyScenes ->", `/api/Scene/List${query}`);
         const response = await Ajax.get({
             url: backendUrlFromPath(`/api/Scene/List${query}`),
             needAuthorization: true,
@@ -1299,13 +1298,6 @@ export async function fetchMyScenes(params?: FetchScenesParams): Promise<Paginat
         }
 
         const data = response?.data.Data as PaginatedScenesResponse;
-        console.debug("[DOT-7545] fetchMyScenes <-", {
-            query,
-            page: data?.Page,
-            returned: data?.Scenes?.length ?? 0,
-            total: data?.TotalCount,
-            firstIds: (data?.Scenes ?? []).slice(0, 5).map(s => s.ID),
-        });
         return data;
     } catch (error) {
         console.error("Fetching scenes error:", error instanceof Error ? error.message : error);
@@ -1398,7 +1390,6 @@ export async function fetchPublishedScenes(params?: FetchScenesParams): Promise<
     if (IS_OSS) return emptyPaginatedScenesResponse(params);
     try {
         const query = buildPaginationQuery(params);
-        console.debug("[DOT-7545] fetchPublishedScenes ->", `/api/Scene/ListPublished${query}`);
         const response = await Ajax.get({
             url: backendUrlFromPath(`/api/Scene/ListPublished${query}`),
             needAuthorization: params?.includeCloneableForAdmin === true,
@@ -1409,18 +1400,6 @@ export async function fetchPublishedScenes(params?: FetchScenesParams): Promise<
         }
 
         const data = response?.data.Data as PaginatedScenesResponse;
-        console.debug("[DOT-7545] fetchPublishedScenes <-", {
-            query,
-            page: data?.Page,
-            returned: data?.Scenes?.length ?? 0,
-            total: data?.TotalCount,
-            firstIds: (data?.Scenes ?? []).slice(0, 5).map(s => ({
-                id: s.ID,
-                name: s.Name,
-                IsPublic: s.IsPublic,
-                IsPublished: s.IsPublished,
-            })),
-        });
         return data;
     } catch (error) {
         console.error("Fetching published scenes error:", error instanceof Error ? error.message : error);
