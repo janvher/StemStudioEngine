@@ -45,7 +45,7 @@ class VoiceRecorder {
             this.mediaRecorder.onstop = () => {
                 const audioBlob = new Blob(this.audioChunks, {type: this.mediaRecorder?.mimeType});
                 //this.playAudio(audioBlob);
-                this.onAudioRecorded && this.onAudioRecorded(audioBlob);
+                if (this.onAudioRecorded) this.onAudioRecorded(audioBlob);
                 this.audioChunks = [];
                 this.onAudioRecorded = null;
             };

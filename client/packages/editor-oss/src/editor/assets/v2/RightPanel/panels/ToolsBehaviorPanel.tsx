@@ -66,7 +66,7 @@ export const ToolsBehaviorPanel = ({ behaviorUISettings }: Props) => {
             return;
         }
 
-        const behavior = selectedObject.userData.behaviors.find((b: any) => b.id === behaviorID);
+        const behavior = selectedObject.userData.behaviors.find((b: {id: string}) => b.id === behaviorID);
         if (!behavior) return;
 
         const behaviorContextProvider = app.editor?.behaviorContextProvider;

@@ -21,6 +21,14 @@ export interface IGameMappingResponse {
     mapping?: IGameMapping;
 }
 
+/** Shape of an HTTP error thrown by the Ajax helper. */
+interface IHttpError {
+    response?: {
+        status?: number;
+        data?: string;
+    };
+}
+
 export interface ISlugCheckResponse {
     exists: boolean;
     valid: boolean;
@@ -112,16 +120,17 @@ export const createGameMapping = async (
             showToast({type: "error", title: errorMessage});
             return null;
         }
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error creating game mapping:", error);
         let errorMessage = "Error creating game mapping";
+        const httpError = error as IHttpError;
 
-        if (error.response?.status === 403) {
+        if (httpError.response?.status === 403) {
             errorMessage = "You don't have permission to create mappings for this game";
-        } else if (error.response?.status === 409) {
-            errorMessage = error.response.data || "Slug is already taken";
-        } else if (error.response?.status === 400) {
-            errorMessage = error.response.data || "Invalid request";
+        } else if (httpError.response?.status === 409) {
+            errorMessage = httpError.response.data || "Slug is already taken";
+        } else if (httpError.response?.status === 400) {
+            errorMessage = httpError.response.data || "Invalid request";
         }
 
         showToast({type: "error", title: errorMessage});
@@ -162,18 +171,19 @@ export const updateGameMapping = async (
             showToast({type: "error", title: errorMessage});
             return null;
         }
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error updating game mapping:", error);
         let errorMessage = "Error updating game mapping";
+        const httpError = error as IHttpError;
 
-        if (error.response?.status === 403) {
+        if (httpError.response?.status === 403) {
             errorMessage = "You don't have permission to update this mapping";
-        } else if (error.response?.status === 409) {
-            errorMessage = error.response.data || "Slug is already taken";
-        } else if (error.response?.status === 404) {
+        } else if (httpError.response?.status === 409) {
+            errorMessage = httpError.response.data || "Slug is already taken";
+        } else if (httpError.response?.status === 404) {
             errorMessage = "Game mapping not found";
-        } else if (error.response?.status === 400) {
-            errorMessage = error.response.data || "Invalid request";
+        } else if (httpError.response?.status === 400) {
+            errorMessage = httpError.response.data || "Invalid request";
         }
 
         showToast({type: "error", title: errorMessage});
@@ -197,13 +207,14 @@ export const deleteGameMapping = async (gameId: string): Promise<boolean> => {
             showToast({type: "error", title: "Failed to delete mapping"});
             return false;
         }
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error deleting game mapping:", error);
         let errorMessage = "Error deleting game mapping";
+        const httpError = error as IHttpError;
 
-        if (error.response?.status === 403) {
+        if (httpError.response?.status === 403) {
             errorMessage = "You don't have permission to delete this mapping";
-        } else if (error.response?.status === 404) {
+        } else if (httpError.response?.status === 404) {
             errorMessage = "Game mapping not found";
         }
 

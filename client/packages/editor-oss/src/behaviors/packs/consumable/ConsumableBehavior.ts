@@ -1,5 +1,3 @@
-import * as THREE from "three";
-
 import { COLLISION_TYPE, CONSUMABLE_TYPES } from "@stem/editor-oss/types/editor";
 import CameraUtils from "@stem/editor-oss/utils/CameraUtils";
 import { BehaviorBase } from "../../Behavior";

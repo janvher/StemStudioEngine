@@ -67,7 +67,7 @@ export const legacyEditBehavior = async (id: string, config: string, code: strin
         }
     } catch (error) {
         console.error("Error editing behavior:", error);
-        throw new Error((error as any)?.message || "Failed to edit behavior.");
+        throw new Error((error instanceof Error ? error.message : "") || "Failed to edit behavior.");
     }
 };
 
@@ -87,7 +87,7 @@ export const legacyAddBehaviorToScene = async (id: string, sceneId: string): Pro
         }
     } catch (error) {
         console.error("Error adding behavior to scene:", error);
-        throw new Error((error as any)?.message || "Failed to add behavior to scene.");
+        throw new Error((error instanceof Error ? error.message : "") || "Failed to add behavior to scene.");
     }
 };
 
@@ -117,9 +117,10 @@ const legacyGetBehaviorsList = async (): Promise<LegacyBehaviorBackendData[]> =>
         }
 
         return response.data.Data;
-    } catch (error: any) {
-        console.error("Error listing behaviors:", error.message || error);
-        throw new Error(error.message || "Failed to list behaviors.");
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error("Error listing behaviors:", message);
+        throw new Error(message || "Failed to list behaviors.");
     }
 };
 
@@ -179,9 +180,10 @@ export const legacyGetBehaviorsListForScene = async (sceneId: string): Promise<L
         }
 
         return response.data.Data;
-    } catch (error: any) {
-        console.error("Error listing behaviors for scene:", error.message || error);
-        throw new Error(error.message || "Failed to list behaviors for scene.");
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error("Error listing behaviors for scene:", message);
+        throw new Error(message || "Failed to list behaviors for scene.");
     }
 };
 
@@ -286,9 +288,10 @@ export const bulkImport = async (behaviors: BehaviorImport[]): Promise<BulkImpor
         }
 
         return response.data.Data;
-    } catch (error: any) {
-        console.error("Error bulk importing behaviors:", error.message || error);
-        throw new Error(error.message || "Failed to bulk import behaviors.");
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error("Error bulk importing behaviors:", message);
+        throw new Error(message || "Failed to bulk import behaviors.");
     }
 };
 

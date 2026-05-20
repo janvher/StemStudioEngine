@@ -23,7 +23,7 @@ export function downloadAudio(
     })
         .then(response => {
             const data = response?.data as AudioDownloadResponse;
-            callback && callback(data);
+            if (callback) callback(data);
             return data;
         })
         .catch(error => {
@@ -33,7 +33,7 @@ export function downloadAudio(
                 Msg: "Audio download failed",
                 Path: "",
             };
-            callback && callback(errorResponse);
+            if (callback) callback(errorResponse);
             return errorResponse;
         });
 }

@@ -60,10 +60,26 @@ class CinematicCameraBehavior extends BehaviorBase {
  *
  * @param raw
  */
+interface RawVec {
+    x?: number;
+    y?: number;
+    z?: number;
+}
+
+interface RawCinematicStep {
+    from?: RawVec;
+    to?: RawVec;
+    lookAt?: RawVec;
+    lookAtFrom?: RawVec;
+    lookAtTo?: RawVec;
+    duration?: number;
+    wait?: number;
+}
+
 function parseSteps(raw: unknown): CinematicStep[] {
     if (!raw) return [];
 
-    let data: any[];
+    let data: RawCinematicStep[];
     if (typeof raw === "string") {
         try {
             data = JSON.parse(raw);
@@ -76,7 +92,7 @@ function parseSteps(raw: unknown): CinematicStep[] {
         return [];
     }
 
-    return data.map((s: any) => ({
+    return data.map((s: RawCinematicStep) => ({
         from: s.from ? new THREE.Vector3(s.from.x, s.from.y, s.from.z) : undefined,
         to: new THREE.Vector3(s.to?.x ?? 0, s.to?.y ?? 0, s.to?.z ?? 0),
         lookAt: s.lookAt ? new THREE.Vector3(s.lookAt.x, s.lookAt.y, s.lookAt.z) : undefined,

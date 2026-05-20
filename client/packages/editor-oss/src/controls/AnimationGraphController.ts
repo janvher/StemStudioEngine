@@ -43,9 +43,10 @@ export class AnimationGraphController {
         object: Object3D,
         serializedGraph: string,
     ) => {
+        const wrapped = object as {_obj?: {animations?: AnimationClip[]}};
         const animations =
-            (object as any)._obj?.animations.length > 0
-                ? ((object as any)._obj.animations as AnimationClip[])
+            (wrapped._obj?.animations?.length ?? 0) > 0
+                ? (wrapped._obj?.animations as AnimationClip[])
                 : object.animations;
 
         const clipMap: Record<string, AnimationClip> = {};

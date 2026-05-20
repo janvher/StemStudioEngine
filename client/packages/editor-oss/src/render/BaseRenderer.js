@@ -12,7 +12,7 @@ class BaseRenderer {
         this.id = `${this.constructor.name}${ID--}`;
     }
 
-    create(scenes, camera, renderer, selected) {
+    create(_scenes, _camera, _renderer, _selected) {
         return new Promise(resolve => {
             resolve();
         });

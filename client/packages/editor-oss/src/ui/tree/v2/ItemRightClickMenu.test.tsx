@@ -15,7 +15,9 @@ const hoisted = vi.hoisted(() => ({
 }));
 
 vi.mock("styled-components", () => {
-    const styledFactory = (tag: any) => () => (props: any) => React.createElement(tag, props, props.children);
+    const styledFactory = (tag: any) => () => function StyledMock(props: any) {
+        return React.createElement(tag, props, props.children);
+    };
     const styled = new Proxy(styledFactory as any, {
         get: (_target, prop) => styledFactory(prop),
     });

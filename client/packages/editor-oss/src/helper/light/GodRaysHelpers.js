@@ -5,8 +5,6 @@
  */
 
 
-import * as THREE from "three";
-
 import global from "../../global";
 import GodRays from "@web-shared/postprocessing/GodRays";
 import BaseHelper from "../BaseHelper";

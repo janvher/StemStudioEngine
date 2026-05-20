@@ -4,7 +4,7 @@ import { FontLoader } from "three/examples/jsm/loaders/FontLoader.js";
 
 import EngineRuntime from "@stem/editor-oss/EngineRuntime";
 import global from "@stem/editor-oss/global";
-import {FONT_MAP, DEFAULT_FONT, DEFAULT_WEIGHT} from "../../../../../object/geometry/fontMap";
+import {FONT_MAP} from "../../../../../object/geometry/fontMap";
 import Text3D from "../../../../../object/geometry/Text3D";
 import { StyledRange } from "../../common/StyledRange";
 import { Separator } from "../common/Separator";
@@ -27,21 +27,6 @@ const Label = styled.label`
     font-weight: 500;
 `;
 
-const Input = styled.input`
-    width: 100%;
-    padding: 6px 10px;
-    background: var(--theme-grey-bg);
-    border: 1px solid var(--theme-container-divider);
-    border-radius: 4px;
-    color: var(--theme-font-main-selected-color);
-    font-size: 13px;
-    font-family: inherit;
-    outline: none;
-
-    &:focus {
-        border-color: var(--theme-primary-color);
-    }
-`;
 
 const TextArea = styled.textarea`
     width: 100%;
@@ -96,33 +81,6 @@ const TwoColumnInputs = styled.div`
     gap: 8px;
 `;
 
-const Button = styled.button<{ variant?: "primary" }>`
-    width: 100%;
-    padding: 10px 24px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    border: ${props =>
-        props.variant === "primary" ? "none" : "1px solid var(--theme-grey-bg)"};
-    background: ${props =>
-        props.variant === "primary"
-            ? "var(--theme-primary-color)"
-            : "transparent"};
-    color: var(--theme-font-main-selected-color);
-
-    &:hover {
-        opacity: 0.8;
-        transform: translateY(-1px);
-    }
-
-    &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-        transform: none;
-    }
-`;
 
 // Font loader with cache for multiple fonts
 const fontLoader = new FontLoader();

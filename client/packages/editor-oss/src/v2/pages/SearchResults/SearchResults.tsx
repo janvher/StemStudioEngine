@@ -33,7 +33,7 @@ export const SearchResults = () => {
     useEffect(() => {
         const getResults = async () => {
             if (!queryParams) return console.error("Missing query params");
-            isSearchResultsMatch && setInitSearchValue(queryParams.name || "");
+            if (isSearchResultsMatch) setInitSearchValue(queryParams.name || "");
             const gamesResults = await getGamesByQuery(queryParams);
             if (gamesResults) {
                 setResults(gamesResults);
@@ -41,7 +41,7 @@ export const SearchResults = () => {
                 setResults([]);
             }
         };
-        queryParams && getResults();
+        if (queryParams) getResults();
     }, [queryParams]);
 
     return (

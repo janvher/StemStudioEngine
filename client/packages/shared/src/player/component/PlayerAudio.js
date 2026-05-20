@@ -16,7 +16,7 @@ class PlayerAudio extends PlayerComponent {
         this.audios = [];
     }
 
-    create(scene, camera, renderer) {
+    create(scene, _camera, _renderer) {
          
         this.audios.length = 0;
 

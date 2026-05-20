@@ -37,9 +37,10 @@ export const getUser = async (): Promise<UserData> => {
             throw new Error(response?.data.Msg || "Failed to get user.");
         }
         return response.data.Data;
-    } catch (error: any) {
-        console.error("Error getting user:", error.message || error);
-        throw new Error(error.message || "Failed to get user.");
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error("Error getting user:", message);
+        throw new Error(message || "Failed to get user.");
     }
 };
 
@@ -56,9 +57,10 @@ export const getAiCreditsConfig = async (): Promise<AiCreditsConfig> => {
         }
         console.log("AI Credits Config:", response.data.Data);
         return response.data.Data;
-    } catch (error: any) {
-        console.error("Error getting AI credits config:", error.message || error);
-        throw new Error(error.message || "Failed to get AI credits config.");
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error("Error getting AI credits config:", message);
+        throw new Error(message || "Failed to get AI credits config.");
     }
 };
 
@@ -78,9 +80,10 @@ export const setUserLimits = async (userEmails: string[], updateAll: boolean, ai
         if (response?.data.Code !== 200) {
             throw new Error(response?.data.Msg || "Failed to set user limits.");
         }
-    } catch (error: any) {
-        console.error("Error setting user limits:", error.message || error);
-        throw new Error(error.message || "Failed to set user limits.");
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error("Error setting user limits:", message);
+        throw new Error(message || "Failed to set user limits.");
     }
 };
 
@@ -103,9 +106,10 @@ export const increaseUserLimits = async (
         if (response?.data.Code !== 200) {
             throw new Error(response?.data.Msg || "Failed to increase user limits.");
         }
-    } catch (error: any) {
-        console.error("Error increasing user limits:", error.message || error);
-        throw new Error(error.message || "Failed to increase user limits.");
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error("Error increasing user limits:", message);
+        throw new Error(message || "Failed to increase user limits.");
     }
 };
 
@@ -128,9 +132,10 @@ export const decreaseUserLimits = async (
         if (response?.data.Code !== 200) {
             throw new Error(response?.data.Msg || "Failed to decrease user limits.");
         }
-    } catch (error: any) {
-        console.error("Error decreasing user limits:", error.message || error);
-        throw new Error(error.message || "Failed to decrease user limits.");
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error("Error decreasing user limits:", message);
+        throw new Error(message || "Failed to decrease user limits.");
     }
 };
 
@@ -154,9 +159,10 @@ export const setUserAccountType = async (
             throw new Error(response?.data.Msg || "Failed to set account type.");
         }
         return response.data.Data;
-    } catch (error: any) {
-        console.error("Error setting account type:", error.message || error);
-        throw new Error(error.message || "Failed to set account type.");
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error("Error setting account type:", message);
+        throw new Error(message || "Failed to set account type.");
     }
 };
 
@@ -170,8 +176,9 @@ export const getUsersByAccountType = async (accountType: AccountType = "influenc
             throw new Error(response?.data.Msg || "Failed to get users.");
         }
         return response.data.Data;
-    } catch (error: any) {
-        console.error("Error getting users by account type:", error.message || error);
-        throw new Error(error.message || "Failed to get users by account type.");
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error("Error getting users by account type:", message);
+        throw new Error(message || "Failed to get users by account type.");
     }
 };

@@ -23,7 +23,7 @@ class TubeBufferGeometrySerializer extends BaseSerializer {
             if (pathData && pathData.type) {
                 // Reconstruct curve based on type
                 switch (pathData.type) {
-                    case "CatmullRomCurve3":
+                    case "CatmullRomCurve3": {
                         const points = pathData.points.map(p => new THREE.Vector3(p[0], p[1], p[2]));
                         curve = new THREE.CatmullRomCurve3(
                             points,
@@ -32,6 +32,7 @@ class TubeBufferGeometrySerializer extends BaseSerializer {
                             pathData.tension,
                         );
                         break;
+                    }
                     case "CubicBezierCurve3":
                         curve = new THREE.CubicBezierCurve3(
                             new THREE.Vector3().fromArray(pathData.v0),

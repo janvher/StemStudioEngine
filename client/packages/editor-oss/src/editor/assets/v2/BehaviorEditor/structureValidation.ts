@@ -195,7 +195,7 @@ export function validateScript(
     try {
         // eslint-disable-next-line @typescript-eslint/no-implied-eval
         new Function(parsedImports.code);
-    } catch (e: any) {
+    } catch (e) {
         if (e instanceof SyntaxError) {
             // Try to extract line number from message (e.g. "(1:5)" or "line 1")
             const lineMatch = e.message.match(/\((\d+):(\d+)\)/) || e.message.match(/line\s+(\d+)/i);

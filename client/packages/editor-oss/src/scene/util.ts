@@ -14,7 +14,17 @@ export type LoadSceneParams = {
     /** Optional AssetLoader for efficient model loading (avoids N+1 API requests) */
     assetLoader?: AssetLoader;
     /** Scene data (metadata and payload) */
-    sceneData: { data: any; metadata: any };
+    sceneData: {
+        /** Raw scene JSON payload fed to the untyped Converter.fromJson. */
+        data: any;
+        metadata:
+            | {
+                  Dependencies?: Record<string, string>;
+                  LogicalIDToAssetID?: Record<string, string>;
+                  [key: string]: unknown;
+              }
+            | undefined;
+    };
 };
 
 export const loadScene = async ({

@@ -27,7 +27,7 @@ const VideoElement = styled.video`
 
 const Video = forwardRef<HTMLDivElement, VideoProps>(({className, style, url, onClick}, ref) => {
     const handleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-        onClick && onClick(event);
+        if (onClick) onClick(event);
     };
 
     const handleClickVideo = (event: React.MouseEvent<HTMLVideoElement, MouseEvent>) => {

@@ -115,6 +115,7 @@ export const AnimationList: React.FC = () => {
                 setPlaying(null);
                 return;
             }
+            if (!mixer) return;
             const newAction = mixer.clipAction(animation);
             newAction.play();
             setAction(newAction);
@@ -132,7 +133,7 @@ export const AnimationList: React.FC = () => {
     };
 
     const removeAnimation = (animationId: string) => {
-        if (action && action._clip.uuid === animationId) action.stop();
+        if (action && action.getClip().uuid === animationId) action.stop();
         deleteAnimation(animationId);
     };
 

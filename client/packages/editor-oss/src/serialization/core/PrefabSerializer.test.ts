@@ -12,25 +12,16 @@ vi.mock('three', async (importOriginal) => ({
     AudioListener: vi.fn(),
 }));
 
-// PrefabSerializer.ts imports from @web-shared/prefab/util (which is a shim
-// that re-exports from @stem/editor-oss/prefab/util). Vitest treats those
-// paths as separate module instances, so the mock must apply to the actual
-// source path. `importOriginal` on the shim returns an empty `export *`
-// view that doesn't expose the named functions, so we import from the
-// source module and route loadPrefab at a shared mock fn that the test
-// body controls via `vi.hoisted`.
+// PrefabSerializer.ts imports `loadPrefab` directly from
+// `@stem/editor-oss/prefab/util`, so mocking that path routes the call to a
+// shared `vi.fn()` the test body controls via `mockResolvedValue`. The fn is
+// created through `vi.hoisted` so it exists before the hoisted `vi.mock`
+// factory runs.
 const {sharedLoadPrefab} = vi.hoisted(() => ({sharedLoadPrefab: vi.fn()}));
 vi.mock('@stem/editor-oss/prefab/util', async (importOriginal) => ({
     ...await importOriginal<typeof import('@stem/editor-oss/prefab/util')>(),
     loadPrefab: sharedLoadPrefab,
 }));
-vi.mock('@stem/editor-oss/prefab/util', async () => {
-    // Re-export the same surface as @stem/editor-oss/prefab/util so callers
-    // that import via the shim see the mocked loadPrefab too. We import the
-    // mocked module (not the real one) to ensure loadPrefab is the shared fn.
-    const mocked = await import('@stem/editor-oss/prefab/util');
-    return {...mocked};
-});
 
 describe('PrefabSerializer', () => {
     let serializer: PrefabSerializer;

@@ -1,3 +1,5 @@
+import type { Clock } from "three";
+
 import type { FrameContext, ISystem } from "../types";
 import { PipelineStage } from "../types";
 
@@ -15,8 +17,8 @@ export class RenderSystemAdapter implements ISystem {
     readonly supportsTimeSlicing = false;
 
     constructor(
-        private getRenderCallback: () => ((clock: any, deltaTime: number) => void) | undefined,
-        private getClock: () => any
+        private getRenderCallback: () => ((clock: Clock, deltaTime: number) => void) | undefined,
+        private getClock: () => Clock
     ) {}
 
     update(context: FrameContext): void {

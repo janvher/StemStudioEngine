@@ -337,7 +337,7 @@ class MultiplayerClient {
                     const room = await this.joinRoom(response?.data.roomId);
                     resolve(room);
                 }
-            } catch (error) {
+            } catch {
                 reject(inviteCode ? "Room doesn't exist or is full" : "Failed to join a room. Try again.");
             }
         });

@@ -52,15 +52,15 @@ class TouchControls extends BehaviorBase {
 
     private onResizeHandler: () => void;
 
-    private onShowButtonHandler: (topic: string, data: any) => void;
-    private onHideButtonHandler: (topic: string, data: any) => void;
-    private onToggleButtonHandler: (topic: string, data: any) => void;
-    private onShowJoystickHandler: (topic: string, data: any) => void;
-    private onHideJoystickHandler: (topic: string, data: any) => void;
-    private onShowSteeringWheelHandler: (topic: string, data: any) => void;
-    private onHideSteeringWheelHandler: (topic: string, data: any) => void;
-    private onEnableHandler: (topic: string, data: any) => void;
-    private onDisableHandler: (topic: string, data: any) => void;
+    private onShowButtonHandler: (topic: string, data: ButtonShowEvent) => void;
+    private onHideButtonHandler: (topic: string, data: ButtonShowEvent) => void;
+    private onToggleButtonHandler: (topic: string, data: ButtonShowEvent) => void;
+    private onShowJoystickHandler: () => void;
+    private onHideJoystickHandler: () => void;
+    private onShowSteeringWheelHandler: () => void;
+    private onHideSteeringWheelHandler: () => void;
+    private onEnableHandler: () => void;
+    private onDisableHandler: () => void;
     private onToggleVisibilityHandler: (topic: string, data: {visible: boolean}) => void;
 
     private eventTokens: string[] = [];
@@ -209,7 +209,11 @@ class TouchControls extends BehaviorBase {
         return window.innerHeight > window.innerWidth ? 'portrait' : 'landscape';
     }
 
-    private getDeviceConfig(deviceType: DeviceType): any {
+    private getDeviceConfig(deviceType: DeviceType): {
+        enabled: boolean;
+        verticalLayout: LayoutConfig | undefined;
+        horizontalLayout: LayoutConfig | undefined;
+    } {
         const enabledKey = `${deviceType}Enabled`;
         const verticalKey = `${deviceType}VerticalLayout`;
         const horizontalKey = `${deviceType}HorizontalLayout`;
@@ -490,21 +494,21 @@ class TouchControls extends BehaviorBase {
         }
     }
 
-    private onShowButton(topic: string, data: any): void {
+    private onShowButton(topic: string, data: ButtonShowEvent): void {
         const button = this.getButtonByEventData(data);
         if (button) {
             button.setVisibility(true, this.isControlsVisible);
         }
     }
 
-    private onHideButton(topic: string, data: any): void {
+    private onHideButton(topic: string, data: ButtonShowEvent): void {
         const button = this.getButtonByEventData(data);
         if (button) {
             button.setVisibility(false, this.isControlsVisible);
         }
     }
 
-    private onToggleButton(topic: string, data: any): void {
+    private onToggleButton(topic: string, data: ButtonShowEvent): void {
         const button = this.getButtonByEventData(data);
 
         if (button) {
@@ -512,25 +516,25 @@ class TouchControls extends BehaviorBase {
         }
     }
 
-    private onShowJoystick(topic: string, data: any): void {
+    private onShowJoystick(): void {
         if (this.joystick) {
             this.joystick.setVisibility(true);
         }
     }
 
-    private onHideJoystick(topic: string, data: any): void {
+    private onHideJoystick(): void {
         if (this.joystick) {
             this.joystick.setVisibility(false);
         }
     }
 
-    private onShowSteeringWheel(topic: string, data: any): void {
+    private onShowSteeringWheel(): void {
         if (this.steeringWheel) {
             this.steeringWheel.setVisibility(true);
         }
     }
 
-    private onHideSteeringWheel(topic: string, data: any): void {
+    private onHideSteeringWheel(): void {
         if (this.steeringWheel) {
             this.steeringWheel.setVisibility(false);
         }
@@ -549,11 +553,11 @@ class TouchControls extends BehaviorBase {
         });
     }
 
-    private onEnable(topic: string, data: any): void {
+    private onEnable(): void {
         this.enableControls();
     }
 
-    private onDisable(topic: string, data: any): void {
+    private onDisable(): void {
         this.disableControls();
     }
 

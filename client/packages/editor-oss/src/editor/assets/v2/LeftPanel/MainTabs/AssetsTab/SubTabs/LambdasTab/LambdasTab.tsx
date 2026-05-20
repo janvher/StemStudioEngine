@@ -10,7 +10,7 @@ import type {LambdaInstanceData} from "../../../../../../../../lambdas/Lambda";
 import {RightClickMenu, ItemMenuText} from "../../../../../../../../ui/common/RightClickMenu/RightClickMenu";
 import {useListEditorAssets, useAssetRevisions} from "../../../../../../../asset-management/hooks/assets";
 import {useRemoveAssetsAndInstancesFromScene} from "../../../../../../../asset-management/hooks/scene";
-import {useLambdaData, useGetLambdaRevisionData} from "../../../../../../../lambdas/hooks/lambdas";
+import {useLambdaData} from "../../../../../../../lambdas/hooks/lambdas";
 import {IconButton} from "../../../../../AssetsLibrary/AssetsLibrary.style";
 import lambdaIcon from "../../../../../AssetsLibrary/FoldersView/icons/lambda-icon.svg";
 import editIcon from "../../../../../AssetsLibrary/images/edit.svg";
@@ -83,8 +83,7 @@ export const LambdasTab = ({search, assets: propAssets}: Props) => {
 const SingleLambda = ({assetId, name, revisionId}: {assetId: string; name: string; revisionId?: string}) => {
     const app = global.app;
     const editor = app?.editor;
-    const {config, code} = useLambdaData(assetId, revisionId);
-    const getLambdaRevisionData = useGetLambdaRevisionData();
+    const {config} = useLambdaData(assetId, revisionId);
     const removeAssetsAndInstancesFromScene = useRemoveAssetsAndInstancesFromScene();
     const revisionsQuery = useAssetRevisions(assetId);
 
@@ -206,13 +205,10 @@ const SingleLambda = ({assetId, name, revisionId}: {assetId: string; name: strin
         }
     };
 
-    const handleLoadRevisionClick = useCallback(
-        (_event: React.MouseEvent, _loadRevisionId: string) => {
-            editor?.component?.closeRevisionPopup();
-            editor?.component?.openCodeEditor({kind: "lambda", id: assetId});
-        },
-        [assetId, editor],
-    );
+    const handleLoadRevisionClick = useCallback(() => {
+        editor?.component?.closeRevisionPopup();
+        editor?.component?.openCodeEditor({kind: "lambda", id: assetId});
+    }, [assetId, editor]);
 
     const openRevisionPanel = () => {
         editor?.component?.openRevisionPopup({
@@ -224,10 +220,10 @@ const SingleLambda = ({assetId, name, revisionId}: {assetId: string; name: strin
                         key: "load",
                         tooltip: isOlderThanCurrent ? "Roll back to this revision" : "Switch to this revision",
                         icon: "apply",
-                        onClick: event => {
+                        onClick: () => {
                             confirmRevisionRollback(revision, isOlderThanCurrent, () => {
                                 // handleLoadRevisionClick handles its own errors via toast.
-                                void handleLoadRevisionClick(event, revision.id);
+                                void handleLoadRevisionClick();
                             });
                         },
                     }],

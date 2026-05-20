@@ -1,4 +1,4 @@
-import {Prompt, SubmitButton} from "../ContextMenu.styles";
+import {SubmitButton} from "../ContextMenu.styles";
 
 type Props = {
     handleAddAnother: () => void;

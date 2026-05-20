@@ -66,8 +66,8 @@ export const CommandsPrompt = ({ isOpen, onMenuClose, setIsOpen, selectedObject 
             } else {
                 throw new Error();
             }
-        } catch (error: any) {
-            if (error.code === "ERR_CANCELED") return;
+        } catch (error) {
+            if ((error as {code?: string})?.code === "ERR_CANCELED") return;
             showToast({ type: "error", title: "Failed to generate commands" });
         } finally {
             setIsRequesting(false);

@@ -23,15 +23,15 @@ const Confirm = forwardRef<HTMLDivElement, IConfirmProps>((props, ref) => {
     const {className, style, title, children, hidden, mask, okText, cancelText, onOK, onCancel, onClose} = props;
 
     const handleOK = (event: any) => {
-        onOK && onOK(event);
+        if (onOK) onOK(event);
     };
 
     const handleCancel = (event: any) => {
-        onCancel && onCancel(event);
+        if (onCancel) onCancel(event);
     };
 
     const handleClose = (event: any) => {
-        onClose && onClose(event);
+        if (onClose) onClose(event);
     };
 
     return (

@@ -8,7 +8,6 @@ import {
     CloseButton,
     ResultsBody,
     MatchLine,
-    LineNumber,
     MatchText,
 } from "../AssetsLibrary/CodeEditor/SearchResultsPanel/SearchResultsPanel.style";
 import styled from "styled-components";

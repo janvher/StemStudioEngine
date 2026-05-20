@@ -10,7 +10,7 @@
 import { IdleWorkQueue } from "./IdleWorkQueue";
 
 export class ComponentDataPool {
-    private static pools: Map<string, Array<Record<string, any>>> = new Map();
+    private static pools: Map<string, Array<Record<string, unknown>>> = new Map();
     private static poolSizes: Map<string, number> = new Map();
     private static idleQueue = new IdleWorkQueue();
 
@@ -20,7 +20,7 @@ export class ComponentDataPool {
      * @param defaults
      * @param count
      */
-    static warmUp(lambdaId: string, defaults: Record<string, any>, count: number = 50): void {
+    static warmUp(lambdaId: string, defaults: Record<string, unknown>, count: number = 50): void {
         const pool = this.getPool(lambdaId);
         for (let i = 0; i < count; i++) {
             pool.push({ ...defaults });
@@ -33,7 +33,7 @@ export class ComponentDataPool {
      * @param lambdaId
      * @param defaults
      */
-    static acquire(lambdaId: string, defaults: Record<string, any>): Record<string, any> {
+    static acquire(lambdaId: string, defaults: Record<string, unknown>): Record<string, unknown> {
         const pool = this.getPool(lambdaId);
         if (pool.length > 0) {
             const obj = pool.pop()!;
@@ -50,7 +50,7 @@ export class ComponentDataPool {
      * @param lambdaId
      * @param data
      */
-    static release(lambdaId: string, data: Record<string, any>): void {
+    static release(lambdaId: string, data: Record<string, unknown>): void {
         const pool = this.getPool(lambdaId);
         const maxSize = this.poolSizes.get(lambdaId) ?? 100;
         if (pool.length < maxSize) {
@@ -64,11 +64,11 @@ export class ComponentDataPool {
      * @param defaults
      * @param count
      */
-    static scheduleWarmUp(lambdaId: string, defaults: Record<string, any>, count: number = 50): void {
+    static scheduleWarmUp(lambdaId: string, defaults: Record<string, unknown>, count: number = 50): void {
         this.idleQueue.schedule(() => this.warmUp(lambdaId, defaults, count));
     }
 
-    private static getPool(lambdaId: string): Array<Record<string, any>> {
+    private static getPool(lambdaId: string): Array<Record<string, unknown>> {
         let pool = this.pools.get(lambdaId);
         if (!pool) {
             pool = [];

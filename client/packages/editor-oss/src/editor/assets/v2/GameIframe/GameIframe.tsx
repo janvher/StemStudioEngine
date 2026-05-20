@@ -3,7 +3,6 @@ import ReactDOM from "react-dom";
 import styled from "styled-components";
 
 import { renderingEditorToApi } from '@stem/network/api/scene';
-import EngineRuntime from "@stem/editor-oss/EngineRuntime";
 import {useAuthorizationContext} from "@stem/editor-oss/context";
 import global from "@stem/editor-oss/global";
 import Converter from "../../../../serialization/Converter";
@@ -63,7 +62,7 @@ export const GameIframe = ({iframeRef}: {iframeRef: MutableRefObject<HTMLIFrameE
             }
         };
 
-        const handleMessage = (event: any) => {
+        const handleMessage = (event: MessageEvent) => {
             const message = event.data;
             if (typeof message === "string" && message.includes(IFRAME_MESSAGES.PLAYER_ADDED_LISTENER)) {
                 const id = message.split("?id=")[1];

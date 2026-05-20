@@ -11,7 +11,7 @@ type AnimationControlData = {
     timeScale?: number;
     paramName?: string;
     paramType?: "number" | "boolean" | "string";
-    paramValue?: any;
+    paramValue?: unknown;
 };
 
 export default class AnimationControlLambda extends LambdaBase {
@@ -19,7 +19,7 @@ export default class AnimationControlLambda extends LambdaBase {
         return (target.userData?.animationActions || {}) as Record<string, AnimationAction>;
     }
 
-    private parseValue(type: string, value: any): any {
+    private parseValue(type: string, value: unknown): unknown {
         const raw = typeof value === "string" ? value.trim() : value;
         if (type === "boolean") {
             return raw === true || raw === "true";

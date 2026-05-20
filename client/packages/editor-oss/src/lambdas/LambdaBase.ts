@@ -222,23 +222,23 @@ export class LambdaBase implements Lambda {
     }
 
     // Override this in subclasses instead of apply()
-    update(deltaTime?: number): void {
+    update(_deltaTime?: number): void {
         // Subclass should override and iterate this._registeredObjects
     }
 
-    onObjectAdded(target: Object3D, componentData: Record<string, any>): void { }
+    onObjectAdded(_target: Object3D, _componentData: Record<string, any>): void { }
 
-    onObjectRemoved(target: Object3D): void { }
+    onObjectRemoved(_target: Object3D): void { }
 
     onAttributesUpdated(): void {}
 
-    onAttributeChangeRequested(key: string, newValue: any, oldValue: any, requester: Lambda | null): boolean {
+    onAttributeChangeRequested(_key: string, _newValue: any, _oldValue: any, _requester: Lambda | null): boolean {
         return true;
     }
 
-    onAttributeChanged(key: string, newValue: any, oldValue: any): void {}
+    onAttributeChanged(_key: string, _newValue: any, _oldValue: any): void {}
 
-    onEvent(msg: string, data: any): void | Promise<void> | Generator { }
+    onEvent(_msg: string, _data: any): void | Promise<void> | Generator { }
 
     // Component data access (miniplex-style direct access)
     getComponentData(target: Object3D): Record<string, any> | null {

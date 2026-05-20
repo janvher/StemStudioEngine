@@ -25,7 +25,7 @@ export const AiAssistantTest = ({autoDetectAnimations}: Props) => {
     };
     //TODO this is being tested for AI response to suggest animations
     //it is not finished but trains the Chatgpt to suggest animations to use for the character
-    const AiSuggestAnimoitions = async (weaponType: string) => {
+    const _AiSuggestAnimoitions = async (weaponType: string) => {
         setLoading(true);
 
         const characterOptions = camera.userData.cameraData.characterOptions;
@@ -69,7 +69,7 @@ export const AiAssistantTest = ({autoDetectAnimations}: Props) => {
 
          `;
 
-        const suggestedAnimations = await askQuestion(question);
+        await askQuestion(question);
 
         setLoading(false);
     };

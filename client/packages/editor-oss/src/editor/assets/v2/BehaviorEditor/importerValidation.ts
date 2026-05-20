@@ -24,7 +24,17 @@ const SEVERITY_MAP: Record<string, "Error" | "Warning" | "Info"> = {
     info: "Info",
 };
 
-let _validateCode: ((code: string, type: string) => any[]) | null = null;
+type ImporterDiagnostic = {
+    severity: string;
+    message: string;
+    ruleId: string;
+    startLine: number;
+    startColumn: number;
+    endLine: number;
+    endColumn: number;
+};
+
+let _validateCode: ((code: string, type: string) => ImporterDiagnostic[]) | null = null;
 let _loadAttempted = false;
 
 async function loadValidator(): Promise<void> {
@@ -66,15 +76,7 @@ void loadValidator();
 export function runImporterValidation(code: string, type: ScriptType): ValidationMarker[] {
     if (typeof _validateCode !== "function") return [];
     try {
-        const diagnostics: Array<{
-            severity: string;
-            message: string;
-            ruleId: string;
-            startLine: number;
-            startColumn: number;
-            endLine: number;
-            endColumn: number;
-        }> = _validateCode(code, type);
+        const diagnostics: ImporterDiagnostic[] = _validateCode(code, type);
 
         const markers = diagnostics.map((d) => ({
             severity: SEVERITY_MAP[d.severity] || "Warning",

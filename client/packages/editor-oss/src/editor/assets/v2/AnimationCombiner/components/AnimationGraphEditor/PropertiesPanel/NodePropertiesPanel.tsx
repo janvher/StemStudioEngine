@@ -11,7 +11,6 @@ import { showToast } from "@stem/editor-oss/showToast";
 import { ElementsUtils } from "@stem/editor-oss/utils/ElementsUtils";
 import { StyledButton } from "../../../../common/StyledButton";
 import { TextInput } from "../../../../common/TextInput";
-import { Tooltip } from "../../../../common/Tooltip";
 import { NumericInputRow } from "../../../../RightPanel/common/NumericInputRow";
 import { PanelCheckbox } from "../../../../RightPanel/common/PanelCheckbox";
 import { SelectRow } from "../../../../RightPanel/common/SelectRow";

@@ -29,7 +29,7 @@ type Props = {
     data: AssetItem[];
     onClick: (id: string) => void;
     selectedItemsIds?: string[];
-    onDelete?: (arg: any) => void;
+    onDelete?: (arg: AssetItem) => void;
     onReplace?: (args: {ID: string; Name: string}) => void;
     className?: string;
     maxHeight?: string;

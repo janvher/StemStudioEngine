@@ -40,7 +40,7 @@ const Input = ({
     const val = value === undefined || value === null ? "" : value;
 
     const handleFocus = (event: any) => {
-        onFocus && onFocus(event);
+        if (onFocus) onFocus(event);
     };
 
     const handleChange = (event: any) => {
@@ -55,12 +55,12 @@ const Input = ({
                         : precision === 0
                           ? intValue
                           : parseFloat(numValue.toFixed(precision));
-                onChange && onChange(finalValue, name, event);
+                if (onChange) onChange(finalValue, name, event);
             } else {
-                onChange && onChange(null, name, event);
+                if (onChange) onChange(null, name, event);
             }
         } else {
-            onChange && onChange(val, name, event);
+            if (onChange) onChange(val, name, event);
         }
     };
 
@@ -68,12 +68,12 @@ const Input = ({
         const val = event.target.value;
         if (type === "number") {
             if (val.trim() !== "") {
-                onInput && onInput(parseFloat(val), name, event);
+                if (onInput) onInput(parseFloat(val), name, event);
             } else {
-                onInput && onInput(null, name, event);
+                if (onInput) onInput(null, name, event);
             }
         } else {
-            onInput && onInput(val, name, event);
+            if (onInput) onInput(val, name, event);
         }
     };
 

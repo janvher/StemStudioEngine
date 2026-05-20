@@ -1,3 +1,5 @@
+import type { Clock } from "three";
+
 import type { FrameContext, ISystem } from "../types";
 import { PipelineStage } from "../types";
 
@@ -14,8 +16,8 @@ export class AiWorldSystemAdapter implements ISystem {
     readonly supportsTimeSlicing = false;
 
     constructor(
-        private getAiWorldControl: () => { update(clock: any, deltaTime: number): void } | undefined,
-        private getClock: () => any,
+        private getAiWorldControl: () => { update(clock: Clock, deltaTime: number): void } | undefined,
+        private getClock: () => Clock,
     ) {}
 
     update(context: FrameContext): void {

@@ -1,6 +1,5 @@
 import * as THREE from "three";
 
-// @ts-ignore local helper control has no TS types in this repo
 import {MeshData} from "./MeshData";
 import {createGeometryFromMeshData, rehydrateMeshData} from "./meshDataUtils";
 import {CADSelectionMode, CADTool, SerializedMeshData} from "./types";
@@ -2486,7 +2485,6 @@ export class CADController {
             }
 
             const chordDir = chord.clone().normalize();
-            const midpoint = start.clone().add(end).multiplyScalar(0.5);
 
             const adjNormal = new THREE.Vector3();
             edge.faceIds.forEach(faceId => {
@@ -2509,7 +2507,6 @@ export class CADController {
             const halfChord = chordLen / 2;
             const radius = (halfChord * halfChord + sagitta * sagitta) / (2 * sagitta);
             const centerOffset = radius - sagitta;
-            const center = midpoint.clone().sub(perpDir.clone().multiplyScalar(centerOffset));
 
             const arcVertexIds: number[] = [edge.v1Id];
             for (let i = 1; i < clampedSegments; i++) {

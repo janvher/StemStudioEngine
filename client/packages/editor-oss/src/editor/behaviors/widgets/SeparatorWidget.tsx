@@ -1,5 +1,4 @@
 import React from "react";
-import ReactDOM from "react-dom/client";
 
 import { BehaviorAttribute } from "../BehaviorAttributes";
 import BaseAttributeWidget from "./BaseAttributeWidget";
@@ -11,11 +10,11 @@ class SeparatorWidget extends BaseAttributeWidget {
     }
 
     protected createComponent(
-        id: string,
-        name: string,
-        attribute: BehaviorAttribute,
-        getCurrentValue: () => any,
-        updateBehaviorField: (value: any) => void,
+        _id: string,
+        _name: string,
+        _attribute: BehaviorAttribute,
+        _getCurrentValue: () => any,
+        _updateBehaviorField: (value: any) => void,
     ): React.ReactElement {
         return <Separator />;
     }

@@ -1,7 +1,5 @@
 import {Object3D, Vector3, Quaternion, Box3} from "three";
 
-import {getPhysics} from "../../../physics/common/getPhysics";
-
 import AiAgent from "./AiAgent";
 import AIConversationManager from "./AiConversationManager";
 import {AVAILABLE_ACTIONS, EVENTS_TO_LISTEN} from "./const";

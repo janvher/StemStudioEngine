@@ -1,4 +1,3 @@
-import * as THREE from "three";
 import {TeapotGeometry} from "three/examples/jsm/geometries/TeapotGeometry.js";
 
 import BaseSerializer from "../BaseSerializer";

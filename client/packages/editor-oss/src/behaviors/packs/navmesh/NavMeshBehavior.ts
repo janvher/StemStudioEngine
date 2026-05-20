@@ -503,7 +503,7 @@ class NavMeshBehavior extends BehaviorBase {
         }
     }
 
-    update(deltaTime: number): void {
+    update(): void {
         // NavMesh doesn't need frame updates
         // Only regenerate when explicitly requested
     }

@@ -6,7 +6,6 @@
 
 
 import {t} from "i18next";
-import * as THREE from "three";
 
 import {AddObjectCommand} from "./AddObjectCommand";
 import Command from "./Command";

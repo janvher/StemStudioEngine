@@ -1,6 +1,6 @@
 export interface ConsoleMessage {
     type: "log" | "warn" | "error" | "info";
-    args: any[];
+    args: unknown[];
     timestamp: number;
 }
 
@@ -11,7 +11,7 @@ const MAX_MESSAGES = 1000;
 const INTERCEPT_METHODS = ["log", "warn", "error", "info"] as const;
 
 export class ConsoleInterceptor {
-    private originals = new Map<string, (...args: any[]) => void>();
+    private originals = new Map<string, (...args: unknown[]) => void>();
     private active = false;
 
     start(onMessage: MessageCallback): void {
@@ -22,7 +22,7 @@ export class ConsoleInterceptor {
             const original = console[method].bind(console);
             this.originals.set(method, original);
 
-            console[method] = (...args: any[]) => {
+            console[method] = (...args: unknown[]) => {
                 original(...args);
                 onMessage({type: method, args, timestamp: Date.now()});
             };
@@ -36,7 +36,7 @@ export class ConsoleInterceptor {
         for (const method of INTERCEPT_METHODS) {
             const original = this.originals.get(method);
             if (original) {
-                console[method] = original as any;
+                console[method] = original;
             }
         }
         this.originals.clear();

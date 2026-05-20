@@ -1,9 +1,4 @@
-import styled, {keyframes} from "styled-components";
-
-const blink = keyframes`
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
-`;
+import styled from "styled-components";
 
 export const TerminalContainer = styled.div`
     display: flex;

@@ -67,7 +67,7 @@ export const LayoutButton = ({
     plusIconBig,
     plusNewLine,
 }: Props) => {
-    const [active, setActive] = useState(false);
+    const [, setActive] = useState(false);
     const {openPopup, setPopupCallback, setOpenColorPicker, openColorPicker, popupType} = useHUDContext();
     const app = (global as any).app;
     const {setStartGameMenuLayout, startGameMenuLayout} = useHUDStartGameMenuContext();
@@ -132,7 +132,7 @@ export const LayoutButton = ({
         }
     };
 
-    const handleDelete = (e: any) => {
+    const handleDelete = (e: React.MouseEvent) => {
         e.stopPropagation();
         if (tab === HUD_TABS.GAME_START_MENU) {
             setStartGameMenuLayout({
@@ -158,7 +158,8 @@ export const LayoutButton = ({
             setActive(false);
         }
     }, [popupType]);
-    const allFieldsAreUndefined = (obj: any) => Object.values(obj).every(value => value === undefined);
+    const allFieldsAreUndefined = (obj: object | string) =>
+        Object.values(obj).every(value => value === undefined);
 
     return (
         <Wrapper>

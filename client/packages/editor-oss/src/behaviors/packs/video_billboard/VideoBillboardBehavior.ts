@@ -182,7 +182,7 @@ class VideoBillboardBehavior extends BehaviorBase {
         } else console.error("Video BB: this.videoElem is undefined");
     }
 
-    update(deltaTime: number) {
+    update() {
         if (!this.videoSource || !this.videoSource.isReady() || !this.target) return;
 
         const texture = this.videoSource.getTexture();

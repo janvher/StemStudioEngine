@@ -31,7 +31,7 @@ export const AxisTransformSection = ({isLocked, setValue, value, name}: Props) =
                                 />
                                 <NumericInput
                                     value={value[axis]}
-                                    setValue={value => {
+                                    setValue={() => {
                                         return null;
                                     }}
                                     className="dark-input"

@@ -27,8 +27,9 @@ export const Templates = () => {
             await saveIds([...ids, ...newIds]);
             setInputValue("");
             showToast({type: "success", title: "Templates updated."});
-        } catch (error: any) {
-            showToast({type: "error", title: error.message || "Failed to save templates."});
+        } catch (error) {
+            const message = error instanceof Error ? error.message : undefined;
+            showToast({type: "error", title: message || "Failed to save templates."});
         }
     };
 
@@ -36,8 +37,9 @@ export const Templates = () => {
         try {
             await saveIds(ids.filter(id => id !== idToRemove));
             showToast({type: "success", title: "Template removed."});
-        } catch (error: any) {
-            showToast({type: "error", title: error.message || "Failed to remove template."});
+        } catch (error) {
+            const message = error instanceof Error ? error.message : undefined;
+            showToast({type: "error", title: message || "Failed to remove template."});
         }
     };
 

@@ -1,10 +1,9 @@
 import {BehaviorAttributeData, Vector2Attribute} from "../BehaviorAttributes";
 import BehaviorAttributeType from "../BehaviorAttributeType";
-import {BehaviorContext} from "../BehaviorContextProvider";
 import AttributeConverter from "./AttributeConverter";
 
 class Vector2AttributeConverter implements AttributeConverter {
-    convertAttribute(attributeData: BehaviorAttributeData, behaviorContext: BehaviorContext): Vector2Attribute {
+    convertAttribute(attributeData: BehaviorAttributeData): Vector2Attribute {
         return {
             name: attributeData.name,
             type: BehaviorAttributeType.Vector2,
@@ -18,12 +17,15 @@ class Vector2AttributeConverter implements AttributeConverter {
         };
     }
 
-    private toVec2(value: any): {x: number; y: number} | undefined {
+    private toVec2(value: unknown): {x: number; y: number} | undefined {
         if (Array.isArray(value)) {
             return {x: value[0] ?? 0, y: value[1] ?? 0};
         }
-        if (value && (value.x !== undefined || value.y !== undefined)) {
-            return {x: value.x ?? 0, y: value.y ?? 0};
+        if (value && typeof value === "object") {
+            const v = value as {x?: number; y?: number};
+            if (v.x !== undefined || v.y !== undefined) {
+                return {x: v.x ?? 0, y: v.y ?? 0};
+            }
         }
         return undefined;
     }

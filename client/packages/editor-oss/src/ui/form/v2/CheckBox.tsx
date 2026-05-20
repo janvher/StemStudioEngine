@@ -4,16 +4,16 @@ import classNames from "classnames";
 
 interface Props {
     className?: string;
-    style?: any;
+    style?: React.CSSProperties;
     name: string;
     checked?: boolean;
     disabled?: boolean;
-    onChange?: (checked: boolean, name: string, event?: any) => void;
+    onChange?: (checked: boolean, name: string, event?: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 const CheckBox = ({className, style, name, checked = false, disabled = false, onChange}: Props) => {
-    const handleChange = (event: any) => {
-        onChange && onChange(event.target.checked, name, event);
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (onChange) onChange(event.target.checked, name, event);
     };
 
     return (

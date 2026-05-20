@@ -145,7 +145,7 @@ class AutoSaveEvent extends BaseEvent {
         }
     }
 
-    commitSaveScene(experience) {
+    commitSaveScene(_experience) {
         const app = global.app;
         const editor = app.editor;
 

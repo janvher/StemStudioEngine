@@ -47,11 +47,11 @@ class BehaviorDataManager {
         };
     }
 
-    getBehaviorDataByUUID(object: any, uuid: string): BehaviorData | null {
+    getBehaviorDataByUUID(object: Object3D, uuid: string): BehaviorData | null {
         return object.userData?.behaviors?.find((behavior: BehaviorData) => behavior.uuid === uuid);
     }
 
-    getBehaviorDataById(object: any, id: string): BehaviorData | null {
+    getBehaviorDataById(object: Object3D, id: string): BehaviorData | null {
         return object.userData?.behaviors?.find((behavior: BehaviorData) => behavior.id === id);
     }
 
@@ -76,7 +76,7 @@ class BehaviorDataManager {
         // If there is an active behavior of the same type - disable it. Only new one will be enabled.
         const config = this.behaviorConfigRegistry.getConfig(data.id);
         if (!config?.allowMultiple) {
-            object.userData.behaviors.forEach((el: any) => {
+            object.userData.behaviors.forEach((el: BehaviorData) => {
                 if (el.enabled && el.id === data.id && el.uuid !== data.uuid) {
                     el.enabled = false;
                 }
@@ -88,7 +88,7 @@ class BehaviorDataManager {
         return true;
     }
 
-    removeBehaviorDataFromObjectByUUID(object: any, uuid: string): boolean {
+    removeBehaviorDataFromObjectByUUID(object: Object3D, uuid: string): boolean {
         if (!object.userData?.behaviors) {
             return false;
         }
@@ -118,7 +118,7 @@ class BehaviorDataManager {
      * @param data
      * @param scene
      */
-    handleExclusiveAttributesOnAdd(object: any, data: BehaviorData, scene: Scene): void {
+    handleExclusiveAttributesOnAdd(object: Object3D, data: BehaviorData, scene: Scene): void {
         const config = this.behaviorConfigRegistry.getConfig(data.id);
         if (!config || !config.attributes) {
             return;
@@ -183,7 +183,7 @@ class BehaviorDataManager {
         }
 
         const attributeConfig = config.attributes[attributeName];
-        if (attributeConfig.type === "boolean" && (attributeConfig as any).isExclusive) {
+        if (attributeConfig.type === "boolean" && attributeConfig.isExclusive) {
             // Find and disable this attribute in all other behaviors in the scene
             const disabledInfo = this.disableExclusiveAttributeInScene(scene, attributeName, behaviorUuid);
 
@@ -305,7 +305,7 @@ class BehaviorDataManager {
                         config.attributes &&
                         config.attributes[attributeName] &&
                         config.attributes[attributeName].type === "boolean" &&
-                        (config.attributes[attributeName] as any).isExclusive
+                        config.attributes[attributeName].isExclusive
                     ) {
                         // Only disable if it was actually true
                         if (behavior.attributesData && behavior.attributesData[attributeName] === true) {
@@ -387,7 +387,7 @@ class BehaviorDataManager {
                         config.attributes &&
                         config.attributes[attributeName] &&
                         config.attributes[attributeName].type === "boolean" &&
-                        (config.attributes[attributeName] as any).isExclusive &&
+                        config.attributes[attributeName].isExclusive &&
                         behavior.attributesData != null &&
                         behavior.attributesData[attributeName] === attributeValue
                     ) {

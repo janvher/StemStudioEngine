@@ -54,7 +54,7 @@ export const BillboardPanel = () => {
             return;
         }
 
-        const behavior = selectedObject.userData.behaviors.find((b: any) => b.id === BEHAVIOR_ID);
+        const behavior = selectedObject.userData.behaviors.find((b: {id: string}) => b.id === BEHAVIOR_ID);
 
         const behaviorContextProvider = app.editor?.behaviorContextProvider;
         if (!behaviorContextProvider) {

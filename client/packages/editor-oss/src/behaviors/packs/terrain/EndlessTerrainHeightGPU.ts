@@ -43,7 +43,7 @@ export class EndlessTerrainHeightGPU {
      * @param maxHeight - Maximum terrain height for normalization
      * @returns DataTexture containing heightmap data
      */
-    generateHeightmapTexture(chunkX: number, chunkZ: number, maxHeight: number): DataTexture {
+    generateHeightmapTexture(chunkX: number, chunkZ: number, _maxHeight: number): DataTexture {
         const cacheKey = `${chunkX},${chunkZ}`;
 
         // Check cache first

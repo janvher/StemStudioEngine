@@ -128,7 +128,7 @@ export const PanelRenderer = ({
                     nextVal = Number.isFinite(num) ? num : 0;
                 }
             }
-            // @ts-ignore
+            // @ts-expect-error - dynamic field key cannot be statically indexed on condition
             condition[field] = nextVal;
 
             onGraphChange(animationGraph);

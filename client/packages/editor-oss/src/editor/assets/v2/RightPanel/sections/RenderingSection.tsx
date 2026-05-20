@@ -3,7 +3,6 @@ import * as THREE from "three";
 
 import global from "@stem/editor-oss/global";
 import {PanelCheckbox} from "../common/PanelCheckbox";
-import {Separator} from "../common/Separator";
 
 interface Props {
     isLocked?: boolean;

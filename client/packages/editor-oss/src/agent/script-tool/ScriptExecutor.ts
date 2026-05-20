@@ -208,13 +208,13 @@ export class ScriptExecutor {
                         output: result.message,
                         error: result.error,
                     });
-                } catch (err: any) {
+                } catch (err) {
                     failCount++;
                     results.push({
                         lineNumber: line.lineNumber,
                         command: parsed.raw,
                         success: false,
-                        error: err.message || "Unexpected error",
+                        error: (err instanceof Error ? err.message : "") || "Unexpected error",
                     });
                 }
                 continue;

@@ -1,5 +1,3 @@
-import {HUD_Z_INDEX} from "@stem/editor-oss/editor/assets/v2/HUD/HUDView/services";
-
 export const joystickInnerCircleBaseCss = (thumbSizePercent: number) => {
     return `
     width: ${thumbSizePercent}%;

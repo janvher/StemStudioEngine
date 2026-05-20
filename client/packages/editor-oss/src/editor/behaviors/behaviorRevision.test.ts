@@ -3,6 +3,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 
 import type { BehaviorConfig } from "./BehaviorConfig";
 import type { BehaviorAttributeData } from "./BehaviorAttributes";
+import type { AssetSource } from "../../asset-management/SceneAssetSource";
 
 // Mock all heavy dependencies before importing the module under test
 vi.mock("../Editor", () => ({ default: vi.fn() }));
@@ -22,33 +23,33 @@ const mockLoadScriptImportRevisionMap = vi.fn();
 const mockGetAssetResolutionContext = vi.fn();
 const mockRemoveAssetRevision = vi.fn();
 vi.mock("../asset-management/hooks/assets", () => ({
-    createAsset: (...args: any[]) => mockCreateAsset(...args),
-    createAssetRevision: (...args: any[]) => mockCreateAssetRevision(...args),
-    seedAssetRevisionData: (...args: any[]) => mockSeedAssetRevisionData(...args),
-    getAsset: (...args: any[]) => mockGetAsset(...args),
+    createAsset: (...args: unknown[]) => mockCreateAsset(...args),
+    createAssetRevision: (...args: unknown[]) => mockCreateAssetRevision(...args),
+    seedAssetRevisionData: (...args: unknown[]) => mockSeedAssetRevisionData(...args),
+    getAsset: (...args: unknown[]) => mockGetAsset(...args),
 }));
 
 const mockSetAssetRevision = vi.fn();
 vi.mock("../../asset-management/AssetResolutionContext", () => ({
-    getAssetResolutionContext: (...args: any[]) => mockGetAssetResolutionContext(...args),
-    removeAssetRevision: (...args: any[]) => mockRemoveAssetRevision(...args),
-    setAssetRevision: (...args: any[]) => mockSetAssetRevision(...args),
+    getAssetResolutionContext: (...args: unknown[]) => mockGetAssetResolutionContext(...args),
+    removeAssetRevision: (...args: unknown[]) => mockRemoveAssetRevision(...args),
+    setAssetRevision: (...args: unknown[]) => mockSetAssetRevision(...args),
 }));
 
 vi.mock("../../script-runtime/scriptDependencyCache", () => ({
-    seedScriptDependencyEntry: (...args: any[]) => mockSeedScriptDependencyEntry(...args),
+    seedScriptDependencyEntry: (...args: unknown[]) => mockSeedScriptDependencyEntry(...args),
 }));
 
 vi.mock("../../script-runtime/scriptImports", () => ({
-    buildNameAwareScriptImportContext: (...args: any[]) => mockBuildNameAwareScriptImportContext(...args),
-    getScriptImportDependencyMap: (...args: any[]) => mockGetScriptImportDependencyMap(...args),
-    loadScriptImportRevisionMap: (...args: any[]) => mockLoadScriptImportRevisionMap(...args),
+    buildNameAwareScriptImportContext: (...args: unknown[]) => mockBuildNameAwareScriptImportContext(...args),
+    getScriptImportDependencyMap: (...args: unknown[]) => mockGetScriptImportDependencyMap(...args),
+    loadScriptImportRevisionMap: (...args: unknown[]) => mockLoadScriptImportRevisionMap(...args),
 }));
 
 vi.mock("@stem/network/api/asset", () => ({
     AssetType: { Behavior: "Behavior" },
-    isNoChangesError: (err: any) => err?.code === "NO_CHANGES",
-    isConflictError: (err: any) => err?.statusCode === 409,
+    isNoChangesError: (err: {code?: string}) => err?.code === "NO_CHANGES",
+    isConflictError: (err: {statusCode?: number}) => err?.statusCode === 409,
 }));
 
 const mockGlobal: any = { app: null };
@@ -270,11 +271,11 @@ describe("createBehavior", () => {
         mockCreateAsset.mockResolvedValue({ id: "new-asset-id", headRevisionId: "rev-1" });
         const config = { ...testConfig, id: "" };
 
-        const asset = await createBehavior({ assetSource: {} as any, name: "Test", code: "code", config });
+        const asset = await createBehavior({ assetSource: {} as unknown as AssetSource, name: "Test", code: "code", config });
 
         expect(mockCreateAsset).toHaveBeenCalledWith(expect.objectContaining({
             type: "Behavior",
-            assetSource: {} as any,
+            assetSource: {} as unknown as AssetSource,
             name: "Test",
         }));
         expect(config.id).toBe("new-asset-id");
@@ -284,7 +285,7 @@ describe("createBehavior", () => {
     it("seeds revision data cache", async () => {
         mockCreateAsset.mockResolvedValue({ id: "new-asset-id", headRevisionId: "rev-1" });
 
-        await createBehavior({ assetSource: {} as any, name: "Test", code: "code", config: { ...testConfig, id: "" } });
+        await createBehavior({ assetSource: {} as unknown as AssetSource, name: "Test", code: "code", config: { ...testConfig, id: "" } });
 
         expect(mockSeedAssetRevisionData).toHaveBeenCalledWith(
             expect.anything(),
@@ -298,7 +299,7 @@ describe("createBehavior", () => {
     it("calls updateSceneBehaviorRevision when assetSource is provided", async () => {
         mockCreateAsset.mockResolvedValue({ id: "new-asset-id", headRevisionId: "rev-1" });
 
-        await createBehavior({ assetSource: {} as any, name: "Test", code: "code", config: { ...testConfig, id: "" } });
+        await createBehavior({ assetSource: {} as unknown as AssetSource, name: "Test", code: "code", config: { ...testConfig, id: "" } });
 
         expect(mockSetAssetRevision).toHaveBeenCalled();
     });
@@ -371,7 +372,7 @@ describe("createBehaviorRevision", () => {
             parentRevisionId: "rev-1",
             code: "code",
             config: testConfig,
-            assetSource: {} as any,
+            assetSource: {} as unknown as AssetSource,
         });
 
         await vi.waitFor(() => {
@@ -429,7 +430,7 @@ describe("createBehaviorRevision", () => {
             parentRevisionId: "rev-1",
             code: "code",
             config: testConfig,
-            assetSource: {} as any,
+            assetSource: {} as unknown as AssetSource,
         });
 
         await vi.waitFor(() => {

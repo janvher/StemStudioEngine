@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import styled from "styled-components";
 
 import { IBannerInterface } from "../types";
@@ -34,7 +35,7 @@ type Props = {
     maxWidth?: string;
     text?: string;
     onClick?: () => void;
-    children?: any;
+    children?: ReactNode;
     id: string;
 };
 

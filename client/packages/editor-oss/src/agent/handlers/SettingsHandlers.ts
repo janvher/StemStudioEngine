@@ -646,19 +646,19 @@ export class SettingsHandlers {
         try {
             const result = await this.engine.assetLoader.getImageDataUrl(ref);
             url = result.url;
-        } catch (e: any) {
+        } catch (e) {
             return {
                 status: "failed",
-                message: `Failed to resolve image URL for asset "${name}": ${e?.message || e}`,
+                message: `Failed to resolve image URL for asset "${name}": ${e instanceof Error ? e.message : String(e)}`,
             };
         }
 
         try {
             await updateSceneThumbnail(sceneId, sceneName, url);
-        } catch (e: any) {
+        } catch (e) {
             return {
                 status: "failed",
-                message: `Failed to update scene thumbnail metadata: ${e?.message || e}`,
+                message: `Failed to update scene thumbnail metadata: ${e instanceof Error ? e.message : String(e)}`,
             };
         }
 

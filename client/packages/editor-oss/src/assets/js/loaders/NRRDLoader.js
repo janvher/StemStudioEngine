@@ -11,14 +11,14 @@ class NRRDLoader extends BaseLoader {
         super();
     }
 
-    load(url, options) {
-         
+    load(url) {
+
         return new Promise(resolve => {
             this.require("NRRDLoader").then(() => {
                 var loader = new THREE.NRRDLoader();
                 loader.load(
                     url,
-                    result => {
+                    () => {
                          
                         var loader = new THREE.NRRDLoader();
                         loader.load(url, volume => {

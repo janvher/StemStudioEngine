@@ -135,10 +135,10 @@ export class AlignDistributeCommand extends Command {
                 message: `${this.name}: applied to ${moves.length} object(s)`,
                 status: "success",
             };
-        } catch (error: any) {
+        } catch (error) {
             console.error("AlignDistribute error:", error);
             return {
-                message: `${this.name} failed: ${error?.message}`,
+                message: `${this.name} failed: ${error instanceof Error ? error.message : String(error)}`,
                 status: "error",
             };
         }
@@ -165,7 +165,7 @@ export class AlignDistributeCommand extends Command {
         return output;
     }
 
-    fromJSON(json: any) {
+    fromJSON(json: {axis: AlignDistributeAxis; mode: AlignDistributeMode; objectUuids: string[]}) {
         Command.prototype.fromJSON.call(this, json);
         this.axis = json.axis;
         this.mode = json.mode;

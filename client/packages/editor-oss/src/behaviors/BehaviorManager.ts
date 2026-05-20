@@ -563,7 +563,7 @@ class BehaviorManager {
      * @param fixedDeltaTime
      * @param context
      */
-    fixedUpdate(fixedDeltaTime: number, context?: FrameContext): void {
+    fixedUpdate(fixedDeltaTime: number, _context?: FrameContext): void {
         this.isProcessing = true;
         try {
             const behaviors = this.behaviors;

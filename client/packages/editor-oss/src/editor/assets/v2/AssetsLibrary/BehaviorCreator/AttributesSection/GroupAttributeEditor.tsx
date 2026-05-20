@@ -38,15 +38,6 @@ export const GroupAttributeEditor: React.FC<GroupAttributeEditorProps> = ({
     // Remove the problematic useEffect and keep nestedAttributes as the source of truth
     // The issue was that the parent component was overriding our changes
 
-    const updateAttribute = useCallback((field: string, value: any) => {
-        const newAttributes = [...attributes];
-        newAttributes[attributeIndex] = {
-            ...attributes[attributeIndex],
-            [field]: value,
-        } as IAttribute;
-        setAttributes(newAttributes);
-    }, [attributes, attributeIndex, setAttributes]);
-
     const handleNestedAttributesChange = useCallback((updatedNestedAttributes: IAttribute[]) => {
         setNestedAttributes(updatedNestedAttributes);
 
@@ -144,7 +135,7 @@ export const GroupAttributeEditor: React.FC<GroupAttributeEditorProps> = ({
                         marginBottom: "8px",
                     }}
                     >
-                        No attributes yet. Click "Add Attribute" to create your first attribute.
+                        No attributes yet. Click &quot;Add Attribute&quot; to create your first attribute.
                     </div>
                  : 
                     <DragDropContext onDragEnd={handleDragEnd}>

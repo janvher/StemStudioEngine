@@ -13,9 +13,6 @@ interface IMessage {
 }
 
 export const AiAgentChat = () => {
-    const urlSearchParams = new URLSearchParams(window.location.search);
-    const username = urlSearchParams.get("username");
-
     const [stoppedAiAgentIds, setStoppedAiAgentIds] = useState<Set<string>>(new Set());
     const [messages, setMessages] = useState<IMessage[]>([]);
     const [yourMessage, setYourMessage] = useState("");
@@ -208,7 +205,7 @@ export const AiAgentChat = () => {
                     )}
                     {messages.length === 0 && 
                         <NoMessages>
-                            It’s quiet here... <br /> Let's start chatting!
+                            It’s quiet here... <br /> Let&apos;s start chatting!
                         </NoMessages>
                     }
                 </div>

@@ -58,7 +58,7 @@ import {
     setActiveCopilotPreviewPersistence,
 } from "@web-shared/agent/copilotPreviewPersistence";
 
-const makeEditor = (overrides: Record<string, any> = {}) => ({
+const makeEditor = (overrides: Record<string, unknown> = {}) => ({
     sceneID: undefined as string | undefined,
     sceneAssetId: undefined as string | undefined,
     sceneRevisionId: null as string | null,

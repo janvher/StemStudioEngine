@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-control-regex
-export const invalidTagCharsRegex = /[<>{}\[\]|\\\/^~\x00-\x1F\x7F]/;
+export const invalidTagCharsRegex = /[<>{}[\]|\\/^~\x00-\x1F\x7F]/;
 
 export const normalizeTag = (tag: string) => {
     return tag.trim().toLowerCase();

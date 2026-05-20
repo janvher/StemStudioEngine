@@ -48,7 +48,6 @@ export const ScenesTab = () => {
     };
 
     const handleClick = async (id: string, callback?: any) => {
-        //@ts-ignore
         let loader = new SceneLoader();
         let sceneData = data?.find(n => n.ID === id);
         let clone: THREE.Object3D | null = null;
@@ -84,9 +83,9 @@ export const ScenesTab = () => {
                         clone = data.clone;
                         uuidMap = data.uuidMap;
 
-                        callback && callback(clone);
+                        if (callback) callback(clone);
                     })
-                    .catch((e: any) => {
+                    .catch(() => {
                         showToast({type: "error", body: "Could not load model"});
                     })
                     .finally(() => {

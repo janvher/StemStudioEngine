@@ -79,7 +79,7 @@ const shouldShowBehavior = (config: BehaviorConfig, selectedObject: any): boolea
 };
 
 export const AllBehaviorsList = forwardRef<AllBehaviorsListRef, Props>(
-    ({addNewBehavior, behaviorConfigs, className, style}, ref) => {
+    function AllBehaviorsList({addNewBehavior, behaviorConfigs, className, style}, ref) {
         const [searchQuery, setSearchQuery] = useState("");
         const selected = global.app?.editor?.selected;
 

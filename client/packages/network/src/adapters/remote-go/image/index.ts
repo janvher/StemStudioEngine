@@ -23,7 +23,7 @@ export function downloadImage(
     })
         .then(response => {
             const data = response?.data as ImageDownloadResponse;
-            callback && callback(data);
+            if (callback) callback(data);
             return data;
         })
         .catch(error => {
@@ -33,7 +33,7 @@ export function downloadImage(
                 Msg: "Image download failed",
                 Path: "",
             };
-            callback && callback(errorResponse);
+            if (callback) callback(errorResponse);
             return errorResponse;
         });
 }

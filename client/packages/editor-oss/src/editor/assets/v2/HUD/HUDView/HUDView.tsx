@@ -57,7 +57,7 @@ export const HUDView = ({emptyHUD}: Props) => {
         isWinner: false,
         timeRemaining: "00:00:00",
         playerWeapons: [],
-        pickedWeaponOrItem: null,
+        pickedWeaponOrItem: undefined,
     });
 
     const handleShowChat = () => {

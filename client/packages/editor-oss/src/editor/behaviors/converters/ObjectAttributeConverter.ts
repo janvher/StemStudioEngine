@@ -1,3 +1,5 @@
+import type {Object3D} from "three";
+
 import global from "@stem/editor-oss/global";
 import {BehaviorAttributeData, ObjectAttribute} from "../BehaviorAttributes";
 import BehaviorAttributeType from "../BehaviorAttributeType";
@@ -13,8 +15,8 @@ class ObjectAttributeConverter implements AttributeConverter {
      * Check if an object contains any mesh (either is a mesh or has mesh children)
      * @param object
      */
-    private containsMesh(object: any): boolean {
-        if (object.isMesh) {
+    private containsMesh(object: Object3D): boolean {
+        if ((object as Object3D & {isMesh?: boolean}).isMesh) {
             return true;
         }
         if (object.children) {
@@ -41,14 +43,20 @@ class ObjectAttributeConverter implements AttributeConverter {
         const filter = attributeData.filter as string | undefined;
         const seenUuids = new Set<string>();
 
-        editor.scene.traverse((child: any) => {
+        editor.scene.traverse((child: Object3D) => {
+            const childFlags = child as Object3D & {
+                isCamera?: boolean;
+                isLight?: boolean;
+                isHelper?: boolean;
+                isGroup?: boolean;
+            };
             // Skip if already added (prevent duplicates)
             if (seenUuids.has(child.uuid)) {
                 return;
             }
 
             // Skip system objects (cameras, lights, helpers, etc.)
-            if (child.isCamera || child.isLight || child.isHelper) {
+            if (childFlags.isCamera || childFlags.isLight || childFlags.isHelper) {
                 return;
             }
 
@@ -80,7 +88,7 @@ class ObjectAttributeConverter implements AttributeConverter {
                 }
             } else {
                 // Default behavior: include stem objects and top-level groups
-                if (child.userData?.isStemObject || child.isGroup || child.parent === editor.scene) {
+                if (child.userData?.isStemObject || childFlags.isGroup || child.parent === editor.scene) {
                     options.push({name: child.name, uuid: child.uuid});
                     seenUuids.add(child.uuid);
                 }

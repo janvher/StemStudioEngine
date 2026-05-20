@@ -14,7 +14,7 @@ class VideoAttributeConverter implements AttributeConverter {
                 if (typeof videoUrl === "string" && (videoUrl.startsWith("http://") || videoUrl.startsWith("https://"))) {
                     label = new URL(videoUrl, window.location.origin).pathname.split("/").pop() || videoUrl;
                 }
-            } catch (e) {
+            } catch {
                 label = videoUrl.split("/").pop() || videoUrl;
             }
             return {

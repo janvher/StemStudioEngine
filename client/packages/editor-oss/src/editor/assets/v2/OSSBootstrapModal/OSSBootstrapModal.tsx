@@ -97,7 +97,8 @@ export const OSSBootstrapModal = () => {
             <Container>
                 <Title id="oss-bootstrap-title">Welcome to StemStudio</Title>
                 <Subtitle>
-                    You're running the open-source build. Pick how StemStudio should store your projects on this device.
+                    You&apos;re running the open-source build. Pick how StemStudio should store your projects on this
+                    device.
                     You can change this later in Settings.
                 </Subtitle>
 
@@ -136,7 +137,9 @@ export const OSSBootstrapModal = () => {
                 {error ? <ErrorText>{error}</ErrorText> : null}
 
                 <Footer>
-                    <FooterNote>You can switch modes later. Existing projects don't migrate automatically.</FooterNote>
+                    <FooterNote>
+                        You can switch modes later. Existing projects don&apos;t migrate automatically.
+                    </FooterNote>
                     <PrimaryButton type="button" onClick={handleConfirm} $disabled={submitting}>
                         {submitting ? "Setting up…" : "Continue"}
                     </PrimaryButton>

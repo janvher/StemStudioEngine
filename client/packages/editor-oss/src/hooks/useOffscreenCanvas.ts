@@ -53,7 +53,7 @@ export const useOffscreenCanvas = ({
 
         if (supportsOffscreen) {
             isOffscreen.current = true;
-            const offscreen = (canvas as any).transferControlToOffscreen() as Transferable;
+            const offscreen = canvas.transferControlToOffscreen() as Transferable;
             workerCanvasRef.current = canvas;
             
             const w = workerFactory();

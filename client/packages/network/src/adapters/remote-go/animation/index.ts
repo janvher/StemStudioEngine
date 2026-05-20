@@ -26,7 +26,7 @@ export function downloadAnimation(
     })
         .then(response => {
             const data = response?.data as AnimationDownloadResponse;
-            callback && callback(data);
+            if (callback) callback(data);
             return data;
         })
         .catch(error => {
@@ -36,7 +36,7 @@ export function downloadAnimation(
                 Msg: "Animation download failed",
                 Path: "",
             };
-            callback && callback(errorResponse);
+            if (callback) callback(errorResponse);
             return errorResponse;
         });
 }

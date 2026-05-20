@@ -10,11 +10,11 @@ vi.mock("../../global", () => {
     };
     app.editor = {
         get scene() { return app.scene; },
-        addObject: vi.fn((obj: any) => {
+        addObject: vi.fn((obj: THREE.Object3D) => {
             app.scene.add(obj);
             app.call("objectAdded", null, obj);
         }),
-        removeObject: vi.fn((obj: any) => {
+        removeObject: vi.fn((obj: THREE.Object3D) => {
             app.scene.remove(obj);
             app.call("objectRemoved", null, obj);
         }),

@@ -1,5 +1,5 @@
 import { Object3D } from "three";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 
 import type GameManager from "@stem/editor-oss/behaviors/game/GameManager";
 import type { LambdaConfig } from "../Lambda";

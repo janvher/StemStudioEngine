@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import {Object3D, Object3DEventMap} from "three";
+import {Object3D} from "three";
 
 import GameManager from "src/behaviors/game/GameManager";
 
@@ -183,7 +183,7 @@ class TriggerBehavior extends BehaviorBase {
     }
 
     // can be triggered by other triggers
-    onEvent(msg: string, _data: any): void {
+    onEvent(msg: string): void {
         if (msg === "trigger") {
             this.triggerAction();
         }
@@ -917,7 +917,7 @@ class TriggerBehavior extends BehaviorBase {
         if (key === "tag") {
             const tags = userData.tags;
             if (Array.isArray(tags)) {
-                return tags.map((el: any) => String(el)).includes(expected);
+                return tags.map((el: unknown) => String(el)).includes(expected);
             }
             if (typeof tags === "string") {
                 return tags.split(",").map((el: string) => el.trim()).includes(expected);

@@ -143,7 +143,7 @@ export class GeometricSnapHelper {
 
         this.scene.traverse((object) => {
             // Skip excluded objects and non-mesh objects
-            if (excludeObjects.includes(object) || !(object as any).isMesh) {
+            if (excludeObjects.includes(object) || !(object instanceof THREE.Mesh)) {
                 return;
             }
 

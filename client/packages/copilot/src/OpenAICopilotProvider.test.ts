@@ -41,7 +41,7 @@ describe("OpenAICopilotProvider", () => {
                 JSON.stringify({choices: [{delta: {}}]}),
             ]);
 
-        const provider = new OpenAICopilotProvider({apiKey: "test-key", fetchImpl: fetchImpl as any});
+        const provider = new OpenAICopilotProvider({apiKey: "test-key", fetchImpl: fetchImpl as typeof fetch});
         const chunks = await collect(provider.sendMessage("hi", []));
 
         expect(chunks).toEqual([
@@ -55,7 +55,7 @@ describe("OpenAICopilotProvider", () => {
         const fetchImpl = async () =>
             new Response("nope", {status: 401, statusText: "Unauthorized"});
 
-        const provider = new OpenAICopilotProvider({apiKey: "bad", fetchImpl: fetchImpl as any});
+        const provider = new OpenAICopilotProvider({apiKey: "bad", fetchImpl: fetchImpl as typeof fetch});
         const chunks = await collect(provider.sendMessage("hi", []));
 
         expect(chunks).toHaveLength(2);
@@ -64,7 +64,7 @@ describe("OpenAICopilotProvider", () => {
     });
 
     it("prepends systemPrompt to the messages sent upstream", async () => {
-        let captured: any = null;
+        let captured: { messages: Array<{ role: string; content: string }> } | null = null;
         const fetchImpl = async (_url: string, init: RequestInit) => {
             captured = JSON.parse(init.body as string);
             return makeSseResponse([JSON.stringify({choices: [{delta: {content: "ok"}}]})]);
@@ -73,11 +73,11 @@ describe("OpenAICopilotProvider", () => {
         const provider = new OpenAICopilotProvider({
             apiKey: "k",
             systemPrompt: "Be terse.",
-            fetchImpl: fetchImpl as any,
+            fetchImpl: fetchImpl as typeof fetch,
         });
         await collect(provider.sendMessage("hello", []));
 
-        expect(captured.messages[0]).toEqual({role: "system", content: "Be terse."});
-        expect(captured.messages.at(-1)).toEqual({role: "user", content: "hello"});
+        expect(captured!.messages[0]).toEqual({role: "system", content: "Be terse."});
+        expect(captured!.messages.at(-1)).toEqual({role: "user", content: "hello"});
     });
 });

@@ -100,8 +100,8 @@ export const CreditsPurchaseModal = ({onClose, hasSubscription = false}: Credits
             } else {
                 window.location.href = url;
             }
-        } catch (e: any) {
-            setError(e.message);
+        } catch (e) {
+            setError(e instanceof Error ? e.message : String(e));
             setPurchasingId(null);
         }
     };

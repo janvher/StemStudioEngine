@@ -1,5 +1,5 @@
 import React from "react";
-import {BaseEdge, getStraightPath, useStore, Node, useNodes} from "reactflow";
+import {BaseEdge, getStraightPath, useNodes} from "reactflow";
 
 import {getEdgeParams} from "./edgeUtils";
 
@@ -7,9 +7,9 @@ interface FloatingEdgeProps {
     id: string;
     source: string;
     target: string;
-    markerEnd?: any;
-    style?: any;
-    data?: any;
+    markerEnd?: string;
+    style?: React.CSSProperties;
+    data?: unknown;
     selected?: boolean;
 }
 
@@ -24,7 +24,7 @@ interface FloatingEdgeProps {
  * @param root0.data
  * @param root0.selected
  */
-export function FloatingEdge({id, source, target, markerEnd, style, data, selected}: FloatingEdgeProps) {
+export function FloatingEdge({id, source, target, markerEnd, style, selected}: FloatingEdgeProps) {
     const nodes = useNodes();
     const sourceNode = nodes.find(n => n.id === source);
     const targetNode = nodes.find(n => n.id === target);

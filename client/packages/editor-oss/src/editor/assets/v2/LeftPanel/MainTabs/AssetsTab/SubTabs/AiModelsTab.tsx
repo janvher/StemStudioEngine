@@ -48,18 +48,6 @@ export const AiModelsTab = () => {
         void debouncedHandleSearch(value);
     };
 
-    const commitThumbnail = async (thumbnailUrl: string, data: any) => {
-        await Ajax.post({
-            url: backendUrlFromPath(`/api/Mesh/Edit`),
-            data: {
-                ID: data.ID,
-                Name: data.Name,
-                Image: thumbnailUrl,
-                Category: data.CategoryID,
-            },
-            msgBodyType: "urlEncoded",
-        });
-    };
 
     const handleUploadThumbnail = (file: File, objData: any) => {
         Ajax.post({
@@ -68,7 +56,6 @@ export const AiModelsTab = () => {
                 file,
             },
             msgBodyType: "multipart",
-            //@ts-ignore
         })
             .then(response => {
                 if (response?.data.Code === 200) {

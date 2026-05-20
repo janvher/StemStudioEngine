@@ -17,7 +17,7 @@ interface Props {
 type PanelRef = HTMLDivElement;
 
 export const BehaviorDocumentationPanel = forwardRef<PanelRef, Props>(
-    ({documentation, behaviorName, author, onClose, onDocumentationChange, style}, ref) => {
+    function BehaviorDocumentationPanel({documentation, behaviorName, author, onClose, onDocumentationChange, style}, ref) {
         const isBuiltIn = author === STEM_AUTHOR;
 
         const htmlContent = useMemo(() => {

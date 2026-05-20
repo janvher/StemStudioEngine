@@ -13,7 +13,7 @@ class CapsuleBufferGeometrySerializer extends BaseSerializer {
         return BufferGeometrySerializer.prototype.toJSON.call(this, obj, this.defaultGeometry);
     }
 
-    fromJSON(json, parent, options) {
+    fromJSON(json, parent) {
         let obj = parent;
         if (json.parameters && !parent) {
             obj = new THREE.CapsuleGeometry(

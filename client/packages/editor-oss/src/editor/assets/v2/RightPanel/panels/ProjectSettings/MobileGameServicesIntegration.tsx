@@ -1,5 +1,4 @@
 import {Dispatch, SetStateAction, useState, useEffect} from "react";
-import {createPortal} from "react-dom";
 
 import {FormRow, TooltipRowWrapper, Wrapper} from "./ProjectSettings.style";
 import EngineRuntime from "@stem/editor-oss/EngineRuntime";
@@ -8,10 +7,9 @@ import global from "@stem/editor-oss/global";
 import {showToast} from "@stem/editor-oss/showToast";
 import PlatformDetector, {GameServiceType} from "../../../../../../userManagement/utils/PlatformDetector";
 import {Tooltip} from "../../../common";
-import {StyledButton} from "../../../common/StyledButton";
 import {TextInput} from "../../../common/TextInput";
 import {PanelCheckbox} from "../../common/PanelCheckbox";
-import {PanelSectionTitle, PanelSectionTitleSecondary} from "../../RightPanel.style";
+import {PanelSectionTitleSecondary} from "../../RightPanel.style";
 
 export interface MobileGamesIntegrationSettings {
     enabled: boolean;
@@ -37,7 +35,6 @@ interface PlatformInfo {
 export const MobileGameServicesIntegration = ({mobileGameServices, setMobileGameServices}: Props) => {
     const app = global.app as EngineRuntime;
     const editor = app.editor as Editor;
-    const container = document.getElementById("container");
 
     const [platformInfo, setPlatformInfo] = useState<PlatformInfo>({
         available: false,
@@ -45,8 +42,6 @@ export const MobileGameServicesIntegration = ({mobileGameServices, setMobileGame
         description: "Not available",
         configHelp: "",
     });
-    const [newLeaderboard, setNewLeaderboard] = useState("");
-    const [newAchievement, setNewAchievement] = useState("");
 
     useEffect(() => {
         const detectPlatform = () => {
@@ -97,18 +92,6 @@ export const MobileGameServicesIntegration = ({mobileGameServices, setMobileGame
         }
     };
 
-    const handleCloudSaveChange = () => {
-        const newCloudSave = !mobileGameServices.cloudSave;
-        const newSettings = {...mobileGameServices, cloudSave: newCloudSave};
-        setMobileGameServices(newSettings);
-
-        // Update scene userData
-        if (!editor.scene.userData.mobileGameServices) {
-            editor.scene.userData.mobileGameServices = {};
-        }
-        editor.scene.userData.mobileGameServices.cloudSave = newCloudSave;
-    };
-
     const handleGameCenterIdChange = (value: string) => {
         const newSettings = {...mobileGameServices, gameCenterId: value};
         setMobileGameServices(newSettings);
@@ -129,74 +112,6 @@ export const MobileGameServicesIntegration = ({mobileGameServices, setMobileGame
             editor.scene.userData.mobileGameServices = {};
         }
         editor.scene.userData.mobileGameServices.playGamesId = value;
-    };
-
-    const handleAddLeaderboard = () => {
-        if (!newLeaderboard.trim()) return;
-
-        const updatedLeaderboards = [...mobileGameServices.leaderboards, newLeaderboard.trim()];
-        const newSettings = {...mobileGameServices, leaderboards: updatedLeaderboards};
-        setMobileGameServices(newSettings);
-
-        // Update scene userData
-        if (!editor.scene.userData.mobileGameServices) {
-            editor.scene.userData.mobileGameServices = {};
-        }
-        editor.scene.userData.mobileGameServices.leaderboards = updatedLeaderboards;
-
-        setNewLeaderboard("");
-
-        showToast({
-            type: "success",
-            title: "Leaderboard Added",
-            body: `Leaderboard "${newLeaderboard}" has been added.`,
-        });
-    };
-
-    const handleRemoveLeaderboard = (index: number) => {
-        const updatedLeaderboards = mobileGameServices.leaderboards.filter((_, i) => i !== index);
-        const newSettings = {...mobileGameServices, leaderboards: updatedLeaderboards};
-        setMobileGameServices(newSettings);
-
-        // Update scene userData
-        if (!editor.scene.userData.mobileGameServices) {
-            editor.scene.userData.mobileGameServices = {};
-        }
-        editor.scene.userData.mobileGameServices.leaderboards = updatedLeaderboards;
-    };
-
-    const handleAddAchievement = () => {
-        if (!newAchievement.trim()) return;
-
-        const updatedAchievements = [...mobileGameServices.achievements, newAchievement.trim()];
-        const newSettings = {...mobileGameServices, achievements: updatedAchievements};
-        setMobileGameServices(newSettings);
-
-        // Update scene userData
-        if (!editor.scene.userData.mobileGameServices) {
-            editor.scene.userData.mobileGameServices = {};
-        }
-        editor.scene.userData.mobileGameServices.achievements = updatedAchievements;
-
-        setNewAchievement("");
-
-        showToast({
-            type: "success",
-            title: "Achievement Added",
-            body: `Achievement "${newAchievement}" has been added.`,
-        });
-    };
-
-    const handleRemoveAchievement = (index: number) => {
-        const updatedAchievements = mobileGameServices.achievements.filter((_, i) => i !== index);
-        const newSettings = {...mobileGameServices, achievements: updatedAchievements};
-        setMobileGameServices(newSettings);
-
-        // Update scene userData
-        if (!editor.scene.userData.mobileGameServices) {
-            editor.scene.userData.mobileGameServices = {};
-        }
-        editor.scene.userData.mobileGameServices.achievements = updatedAchievements;
     };
 
     return (

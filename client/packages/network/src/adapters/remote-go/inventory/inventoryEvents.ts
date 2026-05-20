@@ -7,7 +7,7 @@ export const EVENTS = {
 export type EventName = keyof typeof EVENTS;
 
 export interface EventDetail {
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 const eventQueue: {eventName: string; detail: EventDetail}[] = [];
@@ -26,9 +26,9 @@ export const dispatchCustomInventoryEvent = <T extends EventName>(
 };
 
 export const flushInventoryEvents = (args: {
-    initInventory: (e: any) => void;
-    addItemToInventory: (e: any) => Promise<void>;
-    deleteItemFromInventory: (e: any) => Promise<void>;
+    initInventory: (e: CustomEvent<EventDetail>) => void;
+    addItemToInventory: (e: CustomEvent<EventDetail>) => Promise<void>;
+    deleteItemFromInventory: (e: CustomEvent<EventDetail>) => Promise<void>;
 }): void => {
     const {initInventory, addItemToInventory, deleteItemFromInventory} = args;
     inventoryReady = true;

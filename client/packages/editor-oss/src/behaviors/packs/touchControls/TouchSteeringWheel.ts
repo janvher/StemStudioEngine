@@ -83,8 +83,7 @@ class TouchSteeringWheel {
     updatePosition(): void {
         if (!this.element) return;
 
-        const viewport = this.getViewportDimensions();
-        const position = this.convertPosition(this.config.steeringWheelPosition, viewport);
+        const position = this.convertPosition(this.config.steeringWheelPosition);
         const size = this.convertSize(this.config.steeringWheelSize);
 
         this.element.style.left = `${position.x + this.frameOffset.x}px`;
@@ -179,8 +178,7 @@ class TouchSteeringWheel {
     }
 
     private createElements(): void {
-        const viewport = this.getViewportDimensions();
-        const position = this.convertPosition(this.config.steeringWheelPosition, viewport);
+        const position = this.convertPosition(this.config.steeringWheelPosition);
         const size = this.convertSize(this.config.steeringWheelSize);
 
         const absolutePosition = {
@@ -221,7 +219,7 @@ class TouchSteeringWheel {
                 this.onWheelDrag(event);
                 return true;
             },
-            onPointerUp: (event: PointerEvent) => {
+            onPointerUp: () => {
                 this.onWheelEnd();
                 return true;
             },
@@ -338,7 +336,7 @@ class TouchSteeringWheel {
         };
     }
 
-    private convertPosition(position: {x: number; y: number} | undefined, viewport: {width: number; height: number}) {
+    private convertPosition(position: {x: number; y: number} | undefined) {
         // Default position if not provided
         const safePosition = position || {x: 0.5, y: 0.15};
         return this.scaler.scalePosition(safePosition);

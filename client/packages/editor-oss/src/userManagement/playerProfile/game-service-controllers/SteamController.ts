@@ -7,7 +7,6 @@
 
 import {BaseGameServiceController, GameServiceSettings} from "./BaseGameServiceController";
 import EngineRuntime from "../../../EngineRuntime";
-import global from "../../../global";
 import {IUser, SteamPlayer} from "../../types";
 import {getSteamUser} from "../services/SteamService";
 

@@ -75,7 +75,7 @@ class CompressedTextureSerializer extends TextureSerializer {
         return json;
     }
 
-    fromJSON(json: any, parent: CompressedTexture | undefined, options: any) {
+    fromJSON(json: any, parent: CompressedTexture | undefined, options: { server?: string }) {
         const texture = parent || new CompressedTexture([], 0, 0);
         const server = options.server || '';
 

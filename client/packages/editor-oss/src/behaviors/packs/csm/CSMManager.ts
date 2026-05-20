@@ -29,7 +29,7 @@ class ExtendedCSMShadowNode extends CSMShadowNode {
                 parent.add(csmRoot);
             }
 
-            const lights = (this as any).lights as DirectionalLight[];
+            const lights = this.lights as DirectionalLight[];
             if (lights) {
                 for (const light of lights) {
                     csmRoot.add(light.target);
@@ -68,7 +68,8 @@ class ExtendedCSMShadowNode extends CSMShadowNode {
         // Force matrixWorld update on cascade lights — positions were set in super
         // but matrixWorld is stale (scene.updateMatrixWorld() ran before updateBefore)
         for (let i = 0; i < this.lights.length; i++) {
-            const lwLight = this.lights[i] as any;
+            const lwLight = this.lights[i];
+            if (!lwLight) continue;
             lwLight.updateMatrixWorld(true);
             if (lwLight.target) lwLight.target.updateMatrixWorld(true);
         }
@@ -80,7 +81,7 @@ class ExtendedCSMShadowNode extends CSMShadowNode {
         if (this._disposed) return;
         this._disposed = true;
 
-        const lights = (this as any).lights as DirectionalLight[];
+        const lights = this.lights as DirectionalLight[];
         if (lights) {
             for (const light of lights) {
                 if (light.parent) {

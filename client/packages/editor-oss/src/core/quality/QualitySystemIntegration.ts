@@ -10,7 +10,6 @@ import type {IEngineRuntimeWithQuality, IQualityChangeEventData} from "./types";
 // TODO(@stem/editor-oss migration): cross-subsystem dependencies — these
 // will migrate into editor-oss in follow-up sub-steps.
 import type EngineRuntime from "@stem/editor-oss/EngineRuntime";
-import type BehaviorManager from "@stem/editor-oss/behaviors/BehaviorManager";
 import type {IPhysics} from "@stem/editor-oss/physics/common/types";
 import EffectRenderer from "@stem/editor-oss/render/EffectRenderer";
 // scheduler also lives in editor-oss after the scheduler/ migration.

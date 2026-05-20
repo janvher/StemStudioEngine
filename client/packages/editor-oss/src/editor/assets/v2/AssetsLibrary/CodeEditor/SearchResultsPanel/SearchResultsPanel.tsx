@@ -83,11 +83,6 @@ export const SearchResultsPanel: React.FC<SearchResultsPanelProps> = ({
         [globalSearch, debouncedTerm],
     );
 
-    const totalMatches = useMemo(
-        () => results.reduce((sum, r) => sum + r.matches.length, 0),
-        [results],
-    );
-
     const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         setTerm(e.target.value);
     }, []);

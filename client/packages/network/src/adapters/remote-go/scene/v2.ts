@@ -136,7 +136,7 @@ async function loadSceneFromProjectStore(sceneId: string): Promise<DomainSceneDt
 export type CreateSceneAssetOptions = {
     description?: string;
     dependencies?: Record<string, string>;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, object>;
 };
 export type CreateSceneAssetParams = {
     sceneId: string;

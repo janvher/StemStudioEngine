@@ -94,7 +94,7 @@ export const AddItemButton = () => {
                     onChange={item => {
                         const nextFontFamily = item.value;
                         setFontFamily(nextFontFamily);
-                        popupCallback &&
+                        if (popupCallback)
                             popupCallback({
                                 UITag,
                                 fontFamily: nextFontFamily,
@@ -121,7 +121,7 @@ export const AddItemButton = () => {
                 margin="16px 0 0"
                 isBlue
                 onClick={() => {
-                    popupCallback &&
+                    if (popupCallback)
                         popupCallback({
                             UITag,
                             fontFamily,

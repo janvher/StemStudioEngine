@@ -121,7 +121,7 @@ export const AddMiniMap = () => {
                 margin="16px 0 0"
                 isBlue
                 onClick={() => {
-                    popupCallback &&
+                    if (popupCallback)
                         popupCallback({
                             UIStyle,
                             iconSelected,

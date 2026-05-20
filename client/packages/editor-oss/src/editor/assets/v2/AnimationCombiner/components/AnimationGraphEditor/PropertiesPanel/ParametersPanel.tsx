@@ -7,7 +7,6 @@ import {Title, DraggableParam} from "./style";
 import {AnimationParameter, IAnimationGraph} from "../../../../../../../animation";
 import {showToast} from "@stem/editor-oss/showToast";
 import {StyledButton} from "../../../../common/StyledButton";
-import {Tooltip} from "../../../../common/Tooltip";
 import {NumericInputRow} from "../../../../RightPanel/common/NumericInputRow";
 import {PanelCheckbox} from "../../../../RightPanel/common/PanelCheckbox";
 import {SelectRow} from "../../../../RightPanel/common/SelectRow";

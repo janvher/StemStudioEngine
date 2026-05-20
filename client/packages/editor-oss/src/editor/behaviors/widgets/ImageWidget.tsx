@@ -1,11 +1,8 @@
 import React, {useState, useEffect} from "react";
-import ReactDOM from "react-dom/client";
-import styled from "styled-components";
 
 import BaseAttributeWidget from "./BaseAttributeWidget";
 import {UploadField} from "../../assets/v2/common/UploadField/UploadField";
 import {ContentItem} from "../../assets/v2/RightPanel/common/ContentItem";
-import {SelectRow} from "../../assets/v2/RightPanel/common/SelectRow";
 import {PanelSectionTitleSecondary} from "../../assets/v2/RightPanel/RightPanel.style";
 import {ImageAttribute} from "../BehaviorAttributes";
 
@@ -14,7 +11,7 @@ const ImageWidgetComponent: React.FC<{
     getCurrentValue: () => string;
     updateBehaviorField: (value: string) => void;
 }> = ({label, getCurrentValue, updateBehaviorField}) => {
-    const [selectedValue, setSelectedValue] = useState(getCurrentValue() || "");
+    const [, setSelectedValue] = useState(getCurrentValue() || "");
 
     useEffect(() => {
         setSelectedValue(getCurrentValue() || "");

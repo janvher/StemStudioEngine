@@ -205,7 +205,7 @@ export const GameDebugPanel = ({logsRef, updateTrigger, onClose, onClear, maxLog
 
             try {
                 return JSON.stringify(arg, null, 2);
-            } catch (e) {
+            } catch {
                 return String(arg);
             }
         }

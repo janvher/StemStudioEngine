@@ -249,9 +249,8 @@ const AuthorizationContextProvider: React.FC<AuthorizationContextProviderProps> 
 
             const model = response?.data.Data;
             return !!model;
-        } catch (error: any) {
-            // ERROR: Unsafe any type
-            console.error(error?.message);
+        } catch (error) {
+            console.error(error instanceof Error ? error.message : error);
             return false;
         }
     };

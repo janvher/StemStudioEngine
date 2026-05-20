@@ -2,8 +2,6 @@
  
 import styled from "styled-components";
 
-import {flexCenter} from "../../../../../assets/style";
-
 export const StyledSceneList = styled.div`
     width: 100%;
     display: grid;

@@ -26,8 +26,8 @@ export const OBJLoader2 = function (manager) {
 
     this.modelName = "";
     this.instanceNo = 0;
-    this.path;
-    this.resourcePath;
+    this.path = undefined;
+    this.resourcePath = undefined;
     this.useIndices = false;
     this.disregardNormals = false;
     this.materialPerSmoothingGroup = false;
@@ -482,7 +482,7 @@ OBJLoader2.prototype = {
                 materialCreator.preload();
                 materialCreatorMaterials = materialCreator.materials;
                 for (var materialName in materialCreatorMaterials) {
-                    if (materialCreatorMaterials.hasOwnProperty(materialName)) {
+                    if (Object.prototype.hasOwnProperty.call(materialCreatorMaterials, materialName)) {
                         materials[materialName] = materialCreatorMaterials[materialName];
                     }
                 }
@@ -1214,7 +1214,7 @@ OBJLoader2.Parser.prototype = {
         var materialOrg, material, materialName, materialNameOrg;
         // only one specific face type
         for (var oodIndex in meshOutputGroups) {
-            if (!meshOutputGroups.hasOwnProperty(oodIndex)) continue;
+            if (!Object.prototype.hasOwnProperty.call(meshOutputGroups, oodIndex)) continue;
             meshOutputGroup = meshOutputGroups[oodIndex];
 
             materialNameOrg = meshOutputGroup.materialName;

@@ -38,8 +38,9 @@ export class AddAnnotationCommand extends Command {
                 message: `${this.name}`,
                 status: "success",
             };
-        } catch (error: any) {
-            return {message: `${this.name} failed: ${error?.message}`, status: "error"};
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            return {message: `${this.name} failed: ${message}`, status: "error"};
         }
     }
 

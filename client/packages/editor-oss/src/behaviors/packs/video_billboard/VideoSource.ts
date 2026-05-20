@@ -32,7 +32,7 @@ class VideoSource {
         this.muted = muted;
         this.isHLS = url.includes(".m3u8");
         this.maxAnisotropy = renderer?.capabilities?.getMaxAnisotropy?.() ?? 1;
-        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+        const AudioContext = window.AudioContext || (window as Window & { webkitAudioContext?: typeof window.AudioContext }).webkitAudioContext;
         this.audioCtx = new AudioContext();
         this.gainNode = this.audioCtx.createGain();
     }
@@ -115,7 +115,7 @@ class VideoSource {
             );
             elem.addEventListener(
                 "error",
-                ev => {
+                () => {
                     reject(new Error(`Video failed to load: ${this.url}`));
                 },
                 {once: true},

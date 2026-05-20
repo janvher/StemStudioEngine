@@ -440,13 +440,13 @@ class EditorComponent extends React.Component<IEditorComponentProps> {
         });
     };
 
-    createElement(type: any, props: any, children: any) {
+    createElement(type: React.ElementType, props: Record<string, unknown>, children: React.ReactNode) {
         let ref = React.createRef();
         props.ref = ref;
         return React.createElement(type, props, children);
     }
 
-    addElement(element: any, callback: any) {
+    addElement(element: React.ReactElement, callback?: () => void) {
         let elements = this.state.elements;
 
         elements.push(element);
@@ -454,7 +454,7 @@ class EditorComponent extends React.Component<IEditorComponentProps> {
         this.setState({elements}, callback);
     }
 
-    removeElement(element: any, callback: any) {
+    removeElement(element: unknown, callback?: () => void) {
         let elements = this.state.elements;
 
         let index = elements.findIndex(n => n === element || (n.ref && n.ref.current === element));
@@ -761,7 +761,7 @@ class EditorComponent extends React.Component<IEditorComponentProps> {
 
     openAiCopilotTerminal = () => {
         this.setState({showAiCopilot: true}, () => {
-            (global as any).app?.call("copilotTerminal");
+            global.app?.call("copilotTerminal");
         });
     };
 

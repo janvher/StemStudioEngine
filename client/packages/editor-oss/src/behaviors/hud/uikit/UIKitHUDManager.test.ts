@@ -2,6 +2,7 @@ import * as THREE from "three";
 import {describe, it, expect, vi, beforeEach, afterEach} from "vitest";
 
 import UIKitHUDManager from "./UIKitHUDManager";
+import type GameManager from "../../game/GameManager";
 
 // --- Mocks ---
 
@@ -51,20 +52,20 @@ function makeScene(): THREE.Scene {
     return scene;
 }
 
-function makeGameManager(): any {
+function makeGameManager(): GameManager {
     return {
         renderer: {},
         uiCamera: new THREE.PerspectiveCamera(),
         camera: new THREE.PerspectiveCamera(),
         scene: new THREE.Scene(),
-    };
+    } as unknown as GameManager;
 }
 
 // --- Tests ---
 
 describe("UIKitHUDManager", () => {
     let scene: THREE.Scene;
-    let game: any;
+    let game: GameManager;
 
     beforeEach(() => {
         vi.clearAllMocks();

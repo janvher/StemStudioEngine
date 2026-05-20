@@ -14,15 +14,15 @@ export const openFullScreen = () => {
     if (!elem) return;
     if (elem.requestFullscreen) {
         elem.requestFullscreen();
-        // @ts-ignore
+        // @ts-expect-error - webkitRequestFullscreen is a non-standard vendor-prefixed API
     } else if (elem.webkitRequestFullscreen) {
         /* Safari */
-        // @ts-ignore
+        // @ts-expect-error - webkitRequestFullscreen is a non-standard vendor-prefixed API
         elem.webkitRequestFullscreen();
-        // @ts-ignore
+        // @ts-expect-error - msRequestFullscreen is a non-standard vendor-prefixed API
     } else if (elem.msRequestFullscreen) {
         /* IE11 */
-        // @ts-ignore
+        // @ts-expect-error - msRequestFullscreen is a non-standard vendor-prefixed API
         elem.msRequestFullscreen();
     }
 };

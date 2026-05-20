@@ -298,7 +298,7 @@ export class AnimationController {
             const action = actions[i];
             if (!action) continue;
             const name = action.getClip().name;
-            if (weights.hasOwnProperty(name)) {
+            if (Object.prototype.hasOwnProperty.call(weights, name)) {
                 action.setEffectiveWeight(weights[name] ?? 0);
             }
         }
@@ -309,7 +309,7 @@ export class AnimationController {
             for (let i = 0; i < blends.length; i++) {
                 const b = blends[i];
                 if (!b) continue;
-                if (typeof b.name === "string" && weights.hasOwnProperty(b.name)) {
+                if (typeof b.name === "string" && Object.prototype.hasOwnProperty.call(weights, b.name)) {
                     blends[i] = {...b, name: b.name, weight: weights[b.name] ?? 0};
                 }
             }

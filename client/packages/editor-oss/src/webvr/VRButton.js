@@ -150,7 +150,7 @@ class VRButton {
 
             navigator.xr.isSessionSupported('immersive-vr').then(function (supported) {
 
-                supported ? showEnterVR() : showWebXRNotFound();
+                if (supported) showEnterVR(); else showWebXRNotFound();
 
             });
 

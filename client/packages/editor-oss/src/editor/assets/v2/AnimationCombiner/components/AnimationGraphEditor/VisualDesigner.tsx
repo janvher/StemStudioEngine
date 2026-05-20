@@ -199,7 +199,6 @@ export const VisualDesigner: React.FC<{
     onPaneClick,
     handleAddState,
     handleRemoveState,
-    handleRemoveTransition,
     animationGraph,
     getAnimationClipNames,
     setSerializedAnimationGraph,
@@ -222,13 +221,6 @@ export const VisualDesigner: React.FC<{
     }>({visible: false, x: 0, y: 0, nodeId: null});
 
     useEffect(() => {}, [nodes, edges]);
-
-    const onAddState = useCallback(() => {
-        setTimeout(() => {
-            fitView({padding: 0.3, duration: 800});
-        }, 100);
-        handleAddState();
-    }, [handleAddState]);
 
     const getConnectionLineStyle = useCallback(
         () => ({
@@ -286,7 +278,7 @@ export const VisualDesigner: React.FC<{
                     setSerializedAnimationGraph(content);
                     showToast({type: "success", title: "Animation graph imported"});
                     setTimeout(() => fitView({padding: 0.2, duration: 600}), 50);
-                } catch (err) {
+                } catch {
                     showToast({type: "error", title: "Invalid animation graph JSON"});
                 }
             };
@@ -427,9 +419,9 @@ export const VisualDesigner: React.FC<{
                             <InfoSectionTitle>Transitions</InfoSectionTitle>
                             <InfoText>
                                 Drag from one state to another to create a transition. Transitions can have conditions
-                                based on parameters (e.g., "speed &gt; 0.5" or "isJumping = true").
+                                based on parameters (e.g., &quot;speed &gt; 0.5&quot; or &quot;isJumping = true&quot;).
                             </InfoText>
-                            <InfoExample>Example: Idle → Walk when "speed &gt; 0.1"</InfoExample>
+                            <InfoExample>Example: Idle → Walk when &quot;speed &gt; 0.1&quot;</InfoExample>
                         </InfoSection>
 
                         <InfoSection>
@@ -450,7 +442,7 @@ export const VisualDesigner: React.FC<{
                                 from anywhere.
                             </InfoText>
                             <InfoExample>
-                                Example: ANY → Death when "health = 0"
+                                Example: ANY → Death when &quot;health = 0&quot;
                                 <br />
                                 This works whether the character is idle, walking, jumping, etc.
                             </InfoExample>

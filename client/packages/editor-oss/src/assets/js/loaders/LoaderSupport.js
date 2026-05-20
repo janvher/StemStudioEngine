@@ -151,8 +151,8 @@ LoaderSupport.LoadedMeshUserOverride.prototype = {
 LoaderSupport.ResourceDescriptor = function (url, extension) {
     var urlParts = url.split("/");
 
-    this.path;
-    this.resourcePath;
+    this.path = undefined;
+    this.resourcePath = undefined;
     this.name = url;
     this.url = url;
     if (urlParts.length >= 2) {
@@ -253,7 +253,7 @@ LoaderSupport.PrepData.prototype = {
         var property, value;
         for (property in this) {
             value = this[property];
-            if (!clone.hasOwnProperty(property) && typeof this[property] !== "function") {
+            if (!Object.prototype.hasOwnProperty.call(clone, property) && typeof this[property] !== "function") {
                 clone[property] = value;
             }
         }
@@ -525,7 +525,7 @@ LoaderSupport.MeshBuilder.prototype = {
         var progressMessage;
         if (this.validator.isValid(meshes) && meshes.length > 0) {
             var meshNames = [];
-            for (var i in meshes) {
+            for (i in meshes) {
                 mesh = meshes[i];
                 meshNames[i] = mesh.name;
             }
@@ -572,7 +572,7 @@ LoaderSupport.MeshBuilder.prototype = {
 
                 var materialProperties = materialCloneInstructions.materialProperties;
                 for (var key in materialProperties) {
-                    if (material.hasOwnProperty(key) && materialProperties.hasOwnProperty(key))
+                    if (Object.prototype.hasOwnProperty.call(material, key) && Object.prototype.hasOwnProperty.call(materialProperties, key))
                         material[key] = materialProperties[key];
                 }
                 this.materials[materialName] = material;
@@ -1041,7 +1041,7 @@ LoaderSupport.WorkerSupport.CodeSerializer = {
                 }
             }
         }
-        for (var name in object) {
+        for (name in object) {
             objectPart = object[name];
 
             if (typeof objectPart === "function") {
@@ -1142,7 +1142,7 @@ LoaderSupport.WorkerRunnerRefImpl.prototype = {
 
             if (typeof parser[funcName] === "function") {
                 parser[funcName](values);
-            } else if (parser.hasOwnProperty(property)) {
+            } else if (Object.prototype.hasOwnProperty.call(parser, property)) {
                 parser[property] = values;
             }
         }
@@ -1239,7 +1239,7 @@ LoaderSupport.WorkerSupport.NodeLoaderWorker.checkSupport = function () {
         // Work around webpack builds failing with NodeJS requires
         var _require = eval("require");
         _require.resolve("worker_threads");
-    } catch (e) {
+    } catch {
         return "This version of Node does not support web workers!";
     }
 };
@@ -1520,14 +1520,14 @@ LoaderSupport.WorkerDirector.prototype = {
         classDef.call(loader, THREE.DefaultLoadingManager);
 
         // verify that all required functions are implemented
-        if (!loader.hasOwnProperty("instanceNo")) throw classDef.name + ' has no property "instanceNo".';
+        if (!Object.prototype.hasOwnProperty.call(loader, "instanceNo")) throw classDef.name + ' has no property "instanceNo".';
         loader.instanceNo = instanceNo;
 
-        if (!loader.hasOwnProperty("workerSupport")) {
+        if (!Object.prototype.hasOwnProperty.call(loader, "workerSupport")) {
             throw classDef.name + ' has no property "workerSupport".';
         }
         if (typeof loader.run !== "function") throw classDef.name + ' has no function "run".';
-        if (!loader.hasOwnProperty("callbacks") || !LoaderSupport.Validator.isValid(loader.callbacks)) {
+        if (!Object.prototype.hasOwnProperty.call(loader, "callbacks") || !LoaderSupport.Validator.isValid(loader.callbacks)) {
             console.warn(
                 classDef.name + ' has an invalid property "callbacks". Will change to "LoaderSupport.Callbacks"',
             );

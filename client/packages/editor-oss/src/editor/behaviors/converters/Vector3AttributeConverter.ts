@@ -1,10 +1,9 @@
 import {BehaviorAttributeData, Vector3Attribute} from "../BehaviorAttributes";
 import BehaviorAttributeType from "../BehaviorAttributeType";
-import {BehaviorContext} from "../BehaviorContextProvider";
 import AttributeConverter from "./AttributeConverter";
 
 class Vector3AttributeConverter implements AttributeConverter {
-    convertAttribute(attributeData: BehaviorAttributeData, behaviorContext: BehaviorContext): Vector3Attribute {
+    convertAttribute(attributeData: BehaviorAttributeData): Vector3Attribute {
         return {
             name: attributeData.name,
             type: BehaviorAttributeType.Vector3,
@@ -18,13 +17,16 @@ class Vector3AttributeConverter implements AttributeConverter {
         };
     }
 
-    private toVec3(value: any): {x: number; y: number; z: number} | undefined {
+    private toVec3(value: unknown): {x: number; y: number; z: number} | undefined {
         if (Array.isArray(value)) {
             return {x: value[0] ?? 0, y: value[1] ?? 0, z: value[2] ?? 0};
         }
-        
-        if (value && (value.x !== undefined || value.y !== undefined || value.z !== undefined)) {
-            return {x: value.x ?? 0, y: value.y ?? 0, z: value.z ?? 0};
+
+        if (value && typeof value === "object") {
+            const vec = value as {x?: number; y?: number; z?: number};
+            if (vec.x !== undefined || vec.y !== undefined || vec.z !== undefined) {
+                return {x: vec.x ?? 0, y: vec.y ?? 0, z: vec.z ?? 0};
+            }
         }
 
         return undefined;

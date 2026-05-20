@@ -1,6 +1,6 @@
 import {Object3D} from "three";
 
-import { resolveAssetId, resolveAssetRevisionId } from '@stem/editor-oss/asset-management/AssetResolutionContext';
+import { resolveAssetId, resolveAssetRevisionId, ReadonlyAssetResolutionContext } from '@stem/editor-oss/asset-management/AssetResolutionContext';
 import { remapBehaviorAttributeUuids, resolveBehaviorAttributeAssetRefs, resolveLambdaComponentDataAssetRefs } from '@stem/editor-oss/asset-management/dependencies';
 import BehaviorData from '@stem/editor-oss/behaviors/BehaviorData';
 import type {LambdaComponentData} from '@stem/editor-oss/lambdas/Lambda';
@@ -8,6 +8,11 @@ import { PhysicsUtil } from '@stem/editor-oss/physics/PhysicsUtil';
 import { getPrefabId, isPrefabUnlocked, loadPrefab, setPrefabId, setPrefabRevisionId } from '@stem/editor-oss/prefab/util';
 import { PrefabSchema, SerializedPrefab } from '../schema/PrefabSchema';
 import { applyToObject3d, extractFromObject3d } from '../util/object3d';
+
+interface PrefabUuidNode {
+    uuid: string;
+    children?: PrefabUuidNode[];
+}
 
 export class PrefabSerializer {
     toJSON(obj: Object3D): SerializedPrefab {
@@ -44,7 +49,11 @@ export class PrefabSerializer {
         };
     }
 
-    async fromJSON(json: unknown, parent: any, options: any): Promise<Object3D | null> {
+    async fromJSON(
+        json: unknown,
+        _parent: Object3D | null,
+        options: {assetResolutionContext: ReadonlyAssetResolutionContext},
+    ): Promise<Object3D | null> {
         const context = options.assetResolutionContext;
         const result = PrefabSchema.safeParse(json);
         if (!result.success) {
@@ -73,7 +82,7 @@ export class PrefabSerializer {
             }
         }
 
-        (prefab as any).parentUuid = jsonParentUuid;
+        (prefab as Object3D & {parentUuid?: string}).parentUuid = jsonParentUuid;
 
         // Overrides stored in the scene
         applyToObject3d(prefab, {
@@ -170,14 +179,15 @@ export class PrefabSerializer {
      * @param list - The stored UUID list from userData.children
      * @param uuidMap - Map to populate with current UUID to instance UUID mappings
      */
-    buildUuidMap(children: Object3D[], list: any[], uuidMap: Map<string, string>): void {
+    buildUuidMap(children: Object3D[], list: PrefabUuidNode[], uuidMap: Map<string, string>): void {
         for (let i = 0; i < children.length; i++) {
             const child = children[i];
-            if (list[i] && child) {
-                uuidMap.set(child.uuid, list[i].uuid);
+            const node = list[i];
+            if (node && child) {
+                uuidMap.set(child.uuid, node.uuid);
             }
-            if (child?.children && list[i]?.children) {
-                this.buildUuidMap(child.children, list[i].children, uuidMap);
+            if (child?.children && node?.children) {
+                this.buildUuidMap(child.children, node.children, uuidMap);
             }
         }
     }
@@ -187,16 +197,17 @@ export class PrefabSerializer {
      * @param {Object3D[]} children - The child objects
      * @param {Array} list - The original UUID list
      */
-    mapUuids(children: Object3D[], list: any[]): void {
+    mapUuids(children: Object3D[], list: PrefabUuidNode[]): void {
         for (let i = 0; i < children.length; i++) {
-            let child = children[i];
+            const child = children[i];
+            const node = list[i];
 
-            if (list[i] && child) {
-                child.uuid = list[i].uuid;
+            if (node && child) {
+                child.uuid = node.uuid;
             }
 
-            if (child?.children && list[i] && list[i].children) {
-                this.mapUuids(child.children, list[i].children);
+            if (child?.children && node?.children) {
+                this.mapUuids(child.children, node.children);
             }
         }
     }

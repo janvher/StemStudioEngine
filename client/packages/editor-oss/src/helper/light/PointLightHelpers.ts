@@ -5,7 +5,7 @@ import VolumePointLightHelper from "./VolumePointLightHelper";
 
 class PointLightHelpers extends BaseLightHelpers<VolumePointLightHelper> {
     protected shouldHaveHelper(object: Object3D): boolean {
-        return (object as any)?.isPointLight;
+        return (object as { isPointLight?: boolean })?.isPointLight ?? false;
     }
 
     protected createHelper(object: Object3D): VolumePointLightHelper {

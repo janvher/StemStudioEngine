@@ -1,4 +1,3 @@
-import {useRef, useState} from "react";
 import styled from "styled-components";
 
 import {flexCenter} from "../../../../../assets/style";

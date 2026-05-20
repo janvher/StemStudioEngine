@@ -374,8 +374,8 @@ export interface TriggerBehaviorInterface extends BehaviorInterface {
     then_object: string;
     else_object: string;
     delay: number; // delay in seconds
-    then_behaviors_on_trigger: Array<{key: any; value: boolean}>; // for example ["Animation": true] - true means it is waiting for the trigger to start/stop, false means this trigger has no effect on it
-    else_behaviors_on_trigger: Array<{key: any; value: boolean}>; // for example ["Animation": true] - true means it is waiting for the trigger to start/stop, false means this trigger has no effect on it
+    then_behaviors_on_trigger: Array<{key: string; value: boolean}>; // for example ["Animation": true] - true means it is waiting for the trigger to start/stop, false means this trigger has no effect on it
+    else_behaviors_on_trigger: Array<{key: string; value: boolean}>; // for example ["Animation": true] - true means it is waiting for the trigger to start/stop, false means this trigger has no effect on it
 }
 
 export enum SCENE_LAYERS {

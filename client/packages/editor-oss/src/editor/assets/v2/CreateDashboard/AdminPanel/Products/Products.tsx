@@ -126,8 +126,8 @@ export const Products = () => {
             const uploaded = await ModelUtils.uploadThumbnail(file);
             setDraft({...draft, imageUrl: uploaded});
             showToast({type: "success", title: "Image uploaded"});
-        } catch (e: any) {
-            showToast({type: "error", title: e?.message || "Failed to upload image"});
+        } catch (e) {
+            showToast({type: "error", title: (e instanceof Error && e.message) || "Failed to upload image"});
         } finally {
             setLoading(false);
             event.target.value = "";
@@ -146,8 +146,8 @@ export const Products = () => {
             showToast({type: "success", title: "Product created"});
             cancelForm();
             await loadProducts();
-        } catch (e: any) {
-            showToast({type: "error", title: e?.message || "Failed to create product"});
+        } catch (e) {
+            showToast({type: "error", title: (e instanceof Error && e.message) || "Failed to create product"});
         } finally {
             setLoading(false);
         }
@@ -186,8 +186,8 @@ export const Products = () => {
             }
             cancelForm();
             await loadProducts();
-        } catch (e: any) {
-            showToast({type: "error", title: e?.message || "Failed to save product"});
+        } catch (e) {
+            showToast({type: "error", title: (e instanceof Error && e.message) || "Failed to save product"});
         } finally {
             setLoading(false);
         }
@@ -223,8 +223,8 @@ export const Products = () => {
                 cancelForm();
             }
             await loadProducts();
-        } catch (e: any) {
-            showToast({type: "error", title: e?.message || "Failed to delete plan"});
+        } catch (e) {
+            showToast({type: "error", title: (e instanceof Error && e.message) || "Failed to delete plan"});
         } finally {
             setLoading(false);
         }
@@ -236,8 +236,8 @@ export const Products = () => {
             await updateAdminProduct({productId: product.productId, active: !product.active});
             showToast({type: "success", title: product.active ? "Product deactivated" : "Product activated"});
             await loadProducts();
-        } catch (e: any) {
-            showToast({type: "error", title: e?.message || "Failed to toggle product"});
+        } catch (e) {
+            showToast({type: "error", title: (e instanceof Error && e.message) || "Failed to toggle product"});
         } finally {
             setLoading(false);
         }

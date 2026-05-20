@@ -65,7 +65,11 @@ const processCompressTextures = async (input: CompressTexturesInput): Promise<Ar
 
             if (typeof material[getter] === 'function' && typeof material[setter] === 'function') {
                 try {
-                    const texture = (material[getter] as () => any)();
+                    const texture = (material[getter] as () => {
+                        getName?: () => string;
+                        getURI?: () => string;
+                        getImage?: () => {byteLength?: number} | null | undefined;
+                    } | null | undefined)();
                     if (texture) {
                         const textureName = texture.getName?.() || texture.getURI?.() || 'unnamed';
                         const image = texture.getImage?.();

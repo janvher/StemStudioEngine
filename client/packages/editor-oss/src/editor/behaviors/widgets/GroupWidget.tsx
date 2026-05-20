@@ -68,11 +68,6 @@ const GroupComponent: React.FC<{
     const [expanded, setExpanded] = React.useState(true);
     const [currentPreset, setCurrentPreset] = React.useState<string>(getCurrentValue()?.__preset__ ?? "Custom");
 
-    const trackedAttributes = React.useMemo(() => {
-        if (!attribute.attributes) return {};
-        return AttributeUtil.collectVisibleIfAttributes(attribute.attributes, values);
-    }, [attribute.attributes, values]);
-
     React.useEffect(() => {
         const currentValues = getCurrentValue();
         if (currentValues) {

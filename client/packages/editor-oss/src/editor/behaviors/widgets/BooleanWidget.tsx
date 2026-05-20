@@ -1,5 +1,4 @@
 import React, {useState, useEffect} from "react";
-import ReactDOM from "react-dom/client";
 
 import {PanelCheckbox} from "../../assets/v2/RightPanel/common/PanelCheckbox";
 import {BooleanAttribute} from "../BehaviorAttributes";

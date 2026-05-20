@@ -17,7 +17,7 @@ export const SearchRow = ({initValue}: Props) => {
     const [value, setValue] = useState("");
 
     useEffect(() => {
-        initValue && setValue(initValue);
+        if (initValue) setValue(initValue);
     }, [initValue]);
 
     const handleSearch = () => {

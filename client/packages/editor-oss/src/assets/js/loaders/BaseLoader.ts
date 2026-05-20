@@ -20,8 +20,7 @@ class BaseLoader {
         this.require = this.packageManager.require.bind(this.packageManager);
     }
 
-    load(url: string, options?: any) {
-         
+    load(_url: string, _options?: unknown) {
         return new Promise(resolve => {
             resolve(null);
         });

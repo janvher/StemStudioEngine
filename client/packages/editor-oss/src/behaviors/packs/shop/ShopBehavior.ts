@@ -65,9 +65,7 @@ class ShopBehavior extends BehaviorBase {
 
         if (playerBox.intersectsBox(targetBox)) {
             if (!this.isMenuOpen) {
-                this.createShopMenu(() => {
-                    this.isMenuOpen = false;
-                });
+                this.createShopMenu();
                 this.isMenuOpen = true;
             }
         } else {
@@ -83,7 +81,7 @@ class ShopBehavior extends BehaviorBase {
 
     //TODO some ideas - in next version replace the html with 
     //template snippets for the user to select their own layout
-    createShopMenu(onClose: () => void) {
+    createShopMenu() {
         if (document.getElementById('shopMenu')) return;
 
         let shopDataHtml = "<p>No shop items available</p>";

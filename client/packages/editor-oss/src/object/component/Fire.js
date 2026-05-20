@@ -27,8 +27,6 @@ import {
     floor,
     dot,
     pow,
-    clamp,
-    max,
 } from "three/tsl";
 import {PointsNodeMaterial} from "three/webgpu";
 

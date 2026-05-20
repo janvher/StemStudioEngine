@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState, useRef} from "react";
+import React, {useCallback, useEffect, useRef} from "react";
 import {AnimationClip} from "three";
 import {
     Node,
@@ -15,7 +15,6 @@ import styled from "styled-components";
 
 import {PanelRenderer} from "./PropertiesPanel/PanelRenderer";
 import {VisualDesigner} from "./VisualDesigner";
-import {AnimationGraph} from "../../../../../../animation/AnimationGraph";
 import {AnimationState} from "../../../../../../animation/AnimationState";
 import {BlendTreeState} from "../../../../../../animation/BlendTreeState";
 import {IAnimationGraph, TransitionCondition} from "../../../../../../animation/types";
@@ -62,7 +61,6 @@ export const AnimationGraphEditor: React.FC = () => {
         setAnimationGraph,
     } = useModelAnimationCombinerContext();
     const copiedNodeIdRef = useRef<string | null>(null);
-    const [serializedAnimationGraph, setSerializedAnimationGraph] = useState<string>("");
     const onGraphChange = useCallback((graph: IAnimationGraph) => setAnimationGraph(graph), [setAnimationGraph]);
 
     const updateNodesAndEdges = useCallback((graph: IAnimationGraph, preservePositions: boolean = false) => {
@@ -157,7 +155,7 @@ export const AnimationGraphEditor: React.FC = () => {
 
     const applySerializedAnimationGraph = useCallback(
         (graphStr: string) => {
-            if (!graphStr || !animationGraph) return;
+            if (!graphStr || !animationGraph || !mainModel) return;
             try {
                 const animsArr = mainModel._obj?.animations || mainModel.animations || [];
                 const anims: Record<string, AnimationClip> = {};
@@ -169,12 +167,18 @@ export const AnimationGraphEditor: React.FC = () => {
                 animationGraph.fromJSON(graphStr, anims);
                 onGraphChange(animationGraph);
                 updateNodesAndEdges(animationGraph, false);
-            } catch (e) {}
+            } catch {
+                /* ignore malformed graph JSON */
+            }
         },
         [animationGraph, mainModel, onGraphChange, updateNodesAndEdges],
     );
 
-    const logGraphChanges = useCallback((message: string, graph: IAnimationGraph) => {}, []);
+    const logGraphChanges = useCallback((message: string, graph: IAnimationGraph) => {
+        // Intentionally a no-op; params retained for the call-site contract.
+        void message;
+        void graph;
+    }, []);
 
     useEffect(() => {
         if (!animationGraph) return;
@@ -193,31 +197,31 @@ export const AnimationGraphEditor: React.FC = () => {
             );
         };
 
-        const handleStateAdded = (event: {state: any}) => {
+        const handleStateAdded = () => {
             updateNodesAndEdges(animationGraph, true);
         };
 
-        const handleStateRemoved = (event: {stateId: string}) => {
+        const handleStateRemoved = () => {
             updateNodesAndEdges(animationGraph, true);
         };
 
-        const handleTransitionAdded = (event: {fromState: any; toState: any}) => {
+        const handleTransitionAdded = () => {
             updateNodesAndEdges(animationGraph, true);
         };
 
-        const handleTransitionRemoved = (event: {fromState: any; toState: any}) => {
+        const handleTransitionRemoved = () => {
             updateNodesAndEdges(animationGraph, true);
         };
 
-        const handleParameterAdded = (event: {parameter: any}) => {
+        const handleParameterAdded = () => {
             updateNodesAndEdges(animationGraph, true);
         };
 
-        const handleParameterRemoved = (event: {parameterName: string}) => {
+        const handleParameterRemoved = () => {
             updateNodesAndEdges(animationGraph, true);
         };
 
-        const handleParameterChanged = (event: {parameter: any; oldValue: any; newValue: any}) => {
+        const handleParameterChanged = () => {
             updateNodesAndEdges(animationGraph, true);
         };
 
@@ -292,7 +296,6 @@ export const AnimationGraphEditor: React.FC = () => {
                     onGraphChange(animationGraph);
 
                     updateNodesAndEdges(animationGraph, true);
-                } else {
                 }
             }
         },

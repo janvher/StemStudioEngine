@@ -11,7 +11,7 @@ import global from "@stem/editor-oss/global";
 class AttributeUtil {
     static isAttributeWithConditionVisible(
         visibilityCondition: VisibilityCondition | undefined,
-        currentValues: Record<string, any>,
+        currentValues: Record<string, unknown>,
     ): boolean {
         // If no condition is present, display the attribute by default
         if (!visibilityCondition) {
@@ -37,17 +37,17 @@ class AttributeUtil {
 
     static collectVisibleIfAttributes(
         attributes: BehaviorAttributes,
-        attributesData: Record<string, any>,
-    ): Record<string, any> {
-        const trackedAttributes: Record<string, any> = {};
-        for (const [fieldName, attribute] of Object.entries(attributes)) {
+        attributesData: Record<string, unknown>,
+    ): Record<string, unknown> {
+        const trackedAttributes: Record<string, unknown> = {};
+        for (const attribute of Object.values(attributes)) {
             const attr = attribute;
 
             if (!attr.visibleIf) {
                 continue;
             }
 
-            for (const [attributeName, expectedValue] of Object.entries(attr.visibleIf)) {
+            for (const attributeName of Object.keys(attr.visibleIf)) {
                 // Support dot notation in attribute names (e.g., "group.field")
                 const topLevelAttributeName = attributeName.split(".")[0];
 
@@ -147,8 +147,8 @@ class AttributeUtil {
      * Priority: attribute definitions < groupAttr.default < explicit values
      * @param groupAttr
      */
-    private static getDefaultValueForGroupAttribute(groupAttr: GroupAttribute): Record<string, any> {
-        const result: Record<string, any> = {};
+    private static getDefaultValueForGroupAttribute(groupAttr: GroupAttribute): Record<string, unknown> {
+        const result: Record<string, unknown> = {};
 
         // First, collect defaults from attribute definitions (base layer)
         if (groupAttr.attributes) {
@@ -171,7 +171,7 @@ class AttributeUtil {
      * @param target
      * @param source
      */
-    private static deepMergeDefaults(target: Record<string, any>, source: Record<string, any>): void {
+    private static deepMergeDefaults(target: Record<string, unknown>, source: Record<string, unknown>): void {
         for (const key in source) {
             const sourceValue = source[key];
             const targetValue = target[key];
@@ -185,7 +185,7 @@ class AttributeUtil {
                 typeof targetValue === "object" &&
                 !Array.isArray(targetValue)
             ) {
-                this.deepMergeDefaults(targetValue, sourceValue);
+                this.deepMergeDefaults(targetValue as Record<string, unknown>, sourceValue as Record<string, unknown>);
             } else {
                 // Override with source value (arrays, primitives, or mixed types)
                 target[key] = sourceValue;
@@ -198,7 +198,7 @@ class AttributeUtil {
      * @param item
      * @param groupAttr
      */
-    private static mergeWithGroupDefaults(item: any, groupAttr: GroupAttribute): Record<string, any> {
+    private static mergeWithGroupDefaults(item: object, groupAttr: GroupAttribute): Record<string, unknown> {
         const defaults = this.getDefaultValueForGroupAttribute(groupAttr);
         return {...defaults, ...item};
     }
@@ -208,12 +208,12 @@ class AttributeUtil {
      * @param enumAttr
      */
     private static getDefaultValueForEnumAttribute(enumAttr: EnumAttribute): any {
-        const isSandboxMode = (global as any)?.app?.editor?.isSandbox;
-        const hasDefaultSandbox = (enumAttr as any).defaultSandbox !== undefined;
+        const isSandboxMode = (global as {app?: {editor?: {isSandbox?: boolean}}})?.app?.editor?.isSandbox;
+        const hasDefaultSandbox = enumAttr.defaultSandbox !== undefined;
 
         // Check for sandbox default first (if in sandbox mode)
         if (isSandboxMode && hasDefaultSandbox) {
-            const sandboxDefault = (enumAttr as any).defaultSandbox;
+            const sandboxDefault = enumAttr.defaultSandbox;
             const found = enumAttr.options.some(opt => opt.value === sandboxDefault);
             if (found) {
                 return sandboxDefault;
@@ -241,12 +241,12 @@ class AttributeUtil {
      * @param attribute
      */
     private static getDefaultValueForPrimitiveAttribute(attribute: BehaviorAttribute): any {
-        const isSandboxMode = (global as any)?.app?.editor?.isSandbox;
-        const hasDefaultSandbox = (attribute as any).defaultSandbox !== undefined;
+        const isSandboxMode = (global as {app?: {editor?: {isSandbox?: boolean}}})?.app?.editor?.isSandbox;
+        const hasDefaultSandbox = attribute.defaultSandbox !== undefined;
 
         // Use sandbox default if in sandbox mode and it exists
         if (isSandboxMode && hasDefaultSandbox) {
-            return (attribute as any).defaultSandbox;
+            return attribute.defaultSandbox;
         }
 
         return attribute.default !== undefined ? attribute.default : null;

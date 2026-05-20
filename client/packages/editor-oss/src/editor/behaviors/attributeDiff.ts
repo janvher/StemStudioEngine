@@ -18,8 +18,8 @@ const stripAttributeOrderMetadata = (value: unknown): unknown => {
 };
 
 export const getModifiedAttributeKeys = (
-    currentAttributes: Record<string, any>,
-    nextAttributes: Record<string, any>,
+    currentAttributes: Record<string, unknown>,
+    nextAttributes: Record<string, unknown>,
 ) => {
     return Object.keys(nextAttributes || {}).filter(key => {
         const current = stripAttributeOrderMetadata(currentAttributes?.[key]);

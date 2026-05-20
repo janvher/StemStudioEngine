@@ -156,7 +156,7 @@ class MultiplayerProxy extends PhysicsBase implements IPhysics {
         });
     }
 
-    private createRoom(gravity: number, resolve: () => void, reject: (reason?: any) => void) {
+    private createRoom(gravity: number, resolve: () => void, reject: (reason?: unknown) => void) {
         this.client
             ?.create<GameRoomState>(this.sceneId, {
                 id: this.id,
@@ -189,7 +189,7 @@ class MultiplayerProxy extends PhysicsBase implements IPhysics {
     private joinRoom(
         roomId: string,
         resolve: () => void,
-        reject: (reason?: any) => void,
+        reject: (reason?: unknown) => void,
     ) {
         this.client
             ?.joinById<GameRoomState>(roomId, {
@@ -337,8 +337,9 @@ class MultiplayerProxy extends PhysicsBase implements IPhysics {
     }
 
     private initializeAnimations(playerObject: Object3D) {
+        const objHolder = playerObject as Object3D & { _obj?: { animations?: AnimationClip[] } };
         let animations = (
-            (playerObject as any)._obj && (playerObject as any)._obj.animations ? (playerObject as any)._obj.animations : []
+            objHolder._obj && objHolder._obj.animations ? objHolder._obj.animations : []
         ) as AnimationClip[];
         if (!animations.length) return;
 

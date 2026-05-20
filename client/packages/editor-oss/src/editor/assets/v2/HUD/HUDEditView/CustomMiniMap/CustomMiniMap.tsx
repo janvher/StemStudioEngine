@@ -1,4 +1,4 @@
-import {useEffect, useLayoutEffect, useRef, useState} from "react";
+import {useEffect, useLayoutEffect, useRef, useState, type ReactNode} from "react";
 import styled from "styled-components";
 import * as THREE from "three";
 
@@ -42,7 +42,7 @@ type Props = {
     height: string;
     maxWidth?: string;
     onClick?: () => void;
-    children?: any;
+    children?: ReactNode;
 };
 
 export const CustomMiniMap = ({customStyle, width, height, maxWidth, onClick, children}: Props) => {

@@ -5,11 +5,8 @@ import {
     Float32BufferAttribute,
     Group,
     Loader,
-    LoaderUtils,
     Mesh,
     MeshStandardMaterial,
-    TextureLoader,
-    Vector3,
     Matrix4,
 } from 'three';
 
@@ -132,7 +129,6 @@ class USDZLoaderImpl extends Loader {
         if (view.getUint32(offset, true) !== 0x04034b50) return null;
 
         const compressionMethod = view.getUint16(offset + 8, true);
-        const compressedSize = view.getUint32(offset + 18, true);
         const uncompressedSize = view.getUint32(offset + 22, true);
         const fileNameLength = view.getUint16(offset + 26, true);
         const extraFieldLength = view.getUint16(offset + 28, true);
@@ -165,16 +161,16 @@ class USDZLoaderImpl extends Loader {
         if (filename.endsWith('.usda')) {
             // ASCII USD format
             const text = new TextDecoder().decode(content);
-            return this.parseUSDA(text, zip);
+            return this.parseUSDA(text);
         } else if (filename.endsWith('.usdc')) {
             // Binary USD format (Crate)
-            return this.parseUSDC(content, zip);
+            return this.parseUSDC();
         }
 
         return group;
     }
 
-    parseUSDA(text, zip) {
+    parseUSDA(text) {
         const group = new Group();
         const lines = text.split('\n');
 
@@ -302,7 +298,7 @@ class USDZLoaderImpl extends Loader {
         return group;
     }
 
-    parseUSDC(content, zip) {
+    parseUSDC() {
         const group = new Group();
 
         // Binary USD (Crate) format is complex
@@ -376,7 +372,7 @@ class USDZLoader extends BaseLoader {
         super();
     }
 
-    load(url, options, environment) {
+    load(url, options) {
         // For blob URLs or absolute URLs, use them directly
         // For relative URLs, prepend server if available
         const path = url.startsWith('blob:') || url.startsWith('http') || url.startsWith('https')

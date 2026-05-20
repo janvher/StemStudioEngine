@@ -49,7 +49,7 @@ const checkClipboardHasNoContent = async (): Promise<boolean> => {
     try {
         const text = await navigator.clipboard.readText();
         return text.trim().length === 0;
-    } catch (error) {
+    } catch {
         return true;
     }
 };
@@ -160,7 +160,7 @@ export const ContextMenu = ({isOpen, onClose, position}: Props) => {
             const isEmpty = await checkClipboardHasNoContent();
             setClipboardEmpty(isEmpty);
         };
-        isOpen && checkClipboard();
+        if (isOpen) checkClipboard();
     }, [isOpen]);
 
     const handleItemClick = (item: MenuItemConfig) => {

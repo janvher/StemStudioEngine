@@ -115,9 +115,9 @@ export function THREE_GetGifTexture(url: string): Promise<GifTexture> {
             resolve(new GifTexture(canvas, gif));
         };
 
-        const onError = (err?: any) => {
+        const onError = (err?: unknown) => {
             clean();
-            reject(new Error(err));
+            reject(new Error(typeof err === "string" ? err : String(err)));
         };
 
         if (gif.isLoading) {

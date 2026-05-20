@@ -9,7 +9,7 @@ import CanvasUtils from "@web-shared/utils/CanvasUtils";
  * @description A screen-space marker with text label and pointer triangle.
  */
 class PointMarker extends THREE.Sprite {
-    constructor(text = "", options = {}) {
+    constructor(text = "", _options = {}) {
         const canvas = document.createElement("canvas");
         const texture = new THREE.CanvasTexture(canvas);
         texture.colorSpace = THREE.SRGBColorSpace;

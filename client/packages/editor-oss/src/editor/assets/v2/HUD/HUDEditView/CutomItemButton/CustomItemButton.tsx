@@ -152,7 +152,7 @@ export const CustomItemButton = ({
 
     const buttonWeapon = weaponIndex !== undefined ? weapons?.[weaponIndex] : undefined;
 
-    const weaponImage = isWeaponButton && buttonWeapon?.hudImage;
+    const weaponImage = (isWeaponButton && buttonWeapon?.hudImage) || undefined;
     const isActive = currentItem?.userData.ID && currentItem?.userData.ID === buttonWeapon?.userData.ID;
 
     return (

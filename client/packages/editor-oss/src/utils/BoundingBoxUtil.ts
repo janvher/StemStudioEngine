@@ -1,4 +1,4 @@
-import {Box3, Mesh, Object3D, Vector3, Vector3Like} from "three";
+import {Box3, Mesh, Object3D, SkinnedMesh, Vector3, Vector3Like} from "three";
 
 export type CapsuleShape = {
     radius: number;
@@ -26,7 +26,7 @@ export default class BoundingBoxUtil {
             // This logic is based on THREE.Box3.setFromObject() but can be used
             // in either traverse() or traverseVisible() whereas setFromObject()
             // cannot filter out invisible objects.
-            const childAsAny = child as any;
+            const childAsAny = child as SkinnedMesh;
             const geometry = childAsAny.geometry;
             if (!geometry) {
                 return;
@@ -41,12 +41,12 @@ export default class BoundingBoxUtil {
                         childBox.copy(childAsAny.boundingBox);
                     } else {
                         if (geometry.boundingBox === null) geometry.computeBoundingBox();
-                        childBox.copy(geometry.boundingBox);
+                        childBox.copy(geometry.boundingBox!);
                     }
                 } else {
                     // Fallback for older Three.js or if computeBoundingBox fails
                     if (geometry.boundingBox === null) geometry.computeBoundingBox();
-                    childBox.copy(geometry.boundingBox);
+                    childBox.copy(geometry.boundingBox!);
                 }
             } else if (childAsAny.boundingBox !== undefined) {
                 if (childAsAny.boundingBox === null) {
@@ -57,7 +57,7 @@ export default class BoundingBoxUtil {
                 if (geometry.boundingBox === null) {
                     geometry.computeBoundingBox();
                 }
-                childBox.copy(geometry.boundingBox);
+                childBox.copy(geometry.boundingBox!);
             }
 
             childBox.applyMatrix4(child.matrixWorld);

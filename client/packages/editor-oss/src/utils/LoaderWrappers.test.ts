@@ -26,7 +26,7 @@ vi.mock('./RuntimeAssetLoader', () => ({
 
 // Mock THREE.js loaders
 vi.mock('three', async () => {
-    const actual = await vi.importActual('three') as any;
+    const actual = await vi.importActual('three') as typeof THREE;
     return {
         ...actual,
         TextureLoader: vi.fn().mockImplementation(function() {
@@ -271,17 +271,22 @@ describe('LoaderWrappers', () => {
             const MockEnhancedTextureLoader = vi.fn().mockImplementation(function() {
                 return {
                     load: mockLoad,
-                    loadWithAssetResolution: async function(urlOrId: string, onLoad?: any, onProgress?: any, onError?: any) {
+                    loadWithAssetResolution: async function(
+                        urlOrId: string,
+                        onLoad?: (texture: THREE.Texture) => void,
+                        onProgress?: (event: ProgressEvent) => void,
+                        onError?: (error: unknown) => void,
+                    ) {
                         const resolvedUrl = await smartResolveAssetUrl(urlOrId, 'texture');
                         return new Promise((resolve, reject) => {
                             this.load(
                                 resolvedUrl,
-                                (texture: any) => {
+                                (texture: THREE.Texture) => {
                                     onLoad?.(texture);
                                     resolve(texture);
                                 },
                                 onProgress,
-                                (error: any) => {
+                                (error: unknown) => {
                                     onError?.(error);
                                     reject(error);
                                 },
@@ -317,17 +322,22 @@ describe('LoaderWrappers', () => {
             const MockEnhancedTextureLoader = vi.fn().mockImplementation(function() {
                 return {
                     load: mockLoad,
-                    loadWithAssetResolution: async function(urlOrId: string, onLoad?: any, onProgress?: any, onError?: any) {
+                    loadWithAssetResolution: async function(
+                        urlOrId: string,
+                        onLoad?: (texture: THREE.Texture) => void,
+                        onProgress?: (event: ProgressEvent) => void,
+                        onError?: (error: unknown) => void,
+                    ) {
                         const resolvedUrl = await smartResolveAssetUrl(urlOrId, 'texture');
                         return new Promise((resolve, reject) => {
                             this.load(
                                 resolvedUrl,
-                                (texture: any) => {
+                                (texture: THREE.Texture) => {
                                     onLoad?.(texture);
                                     resolve(texture);
                                 },
                                 onProgress,
-                                (error: any) => {
+                                (error: unknown) => {
                                     onError?.(error);
                                     reject(error);
                                 },

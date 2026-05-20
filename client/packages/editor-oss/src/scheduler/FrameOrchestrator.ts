@@ -210,7 +210,7 @@ export class FrameOrchestrator {
             tabVisible: this._isTabVisible,
         });
 
-        const shouldTraceReplay = Boolean((globalThis as any).__TRACE_FRAME_REPLAY__);
+        const shouldTraceReplay = Boolean((globalThis as Record<string, unknown>).__TRACE_FRAME_REPLAY__);
         if (shouldTraceReplay) {
             console.debug("[ReplayTrace][OrchestratorFrame]", {
                 frame: this.frameCount,

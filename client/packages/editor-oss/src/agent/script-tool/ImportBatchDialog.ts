@@ -111,7 +111,6 @@ export function showBatchImportDialog(
     preResolved?: AutoResolveResult,
 ): Promise<BatchImportResult> {
     const MODEL_EXTS = [".gltf", ".glb", ".fbx", ".obj"];
-    const COMPANION_EXTS = [".bin", ".png", ".jpg", ".jpeg", ".webp", ".tga", ".bmp"];
 
     return new Promise(resolve => {
         const selected = new Map<number, File>();

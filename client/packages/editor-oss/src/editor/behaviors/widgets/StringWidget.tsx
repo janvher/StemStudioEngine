@@ -1,5 +1,4 @@
 import React, {useState, useEffect} from "react";
-import ReactDOM from "react-dom/client";
 
 import {TextInputRow} from "../../assets/v2/RightPanel/common/TextInputRow";
 import {StringAttribute} from "../BehaviorAttributes";

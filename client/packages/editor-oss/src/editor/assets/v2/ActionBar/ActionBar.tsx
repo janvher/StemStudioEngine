@@ -64,7 +64,6 @@ export const ActionBar = ({
     closeGameDebugPanel = () => {},
     showGameDebugPanel = false,
     pinnedCodeEditorWidth = 0,
-    showCodeEditor = false,
 }: ActionBarProps) => {
     const [showKeybindings, setShowKeybindings] = useState(false);
     const keybindingsBtnRef = useRef<HTMLButtonElement>(null);

@@ -6,6 +6,7 @@
 
 import {QueryClientProvider} from "@tanstack/react-query";
 import {Root, createRoot} from "react-dom/client";
+import type {Scene} from "three";
 
 import {SoundManager} from "./SoundManager";
 import EngineRuntime from "@stem/editor-oss/EngineRuntime";
@@ -18,13 +19,13 @@ import {ISoundSettings} from "@stem/editor-oss/types/editor";
 import {IHUDManager} from "./IHUDManager";
 
 class HUDManager implements IHUDManager {
-    scene: any = null;
+    scene: Scene | null = null;
     containerId: string = "";
     soundManager: SoundManager;
     private hudRoot: Root | null = null;
     engine: EngineRuntime | null = null;
 
-    constructor(scene: any) {
+    constructor(scene: Scene) {
         this.scene = scene;
         this.containerId = "hud-view-container";
         this.hudRoot = null;

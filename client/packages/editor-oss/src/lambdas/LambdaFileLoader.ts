@@ -45,7 +45,7 @@ export class LambdaFileLoader {
         for (const [path, mod] of Object.entries(this.eagerConfigs)) {
             const pathMatch = path.match(/\.\/packs\/([^/]+)\/lambda\.json/);
             if (pathMatch && pathMatch[1]) {
-                const config = (mod as any).default ?? mod;
+                const config = (mod as LambdaConfig & {default?: LambdaConfig}).default ?? mod;
                 results.push({folder: pathMatch[1], config});
             }
         }
@@ -125,7 +125,7 @@ export class LambdaFileLoader {
                 const configModule = this.eagerConfigs[configKey];
                 if (!configModule) continue;
 
-                const config = (configModule as any).default ?? configModule;
+                const config = (configModule as LambdaConfig & {default?: LambdaConfig}).default ?? configModule;
 
                 const cls = await this.loadFile(folder, config.main);
                 if (!cls) {

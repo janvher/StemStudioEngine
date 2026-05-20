@@ -5,7 +5,7 @@ import RectAreaLightHelper from "./RectAreaLightHelper";
 
 class RectAreaLightHelpers extends BaseLightHelpers<RectAreaLightHelper> {
     protected shouldHaveHelper(object: Object3D): boolean {
-        return (object as any)?.isRectAreaLight;
+        return (object as {isRectAreaLight?: boolean}).isRectAreaLight === true;
     }
 
     protected createHelper(object: Object3D): RectAreaLightHelper {

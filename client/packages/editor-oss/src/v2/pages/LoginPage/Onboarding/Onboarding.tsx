@@ -45,8 +45,8 @@ export const Onboarding = ({onCorrectAuth, setOnboarding}: Props) => {
             if (list.length > 0) {
                 setSelectedAvatar(list[0]);
             }
-        } catch (e: any) {
-            showToast({type: "error", title: t("Failed to fetch avatars"), body: e.message});
+        } catch (e) {
+            showToast({type: "error", title: t("Failed to fetch avatars"), body: e instanceof Error ? e.message : undefined});
         }
     };
 

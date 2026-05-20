@@ -1,5 +1,5 @@
 import React from "react";
-import { Behavior, BehaviorTypes, ParameterType } from "three.quarks";
+import { Behavior, BehaviorTypes } from "three.quarks";
 
 import global from "@stem/editor-oss/global";
 import { CollapsibleEditorSection } from "../../../common/CollapsibleEditorSection/CollapsibleEditorSection";

@@ -1,5 +1,3 @@
-import {DomainAssetDto} from "src/api/client/api";
-
 import {SUPPORTED_MODEL_FORMATS} from "@stem/network/api/asset";
 
 export enum TABS {

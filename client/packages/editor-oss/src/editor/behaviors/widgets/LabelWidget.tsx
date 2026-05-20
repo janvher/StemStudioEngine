@@ -18,9 +18,9 @@ class LabelWidget extends BaseAttributeWidget {
     protected createComponent(
         id: string,
         name: string,
-        attribute: BehaviorAttribute,
-        getCurrentValue: () => any,
-        updateBehaviorField: (value: any) => void,
+        _attribute: BehaviorAttribute,
+        _getCurrentValue: () => any,
+        _updateBehaviorField: (value: any) => void,
     ): React.ReactElement {
         return <SectionTitle>{name}</SectionTitle>;
     }

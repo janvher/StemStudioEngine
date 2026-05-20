@@ -19,7 +19,7 @@ class BaseSerializer {
      * @param {Object} obj object
      * @returns {Object} JSON object
      */
-    toJSON(obj) {
+    toJSON(_obj) {
          
         var json = {
             metadata: this.metadata,

@@ -200,7 +200,6 @@ describe("FrameBudgetManager", () => {
         });
 
         it("should ignore invalid FPS values", () => {
-            const originalBudget = manager.activeBudget;
             manager.updateTargetFPS(0);
             manager.updateTargetFPS(-1);
             // Should not change anything

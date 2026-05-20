@@ -1,5 +1,4 @@
 import React, {useEffect, useRef, useState} from "react";
-import {Object3D} from "three";
 
 import {
     getDefaultName,
@@ -69,6 +68,7 @@ export interface TreeItemData {
     draggable?: boolean;
     children?: TreeItemData[];
     onClick?: (event: React.MouseEvent) => void;
+    leaf?: boolean;
     userData?: any;
 }
 
@@ -201,7 +201,7 @@ const TreeItemComponent = ({
 
         return modelIcon;
     };
-    const handleRightClick = (event: React.MouseEvent<HTMLElement, MouseEvent>, valueObj?: any) => {
+    const handleRightClick = (event: React.MouseEvent<HTMLElement, MouseEvent>, valueObj?: string) => {
         event.stopPropagation();
         event.preventDefault();
 

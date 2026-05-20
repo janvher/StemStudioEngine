@@ -35,7 +35,7 @@ export class GPUFrustumCuller {
      * @param renderer Three.js WebGPU renderer
      * @returns Whether initialisation succeeded.
      */
-    init(renderer: any): boolean {
+    init(renderer: {backend?: {device?: GPUDevice; utils?: {device?: GPUDevice}}}): boolean {
         try {
             const device: GPUDevice | undefined =
                 renderer?.backend?.device ?? renderer?.backend?.utils?.device;
@@ -67,7 +67,8 @@ export class GPUFrustumCuller {
     cull(batchedMesh: BatchedMesh, frustum: Frustum): void {
         if (!this.device || !this.pipeline || !this.bindGroupLayout) return;
 
-        const instanceCount = (batchedMesh as any)._instanceInfo?.length ?? 0;
+        const instanceCount =
+            (batchedMesh as BatchedMesh & {_instanceInfo?: unknown[]})._instanceInfo?.length ?? 0;
         if (instanceCount === 0) return;
 
         const uuid = batchedMesh.uuid;
@@ -222,7 +223,9 @@ export class GPUFrustumCuller {
         void promise.then(() => {
             try {
                 const mapped = new Uint32Array(state.readBuffer!.getMappedRange());
-                const setVisible = (bm as any).setVisibleAt?.bind(bm);
+                const setVisible = (
+                    bm as BatchedMesh & {setVisibleAt?: (index: number, visible: boolean) => void}
+                ).setVisibleAt?.bind(bm);
                 if (setVisible) {
                     for (let i = 0; i < count; i++) {
                         setVisible(i, mapped[i] === 1);

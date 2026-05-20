@@ -134,9 +134,9 @@ export const getAssetIcon = (asset: AssetStateType, v2?: boolean) => {
         case AssetType.Script:
             return v2 ? behaviorIconV2 : behaviorIcon;
         case AssetType.Image:
-            return (asset as any).thumbnailUrl;
+            return (asset as {thumbnailUrl?: string}).thumbnailUrl;
         case AssetType.Model:
-            return (asset as any).thumbnailUrl;
+            return (asset as {thumbnailUrl?: string}).thumbnailUrl;
         case AssetType.Prefab:
             return stemIcon;
         case AssetType.Quarks:

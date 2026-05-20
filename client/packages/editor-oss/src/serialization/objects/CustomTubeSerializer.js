@@ -34,7 +34,7 @@ class CustomTubeSerializer extends BaseSerializer {
         return json;
     }
 
-    fromJSON(json, parent, options) {
+    fromJSON(json, parent) {
         if (parent !== undefined) {
             Object3DSerializer.prototype.fromJSON.call(this, json, parent);
             return parent;

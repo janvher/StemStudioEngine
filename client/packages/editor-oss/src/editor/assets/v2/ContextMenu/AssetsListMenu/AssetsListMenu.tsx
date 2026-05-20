@@ -53,7 +53,7 @@ export const AssetsListMenu = ({openAIBuilder, close, oldVersion}: Props) => {
     const [assets, setAssets] = useState<any[]>([]);
     const primitives = PRIMITIVES_LIST;
     const [filteredData, setFilteredData] = useState<any[]>([]);
-    const [modelData, setModelData] = useState<{
+    const [modelData] = useState<{
         modelUrl: string;
         width: number;
         height: number;
@@ -256,7 +256,7 @@ export const AssetsListMenu = ({openAIBuilder, close, oldVersion}: Props) => {
                     return (
                         <SingleAsset
                             draggable
-                            onDragEnd={e => {
+                            onDragEnd={() => {
                                 // const event = new PointerEvent("pointerup", {bubbles: true});
                                 // (app!.game!.cameraControl as any).pointerUpHandler(event);
                             }}

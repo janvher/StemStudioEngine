@@ -23,7 +23,7 @@ class BillboardBehavior extends BehaviorBase {
         }
     }
 
-    update(delta: number): void {
+    update(): void {
         if (!this.game?.player || !this.game?.camera || !this.game?.scene || !this.target) {
             return;
         }
@@ -77,7 +77,7 @@ class BillboardBehavior extends BehaviorBase {
         const screenPos = elPos.clone();
         screenPos.project(camera);
 
-        //@ts-ignore
+        // @ts-expect-error - screenPos is a Vector3 used as a Vector2-like for setFromCamera
         raycaster.setFromCamera(screenPos, camera);
         const intersects = raycaster.intersectObjects(occlude, true);
         if (intersects.length) {

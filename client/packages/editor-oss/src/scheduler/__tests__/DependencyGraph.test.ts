@@ -1,7 +1,7 @@
 import {describe, it, expect, vi, beforeEach} from "vitest";
 
 import {DependencyGraph} from "../DependencyGraph";
-import {PipelineStage, ISystem, FrameContext} from "../types";
+import {PipelineStage, ISystem} from "../types";
 
 // Mock system factory
 /**

@@ -1,7 +1,7 @@
 import {MeshoptDecoder} from "meshoptimizer";
-import {Group, LoaderUtils, LoadingManager, Mesh, MeshStandardMaterial, Texture, TextureLoader} from "three";
+import {Group, LoaderUtils, LoadingManager, Material, Mesh, MeshStandardMaterial, Object3D, Texture, TextureLoader} from "three";
 import {DRACOLoader} from "three/examples/jsm/loaders/DRACOLoader.js";
-import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
+import {GLTFLoader, GLTFParser} from "three/examples/jsm/loaders/GLTFLoader.js";
 import {KTX2Loader} from "three/examples/jsm/loaders/KTX2Loader.js";
 
 import {EARTHAnimationGraphLoaderPlugin} from "../../../animation/extensions/EARTHAnimationGraphLoaderPlugin";
@@ -41,7 +41,7 @@ class GLTFLoaderExtended {
             .setKTX2Loader(ktxLoader)
             .setMeshoptDecoder(MeshoptDecoder);
 
-        loader.register((parser: any) => new EARTHAnimationGraphLoaderPlugin(parser));
+        loader.register((parser: GLTFParser) => new EARTHAnimationGraphLoaderPlugin(parser));
         
         return { loader, dispose: () => {
             loader.setKTX2Loader(null);
@@ -145,12 +145,12 @@ class GLTFLoaderExtended {
                 result => {
                     const obj3d = result.scene;
 
-                    (obj3d as any)._obj = result;
-                    (obj3d as any)._root = result.scene;
+                    (obj3d as Group & {_obj?: typeof result; _root?: Group})._obj = result;
+                    (obj3d as Group & {_obj?: typeof result; _root?: Group})._root = result.scene;
 
                     // Compute bounding boxes for all geometries
-                    obj3d.traverse((child: any) => {
-                        if (child.isMesh && child.geometry) {
+                    obj3d.traverse((child: Object3D) => {
+                        if (child instanceof Mesh && child.geometry) {
                             child.geometry.computeBoundingBox();
                         }
                     });
@@ -247,8 +247,8 @@ class GLTFLoaderExtended {
                                 material.needsUpdate = true;
                             } else if (material && 'map' in material) {
                                 // Handle other material types that support map
-                                (material as any).map = atlasTexture;
-                                (material as any).needsUpdate = true;
+                                (material as Material & {map: Texture | null}).map = atlasTexture;
+                                material.needsUpdate = true;
                             }
                         }
                     });
@@ -334,7 +334,7 @@ class GLTFLoaderExtended {
             let materialsUpdated = 0;
             // Track processed materials to avoid double-dispose when meshes share materials.
             // Without this, the second mesh iteration disposes the NEW texture we just assigned.
-            const processedMaterials = new Set<any>();
+            const processedMaterials = new Set<Material>();
 
             // Apply textures to all meshes - handle ANY material type with a 'map' property
             object.traverse((child) => {
@@ -431,7 +431,7 @@ class GLTFLoaderExtended {
                     }
                     // Handle any other material type that has a 'map' property (MeshBasicMaterial, MeshPhongMaterial, etc.)
                     else if ('map' in material && textureMap.has('map')) {
-                        const mat = material as any;
+                        const mat = material as Material & {map: (Texture & {dispose?: () => void}) | null};
                         const newTex = textureMap.get('map')!;
                         if (mat.map) {
                             newTex.flipY = mat.map.flipY;

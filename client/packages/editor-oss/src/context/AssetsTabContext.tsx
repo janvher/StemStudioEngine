@@ -26,13 +26,6 @@ const ASSET_LOADED_EVENTS: Record<AssetType, string> = {
     [AssetType.NPC_PROFILES]: "onNPCsLoaded",
 };
 
-interface AddAssetsArgs {
-    assetType: AssetType;
-    libraryIDToAdd?: string;
-    forScene?: boolean;
-    callback?: () => void;
-}
-
 interface AssetsTabContextValue {
     fetchAssets: (assetType: AssetType) => void;
     batchAudioUpload: (libraryIDToAdd: string) => void;
@@ -166,7 +159,7 @@ const AssetsTabContextProvider: React.FC<AssetsTabContextProviderProps> = ({chil
                         duration: 5000,
                     });
                 }
-            } catch (err) {
+            } catch {
                 showToast({type: "error", body: "Batch upload failed. Please try again."});
             }
         };

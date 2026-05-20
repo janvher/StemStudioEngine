@@ -12,10 +12,10 @@ type Props = {
     children?: React.ReactNode;
     padding?: boolean;
     hidden?: boolean;
-    mask?: any;
+    mask?: boolean;
     showCloseButton?: boolean;
     closeOnEscape?: boolean;
-    onClose?: (event: any) => void;
+    onClose?: (event: Event | React.SyntheticEvent) => void;
 };
 
 const Window = forwardRef<HTMLDivElement, Props>(
@@ -28,7 +28,7 @@ const Window = forwardRef<HTMLDivElement, Props>(
         const [offsetX, setOffsetX] = useState(0);
         const [offsetY, setOffsetY] = useState(0);
 
-        const handleMouseDown = (event: any) => {
+        const handleMouseDown = (event: React.MouseEvent) => {
             setIsDown(true);
 
             const domCurrent = (dom as React.RefObject<HTMLDivElement>).current;
@@ -41,7 +41,7 @@ const Window = forwardRef<HTMLDivElement, Props>(
             }
         };
 
-        const handleMouseMove = (event: any) => {
+        const handleMouseMove = (event: MouseEvent) => {
             if (!isDown) {
                 return;
             }
@@ -62,8 +62,8 @@ const Window = forwardRef<HTMLDivElement, Props>(
             setOffsetY(0);
         };
 
-        const handleClose = (event: any) => {
-            onClose && onClose(event);
+        const handleClose = (event: Event | React.SyntheticEvent) => {
+            if (onClose) onClose(event);
         };
 
         useEffect(() => {

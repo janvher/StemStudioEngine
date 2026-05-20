@@ -18,7 +18,7 @@ export interface IAnalyticsRecorder {
 
 /** Default no-op implementation. Used by OSS builds and as a fallback. */
 export class NullAnalyticsRecorder implements IAnalyticsRecorder {
-    logEvent(_name: string, _params?: AnalyticsParams): void {/* no-op */}
-    setUserId(_userId: string | undefined): void {/* no-op */}
-    setUserProperties(_params: AnalyticsParams): void {/* no-op */}
+    logEvent(): void {/* no-op */}
+    setUserId(): void {/* no-op */}
+    setUserProperties(): void {/* no-op */}
 }

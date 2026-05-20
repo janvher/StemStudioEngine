@@ -52,7 +52,6 @@ export const ExpandablePanel = ({
     children,
     disableClickToOpen,
     panelType,
-    renderArrow,
     defaultExpanded = false,
 }: Pick<Props, "label"> & {
     children: React.ReactNode;
@@ -110,7 +109,6 @@ export const Panel = ({
     label,
     panelType,
     setColor,
-    showCollision,
     showModelLighting,
     showPhysics,
     showTexture,

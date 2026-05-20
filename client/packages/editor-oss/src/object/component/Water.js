@@ -2,7 +2,6 @@ import {
     Mesh,
     PlaneGeometry,
     Color,
-    Vector3,
     DoubleSide,
 } from "three";
 import {
@@ -19,13 +18,11 @@ import {
     cos,
     dot,
     normalize,
-    reflect,
     pow,
     mix,
     abs,
     fract,
     floor,
-    smoothstep,
     add,
     mul,
     sub,

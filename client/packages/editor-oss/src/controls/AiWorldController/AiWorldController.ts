@@ -29,7 +29,6 @@ import {
     generateAssetFile,
     generateAssetUrl,
     getLookAtPointOnGround,
-    createPlane,
     getSceneData,
     getObjectData,
     clearAllIndicators,
@@ -51,7 +50,6 @@ import {GenerateImageRequest} from "@stem/editor-oss/types/imageGenerator";
 import {getAIBackend} from "@stem/editor-oss/ai";
 import Ajax from "@stem/editor-oss/utils/Ajax";
 import ImageGeneratorProvider from "@stem/editor-oss/utils/ImageGeneratorProvider";
-import {loadTextureWithAssetResolution} from "@stem/editor-oss/utils/LoaderWrappers";
 import ModelGeneratorProvider, {GENERATOR_TYPES} from "@stem/editor-oss/utils/ModelGeneratorProvider";
 import {ModelUtils} from "@stem/editor-oss/utils/ModelUtils";
 import {backendUrlFromPath} from "@stem/editor-oss/utils/UrlUtils";
@@ -255,7 +253,7 @@ class AIWorldController {
 
             if (aiResponse.ok && aiResponse.data) {
                 const {agentResponse} = aiResponse.data;
-                const regex = /,(?!\s*?[{[\"\'\w])/g;
+                const regex = /,(?!\s*?[{["'\w])/g;
                 let assistantText = agentResponse.replace(regex, "");
 
                 let match: RegExpExecArray | null;
@@ -308,8 +306,7 @@ class AIWorldController {
 
             if (aiResponse.ok && aiResponse.data) {
                 const {assistantResponse} = aiResponse.data;
-                // eslint-disable-next-line no-useless-escape
-                const regex = /,(?!\s*?[{[\"\'\w])/g;
+                const regex = /,(?!\s*?[{["'\w])/g;
                 const assistantText = assistantResponse.replace(regex, "");
 
                 if (operation === (AI_OPERATION.EDIT_CODE_PROMPT as string)) {
@@ -391,7 +388,7 @@ class AIWorldController {
         }
     };
 
-    enchancePrompt = async (prompt: string, is3D?: boolean, signal?: AbortSignal) => {
+    enchancePrompt = async (prompt: string, is3D?: boolean) => {
         try {
             const aiResponse = await this.callAIAssistant<AIResponse>(
                 is3D ? AI_OPERATION.ENHANCE_MODEL_PROMPT : AI_OPERATION.ENHANCE_IMAGE_PROMPT,
@@ -598,7 +595,7 @@ class AIWorldController {
         let enchancePromptRes = null;
         try {
             if (args.enhancePrompt) {
-                enchancePromptRes = await this.enchancePrompt(args.prompt, true, this.abortController.signal);
+                enchancePromptRes = await this.enchancePrompt(args.prompt, true);
             }
         } catch (error) {
             console.error("Failed to enhance prompt", error);

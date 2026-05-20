@@ -27,7 +27,7 @@ export function editModel(
         Url?: string;
         IsAvatar?: boolean;
     },
-    callback?: (data: any) => void,
+    callback?: (data: unknown) => void,
 ) {
     Ajax.post({
         url: backendUrlFromPath(`/api/Mesh/Edit`),
@@ -39,7 +39,7 @@ export function editModel(
             if (response?.data.Code !== 200) {
                 showToast({type: "error", body: response?.data.Msg || "Request failed."});
             }
-            callback && callback(response?.data);
+            if (callback) callback(response?.data);
         })
         .catch(error => {
             console.warn("Request failed.", error);
@@ -62,7 +62,7 @@ export function downloadMesh(
     })
         .then(response => {
             const data = response?.data as MeshDownloadResponse;
-            callback && callback(data);
+            if (callback) callback(data);
             return data;
         })
         .catch(error => {
@@ -72,7 +72,7 @@ export function downloadMesh(
                 Msg: "Mesh download failed",
                 Path: "",
             };
-            callback && callback(errorResponse);
+            if (callback) callback(errorResponse);
             return errorResponse;
         });
 }

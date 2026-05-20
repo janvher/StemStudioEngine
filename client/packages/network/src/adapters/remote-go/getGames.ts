@@ -65,7 +65,7 @@ export const getGames = async (userID?: string) => {
         });
 
         communityGamesData.sort(
-            (a: any, b: any) => new Date(b.UpdateTime).getTime() - new Date(a.UpdateTime).getTime(),
+            (a, b) => new Date(b.UpdateTime).getTime() - new Date(a.UpdateTime).getTime(),
         );
 
         return communityGamesData;
@@ -128,7 +128,7 @@ export const getGamesByQuery = async (args: QUERY_PARAMS) => {
 
         // Sort the games by the last update time
         communityGamesData.sort(
-            (a: any, b: any) => new Date(b.UpdateTime).getTime() - new Date(a.UpdateTime).getTime(),
+            (a, b) => new Date(b.UpdateTime).getTime() - new Date(a.UpdateTime).getTime(),
         );
 
         return communityGamesData;

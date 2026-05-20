@@ -4,9 +4,7 @@ import { describe, it, expect, beforeAll } from "vitest";
 
 import BufferGeometrySerializer from "./BufferGeometrySerializer";
 import GeometriesSerializer from "./GeometriesSerializer";
-import CustomShape from "@stem/editor-oss/object/geometry/CustomShape";
 import CustomTube, { CurveType } from "@stem/editor-oss/object/geometry/CustomTube";
-import Text3D from "@stem/editor-oss/object/geometry/Text3D";
 
 describe("BufferGeometrySerializer", () => {
     beforeAll(async () => {

@@ -9,7 +9,6 @@ import {
     ProgressText,
     StatusMessage,
 } from "./StemStudioLoader.style";
-import type EngineRuntime from "../../../EngineRuntime";
 import stemStudioLogo from "../../../editor/assets/v2/HUD/HUDView/FloatingNav/AppVersion/stem-studio-alpha.png";
 import global from "../../../global";
 

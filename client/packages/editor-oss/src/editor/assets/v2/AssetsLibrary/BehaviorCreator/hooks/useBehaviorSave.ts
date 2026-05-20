@@ -17,8 +17,14 @@ import {createBehaviorRevision} from "../../../../../behaviors/util";
  * @param path Internal accumulator for the dotted path of the current entry
  * @returns Dotted path of the first invalid attribute, or null
  */
+type AttributeNode = {
+    name?: string;
+    attributes?: Record<string, AttributeNode | null | undefined>;
+    [key: string]: unknown;
+} | null | undefined;
+
 export const findInvalidAttributePath = (
-    attributes: Record<string, any> | undefined | null,
+    attributes: Record<string, AttributeNode> | undefined | null,
     path = "",
 ): string | null => {
     if (!attributes) return null;

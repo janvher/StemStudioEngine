@@ -2,7 +2,6 @@ import * as THREE from "three";
 import { CSMMode } from "three/examples/jsm/csm/CSM.js";
 
 import { CSMManager } from "./CSMManager";
-import Editor from "@stem/editor-oss/editor/Editor";
 import { BehaviorBase, BehaviorOptions } from "../../Behavior";
 import GameManager from "../../game/GameManager";
 
@@ -72,7 +71,7 @@ export default class CSMBehavior extends BehaviorBase {
     }
   }
 
-  update(deltaTime: number): void {
+  update(_deltaTime: number): void {
     // CSM update is handled by CSMManager in the render loop
     // This method is called every frame but CSM doesn't need per-frame updates
 
@@ -84,7 +83,7 @@ export default class CSMBehavior extends BehaviorBase {
   }
 
   // Editor methods
-  onEditorAdded(editor: Editor): void {
+  onEditorAdded(): void {
       this.onStart();
   }
 

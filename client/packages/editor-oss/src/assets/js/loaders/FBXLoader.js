@@ -3,9 +3,6 @@ import {FBXLoader as FBXLoaderImpl} from "three/examples/jsm/loaders/FBXLoader.j
 
 import BaseLoader from "./BaseLoader";
 
-// 1x1 pink placeholder pixel as data URL (fallback for missing textures)
-const FALLBACK_TEXTURE_DATA_URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==";
-
 /**
  * FBXLoader
  *
@@ -27,7 +24,7 @@ class FBXLoader extends BaseLoader {
         this.loader = new FBXLoaderImpl(this.loadingManager);
     }
 
-    load(url, options) {
+    load(url) {
         return new Promise(resolve => {
             this.require("FBXLoader").then(() => {
                 console.log(`[FBXLoader] Loading FBX from: ${url}`);

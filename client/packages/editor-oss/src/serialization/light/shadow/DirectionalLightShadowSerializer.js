@@ -1,6 +1,5 @@
 import BaseLightShadowSerializer from "./BaseLightShadowSerializer";
 import LightShadowSerializer from "./LightShadowSerializer";
-import BaseSerializer from "@web-shared/serialization/BaseSerializer";
 
 /**
  * DirectionalLightShadowSerializer

@@ -100,7 +100,6 @@ type Props = {
 
 export const StyledRange = ({value, setValue, setValueComplete, min = 0, max = 1, step = 0.01}: Props) => {
     const [localValue, setLocalValue] = useState(value);
-    const sliderValue = value;
     const isDraggingRef = useRef(false);
 
     // Update local value when external value changes

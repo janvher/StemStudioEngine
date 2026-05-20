@@ -126,7 +126,6 @@ class BehaviorThrottler implements IBehaviorThrottler {
         behavior: Behavior,
         camera: THREE.Camera,
         frameCount: number,
-        deltaTime: number,
     ): IThrottleDecision {
         this.performanceMonitor.recordCheck();
 

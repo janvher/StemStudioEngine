@@ -12,7 +12,7 @@ class TestLambda extends LambdaBase {
     public updateCalled = false;
     public processedObjects: Object3D[] = [];
 
-    update(deltaTime?: number): void {
+    update(_deltaTime?: number): void {
         this.updateCalled = true;
         for (const [obj] of this._registeredObjects) {
             this.processedObjects.push(obj);

@@ -27,7 +27,7 @@ const PREVIEW_GAME_DATA: InGameData = {
     isWinner: false,
     timeRemaining: "00:05:30",
     playerWeapons: [],
-    pickedWeaponOrItem: null,
+    pickedWeaponOrItem: undefined,
 };
 
 export class UIKitHUDPreview {
@@ -138,7 +138,7 @@ export class UIKitHUDPreview {
         if (!this.fullscreen) return;
         // Dispose current screen
         if (this.activeScreen) {
-            this.fullscreen.remove((this.activeScreen as any).container);
+            this.fullscreen.remove(this.activeScreen.container);
             this.activeScreen.dispose();
             this.activeScreen = undefined;
         }

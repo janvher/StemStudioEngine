@@ -62,9 +62,9 @@ const originalConsole = {
 };
 
 // Empty function for disabled log levels
-const noop = (...args: any[]): void => {};
+const noop = (): void => {};
 
-export type LogListener = (level: LogLevel, args: any[]) => void;
+export type LogListener = (level: LogLevel, args: unknown[]) => void;
 
 // Create the Logger class
 export class Logger {
@@ -73,19 +73,19 @@ export class Logger {
     private listeners: LogListener[] = [];
 
     // Pre-bound log functions based on configuration
-    public readonly log: (...args: any[]) => void;
-    public readonly debug: (...args: any[]) => void;
-    public readonly info: (...args: any[]) => void;
-    public readonly warn: (...args: any[]) => void;
-    public readonly error: (...args: any[]) => void;
-    public readonly prettyPrint: (object: any) => void;
-    public readonly table: (...args: any[]) => void;
-    public readonly group: (...args: any[]) => void;
-    public readonly groupCollapsed: (...args: any[]) => void;
+    public readonly log: (...args: unknown[]) => void;
+    public readonly debug: (...args: unknown[]) => void;
+    public readonly info: (...args: unknown[]) => void;
+    public readonly warn: (...args: unknown[]) => void;
+    public readonly error: (...args: unknown[]) => void;
+    public readonly prettyPrint: (object: unknown) => void;
+    public readonly table: (...args: unknown[]) => void;
+    public readonly group: (...args: unknown[]) => void;
+    public readonly groupCollapsed: (...args: unknown[]) => void;
     public readonly groupEnd: () => void;
-    public readonly time: (...args: any[]) => void;
-    public readonly timeEnd: (...args: any[]) => void;
-    public readonly timeLog: (...args: any[]) => void;
+    public readonly time: (...args: unknown[]) => void;
+    public readonly timeEnd: (...args: unknown[]) => void;
+    public readonly timeLog: (...args: unknown[]) => void;
 
     constructor(config: LoggerConfig | AdvancedLoggerConfig) {
         // Handle backwards compatibility
@@ -104,7 +104,7 @@ export class Logger {
         this.warn = this.createLogFunction(LogLevel.WARN, originalConsole.warn);
         this.error = this.createLogFunction(LogLevel.ERROR, originalConsole.error);
         this.prettyPrint = this.shouldLog(LogLevel.DEBUG)
-            ? (object: any) => originalConsole.log(JSON.stringify(object, null, 2))
+            ? (object: unknown) => originalConsole.log(JSON.stringify(object, null, 2))
             : noop;
         this.table = this.createLogFunction(LogLevel.DEBUG, originalConsole.table);
         this.group = this.createLogFunction(LogLevel.DEBUG, originalConsole.group);
@@ -124,7 +124,7 @@ export class Logger {
     }
 
     private createLogFunction(level: LogLevel, originalMethod: (...args: any[]) => void) {
-        return (...args: any[]) => {
+        return (...args: unknown[]) => {
             if (this.shouldLog(level)) {
                 originalMethod(...args);
                 this.notifyListeners(level, args);
@@ -132,7 +132,7 @@ export class Logger {
         };
     }
 
-    public notifyListeners(level: LogLevel, args: any[]) {
+    public notifyListeners(level: LogLevel, args: unknown[]) {
         this.listeners.forEach(listener => listener(level, args));
     }
 

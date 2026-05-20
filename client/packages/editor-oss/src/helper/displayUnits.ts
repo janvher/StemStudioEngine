@@ -7,7 +7,7 @@ interface UnitsSettings {
 }
 
 const readUnitsSettings = (): UnitsSettings => {
-    const app = (global as any).app;
+    const app = global.app;
     const settings = app?.editor?.scene?.userData?.units as UnitsSettings | undefined;
     return settings || {};
 };

@@ -10,10 +10,7 @@
  * - soundVolume: Number - Volume level for the sound.
  * - fps_player: global - variable uses control object for player set when FPS controls are enabled
  */
-import React from "react";
 import * as THREE from "three";
-
-import global from "@web-shared/global";
 
 class AudioCollisionBehavior {
     /**

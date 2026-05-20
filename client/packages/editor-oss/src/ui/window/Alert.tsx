@@ -15,7 +15,7 @@ type Props = {
     mask?: boolean;
     okText?: string;
     onOK?: (event?: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
-    onClose?: (event?: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
+    onClose?: (event?: Event | React.SyntheticEvent) => void;
 };
 
 const Alert = forwardRef<HTMLDivElement, Props>(
@@ -24,11 +24,11 @@ const Alert = forwardRef<HTMLDivElement, Props>(
         ref,
     ) => {
         const handleOK = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-            onOK && onOK(event);
+            if (onOK) onOK(event);
         };
 
-        const handleClose = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-            onClose && onClose(event);
+        const handleClose = (event: Event | React.SyntheticEvent) => {
+            if (onClose) onClose(event);
         };
 
         return (

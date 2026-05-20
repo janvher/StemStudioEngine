@@ -18,7 +18,7 @@ import {backendUrlFromPath} from "../utils/UrlUtils";
  */
 async function upload(
     url: string,
-    callback: (response: any) => void,
+    callback: (response: unknown) => void,
     size?: {minWidth: number; minHeight: number},
     accept?: string,
     sceneID?: string,
@@ -66,7 +66,7 @@ async function upload(
                     };
                     await checkImageDimensions();
                 }
-                const data: any = {file};
+                const data: Record<string, unknown> = {file};
                 if (sceneID) {
                     data.SceneID = sceneID;
                 }
@@ -84,8 +84,8 @@ async function upload(
                 } else {
                     showToast({type: "error", body: obj.Msg});
                 }
-            } catch (error: any) {
-                showToast({type: "error", body: error.message || "Request failed."});
+            } catch (error) {
+                showToast({type: "error", body: (error instanceof Error && error.message) || "Request failed."});
             }
         } else {
             callback(inputEvent.target.files?.[0]);
@@ -105,12 +105,12 @@ async function upload(
 async function uploadSingleFile(
     file: File,
     url: string,
-    callback: (response: any) => void,
+    callback: (response: unknown) => void,
     sceneID?: string | null,
     libraryIDToAdd?: string,
 ): Promise<void> {
     try {
-        const data: any = {file};
+        const data: Record<string, unknown> = {file};
         if (sceneID) data.SceneID = sceneID;
         if (libraryIDToAdd) data.LibraryIDToAdd = libraryIDToAdd;
 
@@ -126,8 +126,8 @@ async function uploadSingleFile(
         } else {
             showToast({type: "error", body: obj.Msg});
         }
-    } catch (error: any) {
-        showToast({type: "error", body: error.message || "Upload failed."});
+    } catch (error) {
+        showToast({type: "error", body: (error instanceof Error && error.message) || "Upload failed."});
     }
 }
 
@@ -148,8 +148,8 @@ async function batchUploadFiles(
     sceneID?: string | null,
     libraryIDToAdd?: string,
     maxConcurrency: number = 4,
-): Promise<{successful: any[], failed: {file: File, error: Error}[]}> {
-    const results: any[] = [];
+): Promise<{successful: unknown[], failed: {file: File, error: Error}[]}> {
+    const results: unknown[] = [];
     const errors: {file: File, error: Error}[] = [];
     const batches: File[][] = [];
 
@@ -167,7 +167,7 @@ async function batchUploadFiles(
     for (const batch of batches) {
         const batchPromises = batch.map(async (file) => {
             try {
-                const data: any = {file};
+                const data: Record<string, unknown> = {file};
                 if (sceneID) data.SceneID = sceneID;
                 if (libraryIDToAdd) data.LibraryIDToAdd = libraryIDToAdd;
 
@@ -184,8 +184,8 @@ async function batchUploadFiles(
                 } else {
                     throw new Error(obj.Msg || 'Upload failed');
                 }
-            } catch (error: any) {
-                errors.push({file, error});
+            } catch (error) {
+                errors.push({file, error: error instanceof Error ? error : new Error(String(error))});
                 throw error;
             } finally {
                 completed++;
@@ -217,8 +217,8 @@ async function batchUploadModels(
     sceneID?: string | null,
     libraryIDToAdd?: string,
     maxConcurrency: number = 3,
-): Promise<{successful: any[], failed: {file: File, error: Error}[]}> {
-    const results: any[] = [];
+): Promise<{successful: unknown[], failed: {file: File, error: Error}[]}> {
+    const results: unknown[] = [];
     const errors: {file: File, error: Error}[] = [];
 
     // Ensure maxConcurrency is at least 1 to prevent infinite loops
@@ -243,7 +243,7 @@ async function batchUploadModels(
     for (const batch of batches) {
         const batchPromises = batch.map(async ({file, thumbnailUrl}) => {
             try {
-                const data: any = {
+                const data: Record<string, unknown> = {
                     file,
                     Image: thumbnailUrl,
                 };
@@ -268,8 +268,8 @@ async function batchUploadModels(
                 } else {
                     throw new Error(obj.Msg || 'Model upload failed');
                 }
-            } catch (error: any) {
-                errors.push({file, error});
+            } catch (error) {
+                errors.push({file, error: error instanceof Error ? error : new Error(String(error))});
                 throw error;
             } finally {
                 completed++;

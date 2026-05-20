@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { type MouseEvent as ReactMouseEvent, useEffect, useState } from "react";
 import styled from "styled-components";
 import { toast } from "toastywave";
 
@@ -18,7 +18,7 @@ export const ObjectBehaviorsTab = () => {
     const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
     const [isBehaviorsListDisplayed, setIsBehaviorsListDisplayed] = useState(false);
 
-    const handleRightClick = (event: any) => {
+    const handleRightClick = (event: ReactMouseEvent) => {
         event.preventDefault();
         event.stopPropagation();
 

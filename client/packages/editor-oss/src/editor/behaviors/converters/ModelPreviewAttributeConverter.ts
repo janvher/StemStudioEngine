@@ -1,10 +1,9 @@
-import {BehaviorAttributeData, BehaviorAttribute, ModelPreviewAttribute} from "../BehaviorAttributes";
+import {BehaviorAttributeData, BehaviorAttribute} from "../BehaviorAttributes";
 import BehaviorAttributeType from "../BehaviorAttributeType";
-import {BehaviorContext} from "../BehaviorContextProvider";
 import AttributeConverter from "./AttributeConverter";
 
 class ModelPreviewAttributeConverter implements AttributeConverter {
-    convertAttribute(attributeData: BehaviorAttributeData, behaviorContext: BehaviorContext): BehaviorAttribute {
+    convertAttribute(attributeData: BehaviorAttributeData): BehaviorAttribute {
         return {
             name: attributeData.name,
             type: BehaviorAttributeType.ModelPreview,

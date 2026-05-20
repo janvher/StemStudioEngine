@@ -4,13 +4,8 @@ import {
     isAssetId,
     resolveAssetUrl,
     getImageDownloadUrl,
-    getVideoDownloadUrl,
     getTextureDownloadUrl,
-    getAnimationDownloadUrl,
-    getAvatarDownloadUrl,
     getMeshDownloadUrl,
-    getAudioDownloadUrl,
-    AssetDownloadResult,
 } from './AssetDownloadUtils';
 
 // Mock the API functions

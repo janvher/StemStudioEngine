@@ -7,7 +7,7 @@ import global from "@stem/editor-oss/global";
 import { SerializedObject3D } from '../schema/Object3DSchema';
 
 export const applyToObject3d = (object: Object3D, json: SerializedObject3D, context?: AssetResolutionContext | null) => {
-    (object as any).parentUuid = json.parent;
+    (object as Object3D & { parentUuid?: string }).parentUuid = json.parent;
 
     if (json.uuid) {
         object.uuid = json.uuid;
@@ -38,7 +38,7 @@ export const applyToObject3d = (object: Object3D, json: SerializedObject3D, cont
         const castShadow = json.castShadow;
         object.castShadow = castShadow;
         object.traverse((child) => {
-            if ((child as any).isMesh) {
+            if ((child as Object3D & { isMesh?: boolean }).isMesh) {
                 child.castShadow = castShadow;
             }
         });
@@ -49,7 +49,7 @@ export const applyToObject3d = (object: Object3D, json: SerializedObject3D, cont
         const receiveShadow = json.receiveShadow;
         object.receiveShadow = receiveShadow;
         object.traverse((child) => {
-            if ((child as any).isMesh) {
+            if ((child as Object3D & { isMesh?: boolean }).isMesh) {
                 child.receiveShadow = receiveShadow;
             }
         });

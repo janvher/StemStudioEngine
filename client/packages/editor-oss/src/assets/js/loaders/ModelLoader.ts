@@ -1,4 +1,4 @@
-import {AudioListener, BufferAttribute, Camera, Object3D} from "three";
+import {AudioListener, BufferAttribute, Camera, Mesh, Object3D} from "three";
 import {DRACOLoader} from "three/examples/jsm/loaders/DRACOLoader.js";
 import {Renderer} from "three/webgpu";
 
@@ -286,7 +286,7 @@ class ModelLoader extends BaseLoader {
 
             newLoader
                 .load(url, options, environment)
-                .then((obj: any) => {
+                .then((obj: Object3D | null) => {
                     if (!obj || !obj.userData) {
                         resolve(null);
                         return;
@@ -330,12 +330,10 @@ class ModelLoader extends BaseLoader {
     private normalizeGeometryAttributes(child: Object3D) {
         // CHECK: if we really need this method
 
-        if ((child as any).isMesh && (child as any).geometry) {
-            const geometry = (child as any).geometry;
+        if ((child as Mesh).isMesh && (child as Mesh).geometry) {
+            const geometry = (child as Mesh).geometry;
 
             geometry.computeBoundingBox();
-
-            const attributes = geometry.attributes;
 
             // if (attributes.skinIndex && !(attributes.skinIndex.array instanceof Float32Array)) {
             //     geometry.setAttribute(

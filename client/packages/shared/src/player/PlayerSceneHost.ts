@@ -153,7 +153,7 @@ export class PlayerSceneHost {
 
         scene.traverse(object => {
             object.updateMatrixWorld();
-            (object as any).target?.updateMatrixWorld?.();
+            (object as {target?: {updateMatrixWorld?: () => void}}).target?.updateMatrixWorld?.();
         });
     }
 

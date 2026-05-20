@@ -265,18 +265,11 @@ class TextureSerializer extends BaseSerializer {
                 width: image.width,
                 height: image.height,
             };
-        } else if (image instanceof HTMLVideoElement) {
-            return {
-                tagName: "video",
-                src: this.imageToRelativePath(image.currentSrc || image.src || ""),
-                width: image.videoWidth,
-                height: image.videoHeight,
-            };
         }
         return null;
     }
 
-    deserializeImage(json, server) {
+    deserializeImage(json) {
         if (!json) return null;
         //  VideoTexture
         if (typeof json === "object" && json.tagName === "video") {

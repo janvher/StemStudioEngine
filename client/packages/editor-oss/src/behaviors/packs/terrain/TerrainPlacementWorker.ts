@@ -2,7 +2,6 @@
 /// <reference lib="webworker" />
 
 import { expose, transfer } from "comlink";
-// @ts-ignore noisejs does not ship TypeScript declarations
 import { Noise } from "noisejs";
 import seedrandom from "seedrandom";
 import { MathUtils, Matrix4, Quaternion, Vector3 } from "three";

@@ -12,7 +12,7 @@ class AiWorldControl extends PlayerComponent {
     }
 
     _createControl(scene, camera, renderer, sceneId, player) {
-        return new Promise((resolve, reject) => {
+        return new Promise(resolve => {
             this.control = AIWorldController.getInstance(player);
             resolve();
         });

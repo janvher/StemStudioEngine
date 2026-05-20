@@ -56,7 +56,7 @@ class TweenAnimationBehavior extends BehaviorBase {
         this.removeAnimation();
     }
 
-    update(deltaTime: number) {
+    update() {
         if (this.isStarted) {
             this.tweenGroup.update();
         }
@@ -171,7 +171,7 @@ class TweenAnimationBehavior extends BehaviorBase {
     private createTween(
         isReversed: boolean,
         duration: number,
-        easingFunction: any,
+        easingFunction: (amount: number) => number,
         updateFunction: (progress: number) => void,
     ): Tween {
         const tweenTarget = {progress: isReversed ? 1 : 0};
@@ -260,7 +260,7 @@ class TweenAnimationBehavior extends BehaviorBase {
     }
 
     private getEasingFunction(easingName: string) {
-        const easingMap: Record<string, any> = {
+        const easingMap: Record<string, (amount: number) => number> = {
             linear: Easing.Linear.None,
             quadIn: Easing.Quadratic.In,
             quadOut: Easing.Quadratic.Out,

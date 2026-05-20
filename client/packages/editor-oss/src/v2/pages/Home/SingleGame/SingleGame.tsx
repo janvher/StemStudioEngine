@@ -46,7 +46,7 @@ export const SingleGame = ({ item, heroSection }: Props) => {
     useEffect(() => {
         const getOwner = async () => {
             const response = await getUser(item.UserID);
-            response && setGameOwner(response);
+            if (response) setGameOwner(response);
         };
         getOwner();
     }, []);

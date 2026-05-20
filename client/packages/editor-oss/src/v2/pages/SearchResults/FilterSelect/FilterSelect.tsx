@@ -20,14 +20,14 @@ interface Props {
 }
 
 export const FilterSelect = ({ results, setResults }: Props) => {
-    const [searchSelectedFilter, setSearchSelectedFilter] = useState(FILTERS[0]!.value);
+    const [searchSelectedFilter] = useState(FILTERS[0]!.value);
 
     const sortByNewest = () => {
         const sortedResults = [...results].sort(
             (a, b) => new Date(b.PublishedTime).getTime() - new Date(a.PublishedTime).getTime(),
         );
         setResults(sortedResults);
-        sortedResults.forEach(element => { });
+        sortedResults.forEach(() => { });
     };
 
     const sortByRelevance = () => {

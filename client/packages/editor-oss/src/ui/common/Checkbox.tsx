@@ -9,7 +9,7 @@ interface Props {
     customId: string;
     readOnly?: boolean;
     invisible?: boolean;
-    refProp?: any;
+    refProp?: React.Ref<HTMLInputElement>;
     customBG?: string;
     customStyle?: React.CSSProperties;
 }

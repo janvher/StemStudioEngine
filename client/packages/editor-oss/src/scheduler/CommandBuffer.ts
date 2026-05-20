@@ -5,7 +5,7 @@
  */
 
 export type DeferredCommand =
-    | { type: "add"; target: string; system: string; data?: any }
+    | { type: "add"; target: string; system: string; data?: unknown }
     | { type: "remove"; target: string; system: string }
     | { type: "custom"; callback: () => void };
 

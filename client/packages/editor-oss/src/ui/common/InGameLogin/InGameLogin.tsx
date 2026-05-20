@@ -8,7 +8,6 @@ import {
     LoginContainer,
     LoginForm,
     LoginHeader,
-    SubmitBtn,
     LoginButton,
     InputWrapper,
     ReminderMessage,
@@ -61,17 +60,6 @@ export const InGameLogin = ({ isReminder, cleanupPopup, setIsGuest }: Props) => 
         return `guest${randomNumber}`;
     };
 
-    const guestLogin = () => {
-        const userData: GameLoginData = {
-            username: generateGuestUsername(),
-            email: null,
-            provider: "guest",
-            token: null,
-            isGuest: true,
-            avatarUrl: "",
-        };
-        closePopup(userData);
-    };
 
     const appleLogin = async () => {
         const authUser = await getAuthProvider().signInWithOAuth("apple.com", ["name", "email"]);

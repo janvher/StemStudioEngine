@@ -24,7 +24,7 @@ export class BehaviorWorkerPool {
     private label: string;
     private count: number;
     private busy: Set<number> = new Set();
-    private queue: Array<{type: string; data: any}> = [];
+    private queue: Array<{type: string; data: unknown}> = [];
 
     constructor(behavior: Behavior, label: string, options: {count: number}) {
         this.behavior = behavior;
@@ -57,7 +57,7 @@ export class BehaviorWorkerPool {
                 return false;
             }
             const bridgeIndex = this.bridges.length;
-            bridge.onRawMessage = (type: string, data: any) => {
+            bridge.onRawMessage = (type: string, data: unknown) => {
                 // Free this bridge BEFORE forwarding to user code, so a follow-up
                 // `sendMessage` from inside `onWorkerMessage` can dispatch to it.
                 this.busy.delete(bridgeIndex);
@@ -73,7 +73,7 @@ export class BehaviorWorkerPool {
         return true;
     }
 
-    sendInit(initData: any): void {
+    sendInit(initData: unknown): void {
         for (const b of this.bridges) b.sendInit(initData);
     }
 
@@ -89,7 +89,7 @@ export class BehaviorWorkerPool {
      * Enqueue a job for the pool. Dispatched immediately to a free bridge,
      * or queued if all bridges are busy. Drains in FIFO order.
      */
-    sendMessage(type: string, data: any): void {
+    sendMessage(type: string, data: unknown): void {
         const idx = this.findFree();
         if (idx === -1) {
             this.queue.push({type, data});

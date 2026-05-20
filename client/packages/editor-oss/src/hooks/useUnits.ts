@@ -30,7 +30,7 @@ export const useUnits = () => {
     useEffect(() => {
         if (!app) return;
 
-        const handleUnitsChanged = (_editor: any, settings: UnitsSettings) => {
+        const handleUnitsChanged = (_editor: unknown, settings: UnitsSettings) => {
             if (settings) {
                 console.log('[useUnits] Units settings changed:', settings);
                 // Ensure we preserve all properties when updating

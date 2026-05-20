@@ -5,7 +5,6 @@ import {InputSymbol} from "../../../common/InputSymbol";
 import {Wrapper, Box, BoxInputs, InputWrapper} from "../../../common/MovementSection/MovementSection.style";
 import {NumericInput} from "../../../common/NumericInput";
 import {BouncinessPreset, CollisionType, PhysicsConfig} from "../../../types/physics";
-import {AxisLockRow} from "../../common/AxisLockRow";
 import {NumericInputRow} from "../../common/NumericInputRow";
 import {SelectRow} from "../../common/SelectRow";
 import {PanelSectionTitleSecondary} from "../../RightPanel.style";
@@ -28,8 +27,6 @@ export const PhysicsNumericInput = ({
     isLocked,
     bouncinessPresetOptions,
     handleBouncinessPresetChange,
-    collisionMaterialOptions,
-    handleCollisionMaterialChange,
     section,
 }: Props) => {
     const app = global.app as EngineRuntime;
@@ -52,11 +49,6 @@ export const PhysicsNumericInput = ({
 
     const isCustomPreset = physics.bounciness_preset === BouncinessPreset.CUSTOM;
 
-    // Always shown regardless of preset
-    const alwaysVisibleInputs: {label: string; name: keyof PhysicsConfig}[] = [
-        {label: "Rolling Friction", name: "rollingFriction"},
-        {label: "Spinning Friction", name: "spinningFriction"},
-    ];
 
     // Only shown when Custom preset is selected
     const customOnlyInputs: {label: string; name: keyof PhysicsConfig}[] = [

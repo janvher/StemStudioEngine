@@ -106,7 +106,7 @@ export class VRMExpressionController {
         }
     };
 
-    update = (clock: THREE.Clock, passedDelta: number) => {
+    update = () => {
         if (!this.game || !this.game.scene || !this.gameStarted) {
             return;
         }

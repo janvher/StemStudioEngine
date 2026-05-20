@@ -36,7 +36,7 @@ import {PhysicsEngineType} from "../../../../../../physics/common/types";
 import {showToast} from "@stem/editor-oss/showToast";
 import {HUDRendererMode} from "@stem/editor-oss/types/GameSettingsTypes";
 import Ajax from "@stem/editor-oss/utils/Ajax";
-import {DEFAULT_ORIENTATION_POLICY, type OrientationPolicy} from "@stem/editor-oss/utils/orientationPolicy";
+import {DEFAULT_ORIENTATION_POLICY} from "@stem/editor-oss/utils/orientationPolicy";
 import {backendUrlFromPath} from "@stem/editor-oss/utils/UrlUtils";
 import {DEFAULT_CAD_TOOLS_SETTINGS, setCADToolsSettings} from "../../../../../cad/settings";
 import {Tooltip} from "../../../common";

@@ -6,7 +6,6 @@ class BehaviorConfigLoader implements IBehaviorConfigLoader {
     constructor() {}
 
     async loadConfigs(): Promise<BehaviorConfig[]> {
-        // @ts-ignore - vite specific
         const modules = import.meta.glob('../../behaviors/packs/**/behavior.json');
         const configs: BehaviorConfig[] = [];
 

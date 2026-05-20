@@ -175,7 +175,7 @@ export class MemoryMonitor {
 
     private getMemoryInfo(): MemoryInfo | null {
         if ("memory" in performance) {
-            return (performance as any).memory as MemoryInfo;
+            return (performance as Performance & { memory: MemoryInfo }).memory;
         }
         return null;
     }

@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useReducer} from "react";
+import {useEffect, useReducer} from "react";
 
 import EngineRuntime from "../EngineRuntime";
 import Editor from "../editor/Editor";

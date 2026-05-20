@@ -7,6 +7,7 @@ import {AttachBehaviorCommand} from "@stem/editor-oss/command/behaviors/AttachBe
 import {DetachBehaviorCommand} from "@stem/editor-oss/command/behaviors/DetachBehaviorCommand";
 import {refreshAsset, refreshEditorAssets} from "@stem/editor-oss/editor/asset-management/hooks/assets";
 import {BehaviorConfig} from "@stem/editor-oss/editor/behaviors/BehaviorConfig";
+import type {BehaviorThrottleConfig} from "@stem/editor-oss/behaviors/Behavior";
 import {updateLambdaRegistries} from "@stem/editor-oss/editor/lambdas/util";
 import {refreshDependentScriptsForScript} from "@stem/editor-oss/editor/scripts/util";
 import type EngineRuntime from "@stem/editor-oss/EngineRuntime";
@@ -23,6 +24,45 @@ const behaviorsToOmit = ["character", "csm", "terrain"];
 type SceneChild = {
     uuid: string;
     children: SceneChild[];
+};
+
+/** Per-instance behavior data as stored on object.userData.behaviors. */
+type SerializedBehaviorData = {
+    uuid?: string;
+    id?: string;
+    attributesData?: Record<string, unknown>;
+    throttleConfig?: BehaviorThrottleConfig;
+};
+
+/**
+ * A serialized scene object as received over the multiplayer wire. It is the
+ * JSON form of a THREE.Object3D plus collaboration bookkeeping fields.
+ */
+type Vec3Like = {x: number; y: number; z: number};
+type QuatLike = {x: number; y: number; z: number; w: number};
+
+type SnapshotObject = {
+    uuid: string;
+    userId?: string;
+    parentUuid?: string;
+    parent?: string;
+    name?: string;
+    type?: string;
+    geometry?: {type?: string};
+    metadata?: {generator?: string};
+    position?: Vec3Like;
+    quaternion?: QuatLike;
+    scale?: Vec3Like;
+    userData?: Record<string, unknown>;
+    [key: string]: unknown;
+};
+
+/** Lambda instance entry stored on scene.userData lambda instance arrays. */
+type SceneLambdaInstance = {
+    instanceId?: string;
+    lambdaId?: string;
+    enabled?: boolean;
+    attributes?: Record<string, unknown>;
 };
 
 type LambdaSyncPayload = {
@@ -120,7 +160,7 @@ export class CollaborationClient {
         refreshDependentScriptsForScript(assetId).catch(console.error);
     }
 
-    onSnapshotObjectAdd(obj: any): void {
+    onSnapshotObjectAdd(obj: SnapshotObject): void {
         if (!obj || obj?.userId === this.engine.userId || obj?.uuid === this.engine.scene.uuid) {
             return;
         }
@@ -143,7 +183,7 @@ export class CollaborationClient {
         });
     }
 
-    private async processObjectAdd(obj: any): Promise<void> {
+    private async processObjectAdd(obj: SnapshotObject): Promise<void> {
         if (this.engine.scene.getObjectByProperty("uuid", obj.uuid)) {
             return;
         }
@@ -164,7 +204,7 @@ export class CollaborationClient {
         this.engine.call("sceneGraphChanged", this, this.engine.scene);
     }
 
-    onSnapshotObjectRemove(obj: any): void {
+    onSnapshotObjectRemove(obj: SnapshotObject): void {
         if (!obj || obj?.userId === this.engine.userId || obj?.uuid === this.engine.scene.uuid) {
             return;
         }
@@ -182,7 +222,7 @@ export class CollaborationClient {
     }
 
     // eslint-disable-next-line @typescript-eslint/require-await
-    private async processObjectRemove(obj: any): Promise<void> {
+    private async processObjectRemove(obj: SnapshotObject): Promise<void> {
         const sceneObject = this.engine.scene.getObjectByProperty("uuid", obj.uuid);
         if (sceneObject) {
             this.removeObjectBehaviors(sceneObject, sceneObject.userData?.behaviors || []);
@@ -203,7 +243,7 @@ export class CollaborationClient {
         this.engine.call("sceneGraphChanged", this, this.engine.scene);
     }
 
-    onSnapshotObjectUpdate(obj: any): void {
+    onSnapshotObjectUpdate(obj: SnapshotObject): void {
         if (!obj || !obj.uuid) {
             console.log("[CollaborationClient] onSnapshotObjectUpdate: obj or uuid is null");
             return;
@@ -235,7 +275,7 @@ export class CollaborationClient {
         });
     }
 
-    private async processObjectUpdate(obj: any): Promise<void> {
+    private async processObjectUpdate(obj: SnapshotObject): Promise<void> {
         const isSelected = this.selectedObjectUUID === obj.uuid;
         const oldObject = this.engine.scene.getObjectByProperty("uuid", obj.uuid) || null;
 
@@ -289,13 +329,13 @@ export class CollaborationClient {
                 const oldBehaviors = oldObject.userData?.behaviors || [];
                 const newBehaviors = object.userData?.behaviors || [];
                 const removedBehaviors = oldBehaviors.filter(
-                    (b: any) => !newBehaviors.find((nb: any) => nb.uuid === b.uuid),
+                    (b: {uuid: string}) => !newBehaviors.find((nb: {uuid: string}) => nb.uuid === b.uuid),
                 );
-                const updatedBehaviors = newBehaviors.filter((b: any) =>
-                    oldBehaviors.find((ob: any) => ob.uuid === b.uuid),
+                const updatedBehaviors = newBehaviors.filter((b: {uuid: string}) =>
+                    oldBehaviors.find((ob: {uuid: string}) => ob.uuid === b.uuid),
                 );
                 const addedBehaviors = newBehaviors.filter(
-                    (b: any) => !oldBehaviors.find((ob: any) => ob.uuid === b.uuid),
+                    (b: {uuid: string}) => !oldBehaviors.find((ob: {uuid: string}) => ob.uuid === b.uuid),
                 );
 
                 this.removeObjectBehaviors(object, removedBehaviors);
@@ -490,7 +530,7 @@ export class CollaborationClient {
 
         const objArr = this.engine.editor?.serializeObject(object, !!object.userData?.Server);
 
-        objArr?.forEach((obj: any) => {
+        objArr?.forEach(obj => {
             if (obj.uuid) {
                 obj.userId = this.engine.userId;
                 this.workerHandler?.postMessage({event: SNAPSHOT_EVENTS.ADD.OBJECT, object: obj});
@@ -545,10 +585,10 @@ export class CollaborationClient {
         let objArr = this.engine.editor?.serializeObject(object, !!object.userData?.Server);
 
         if (isPrefab(object) && isPrefabUnlocked(object)) {
-            objArr = objArr?.filter((o: any) => o.uuid === object.uuid) || [];
+            objArr = objArr?.filter(o => o.uuid === object.uuid) || [];
         }
 
-        objArr?.forEach((obj: any) => {
+        objArr?.forEach(obj => {
             if (obj.uuid) {
                 obj.userId = this.engine.userId;
 
@@ -687,7 +727,7 @@ export class CollaborationClient {
         this.workerHandler?.postMessage({event: SNAPSHOT_EVENTS.SYNC.CHECK_REQUEST});
     }
 
-    public handleSyncCheckResponse(objectsData: any[]): void {
+    public handleSyncCheckResponse(objectsData: SnapshotObject[]): void {
         if (!objectsData || !Array.isArray(objectsData)) {
             console.warn("[CollaborationClient] Invalid sync check data received");
             return;
@@ -727,8 +767,9 @@ export class CollaborationClient {
         }*/
 
         // Process objects from room state
-        objectsData.forEach((roomObject: any) => {
-            if (NoDeserializeSerializers.includes(roomObject?.metadata?.generator)) {
+        objectsData.forEach((roomObject: SnapshotObject) => {
+            const generator = roomObject?.metadata?.generator;
+            if (generator && NoDeserializeSerializers.includes(generator)) {
                 return; // Skip objects with non-deserializable serializers
             }
             const sceneObject = this.engine.scene.getObjectByProperty("uuid", roomObject.uuid);
@@ -757,7 +798,7 @@ export class CollaborationClient {
         );
     }
 
-    private hasObjectDesync(sceneObject: Object3D, roomObject: any): boolean {
+    private hasObjectDesync(sceneObject: Object3D, roomObject: SnapshotObject): boolean {
         const reasons: string[] = [];
 
         if (roomObject.position && this.hasPositionDesync(sceneObject, roomObject.position)) {
@@ -828,9 +869,9 @@ export class CollaborationClient {
         "lastSaveTime",
     ]);
 
-    private static filterEphemeralUserData(data: any): Record<string, any> {
+    private static filterEphemeralUserData(data: Record<string, unknown>): Record<string, unknown> {
         if (!data || typeof data !== "object") return data;
-        const filtered: Record<string, any> = {};
+        const filtered: Record<string, unknown> = {};
         for (const key of Object.keys(data)) {
             if (!CollaborationClient.EPHEMERAL_USER_DATA_KEYS.has(key)) {
                 filtered[key] = data[key];
@@ -839,7 +880,7 @@ export class CollaborationClient {
         return filtered;
     }
 
-    private getUserDataDiffKeys(object: Object3D, roomUserData: any): string[] {
+    private getUserDataDiffKeys(object: Object3D, roomUserData: Record<string, unknown>): string[] {
         const localFiltered = CollaborationClient.filterEphemeralUserData(object.userData);
         const roomFiltered = CollaborationClient.filterEphemeralUserData(roomUserData);
         const diffKeys: string[] = [];
@@ -852,7 +893,7 @@ export class CollaborationClient {
         return diffKeys;
     }
 
-    private hasUserDataDesync(object: Object3D, roomUserData: any): boolean {
+    private hasUserDataDesync(object: Object3D, roomUserData: Record<string, unknown>): boolean {
         return this.getUserDataDiffKeys(object, roomUserData).length > 0;
     }
 
@@ -992,12 +1033,12 @@ export class CollaborationClient {
         });
     }
 
-    private getSceneLambdaInstanceAttributes(instanceId: string): Record<string, any> {
+    private getSceneLambdaInstanceAttributes(instanceId: string): Record<string, unknown> {
         const sceneInstances = [
-            ...((this.engine.scene.userData?.projectLambdaInstances || []) as any[]),
-            ...((this.engine.scene.userData?.lambdaInstances || []) as any[]),
+            ...((this.engine.scene.userData?.projectLambdaInstances || []) as SceneLambdaInstance[]),
+            ...((this.engine.scene.userData?.lambdaInstances || []) as SceneLambdaInstance[]),
         ];
-        const instance = sceneInstances.find((entry: any) => entry?.instanceId === instanceId);
+        const instance = sceneInstances.find(entry => entry?.instanceId === instanceId);
         return {...(instance?.attributes || {})};
     }
 
@@ -1024,12 +1065,13 @@ export class CollaborationClient {
 
     private async reconcileLambdaRuntime(lambdaId?: string): Promise<void> {
         for (const instanceData of [
-            ...((this.engine.scene.userData?.projectLambdaInstances || []) as any[]),
-            ...((this.engine.scene.userData?.lambdaInstances || []) as any[]),
+            ...((this.engine.scene.userData?.projectLambdaInstances || []) as SceneLambdaInstance[]),
+            ...((this.engine.scene.userData?.lambdaInstances || []) as SceneLambdaInstance[]),
         ]) {
             if (lambdaId && instanceData?.lambdaId !== lambdaId) continue;
             const lambdaManager = this.engine.game?.lambdaManager;
-            if (!lambdaManager || !instanceData?.enabled || !instanceData?.instanceId) continue;
+            if (!lambdaManager || !instanceData?.enabled || !instanceData?.instanceId || !instanceData?.lambdaId)
+                continue;
 
             if (!lambdaManager.hasLambdaClass(instanceData.lambdaId)) {
                 const config = this.engine.editor?.lambdaConfigRegistry?.getConfig(instanceData.lambdaId) ?? undefined;
@@ -1065,18 +1107,18 @@ export class CollaborationClient {
         }
     }
 
-    private removeObjectBehaviors(object: Object3D, behaviors: any[]): void {
+    private removeObjectBehaviors(object: Object3D, behaviors: SerializedBehaviorData[]): void {
         if (!object || !this.engine.isPlaying) return;
         if (behaviors && behaviors.length > 0) {
-            behaviors.forEach((behaviorData: any) => {
-                if (behaviorData.uuid && !behaviorsToOmit.includes(behaviorData.id)) {
+            behaviors.forEach((behaviorData: SerializedBehaviorData) => {
+                if (behaviorData.uuid && (!behaviorData.id || !behaviorsToOmit.includes(behaviorData.id))) {
                     new DetachBehaviorCommand(object, behaviorData.uuid).execute();
                 }
             });
         }
     }
 
-    private async addObjectBehaviors(object: Object3D, behaviors: any[]): Promise<void> {
+    private async addObjectBehaviors(object: Object3D, behaviors: SerializedBehaviorData[]): Promise<void> {
         if (!object || !this.engine.isPlaying) return;
         if (behaviors && behaviors.length > 0) {
             for (const behaviorData of behaviors) {
@@ -1093,11 +1135,11 @@ export class CollaborationClient {
         this.engine.editor?.addAllPendingBehaviors();
     }
 
-    private updateExistingObjectBehaviors(object: Object3D, behaviors: any[]): void {
+    private updateExistingObjectBehaviors(object: Object3D, behaviors: SerializedBehaviorData[]): void {
         if (!object || !this.engine.isPlaying) return;
 
-        behaviors?.forEach((behaviorData: any) => {
-            if (!behaviorData.uuid || behaviorsToOmit.includes(behaviorData.id)) return;
+        behaviors?.forEach((behaviorData: SerializedBehaviorData) => {
+            if (!behaviorData.uuid || (behaviorData.id && behaviorsToOmit.includes(behaviorData.id))) return;
             const behavior = this.engine.game?.behaviorManager?.getBehaviorByUUID(behaviorData.uuid);
             if (!behavior || !this.engine.game?.behaviorManager) return;
 
@@ -1130,7 +1172,12 @@ export class CollaborationClient {
     }
 
     private async ensureLambdaInstancesForObject(object: Object3D, lambdaIdFilter?: string): Promise<void> {
-        const lambdaComps = (object.userData?.lambdaComponents || []) as any[];
+        const lambdaComps = (object.userData?.lambdaComponents || []) as {
+            lambdaId: string;
+            enabled?: boolean;
+            instanceId?: string;
+            componentData?: Record<string, unknown>;
+        }[];
         const lambdaManager = this.engine.game?.lambdaManager;
         if (!lambdaManager || lambdaComps.length === 0) return;
 

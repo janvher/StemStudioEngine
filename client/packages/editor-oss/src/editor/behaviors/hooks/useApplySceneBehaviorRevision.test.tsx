@@ -14,7 +14,7 @@ vi.mock("../../../global", () => ({
 }));
 
 vi.mock("@stem/network/api/scene", () => ({
-    saveScene: (...args: any[]) => hoisted.mockSaveScene(...args),
+    saveScene: (...args: unknown[]) => hoisted.mockSaveScene(...args),
 }));
 
 vi.mock("./behaviors", () => ({

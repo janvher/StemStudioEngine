@@ -25,41 +25,41 @@ export class CollaborationWorker {
         if (!this.room) return;
 
         // --- Snapshot listeners ---
-        (this.room.state.snapshot as unknown as ClientMapSchema<string>).onAdd((object: string, key: string) => {
+        (this.room.state.snapshot as unknown as ClientMapSchema<string>).onAdd((object: string) => {
             this.onSnapshotObjectAdd(JSON.parse(object));
         });
 
-        (this.room.state.snapshot as unknown as ClientMapSchema<string>).onRemove((object: string, key: string) => {
+        (this.room.state.snapshot as unknown as ClientMapSchema<string>).onRemove((object: string) => {
             this.onSnapshotObjectRemove(JSON.parse(object));
         });
 
-        (this.room.state.snapshot as unknown as ClientMapSchema<string>).onChange((object: string, key: string) => {
+        (this.room.state.snapshot as unknown as ClientMapSchema<string>).onChange((object: string) => {
             this.onSnapshotObjectUpdate(JSON.parse(object));
         });
 
         // --- Behavior listeners ---
-        (this.room.state.behaviors as unknown as ClientMapSchema<Behavior>).onAdd((object: Behavior, key: string) => {
+        (this.room.state.behaviors as unknown as ClientMapSchema<Behavior>).onAdd((object: Behavior) => {
             this.onBehaviorAdd(object);
         });
 
-        (this.room.state.behaviors as unknown as ClientMapSchema<Behavior>).onRemove((object: Behavior, key: string) => {
+        (this.room.state.behaviors as unknown as ClientMapSchema<Behavior>).onRemove((object: Behavior) => {
             this.onBehaviorRemove(object);
         });
 
-        (this.room.state.behaviors as unknown as ClientMapSchema<Behavior>).onChange((object: Behavior, key: string) => {
+        (this.room.state.behaviors as unknown as ClientMapSchema<Behavior>).onChange((object: Behavior) => {
             this.onBehaviorUpdate(object);
         });
 
         // --- Script listeners ---
-        (this.room.state.scripts as unknown as ClientMapSchema<Script>).onAdd((object: Script, key: string) => {
+        (this.room.state.scripts as unknown as ClientMapSchema<Script>).onAdd((object: Script) => {
             this.onScriptAdd(object);
         });
 
-        (this.room.state.scripts as unknown as ClientMapSchema<Script>).onRemove((object: Script, key: string) => {
+        (this.room.state.scripts as unknown as ClientMapSchema<Script>).onRemove((object: Script) => {
             this.onScriptRemove(object);
         });
 
-        (this.room.state.scripts as unknown as ClientMapSchema<Script>).onChange((object: Script, key: string) => {
+        (this.room.state.scripts as unknown as ClientMapSchema<Script>).onChange((object: Script) => {
             this.onScriptUpdate(object);
         });
 
@@ -69,34 +69,34 @@ export class CollaborationWorker {
             }
         });
 
-        this.room.onMessage(ASSET_EVENTS.ADD, (obj: any) => {
+        this.room.onMessage(ASSET_EVENTS.ADD, (obj: unknown) => {
             this.onAssetAdd(obj);
         });
 
-        this.room.onMessage(ASSET_EVENTS.REMOVE, (obj: any) => {
+        this.room.onMessage(ASSET_EVENTS.REMOVE, (obj: unknown) => {
             this.onAssetRemove(obj);
         });
 
-        this.room.onMessage(ASSET_EVENTS.UPDATE, (obj: any) => {
+        this.room.onMessage(ASSET_EVENTS.UPDATE, (obj: unknown) => {
             this.onAssetUpdate(obj);
         });
 
-        this.room.onMessage(LAMBDA_EVENTS.REGISTER, (lambda: any) => {
+        this.room.onMessage(LAMBDA_EVENTS.REGISTER, (lambda: unknown) => {
             this.onLambdaAdd(lambda);
         });
 
-        this.room.onMessage(LAMBDA_EVENTS.UNREGISTER, (lambda: any) => {
+        this.room.onMessage(LAMBDA_EVENTS.UNREGISTER, (lambda: unknown) => {
             this.onLambdaRemove(lambda);
         });
 
-        this.room.onMessage(LAMBDA_EVENTS.UPDATE, (lambda: any) => {
+        this.room.onMessage(LAMBDA_EVENTS.UPDATE, (lambda: unknown) => {
             this.onLambdaUpdate(lambda);
         });
     }
 
     // --- Snapshot Events ---
 
-    onSnapshotObjectAdd(obj: any): void {
+    onSnapshotObjectAdd(obj: {uuid: string}): void {
         if (this.room?.state.players.has(obj?.uuid)) {
             console.warn("Collaboration: Object is a player, skipping addition:", obj.uuid);
             return;
@@ -104,7 +104,7 @@ export class CollaborationWorker {
         postMessage({event: SNAPSHOT_EVENTS.ADD.OBJECT, object: obj});
     }
 
-    onSnapshotObjectRemove(obj: any): void {
+    onSnapshotObjectRemove(obj: {uuid: string}): void {
         if (this.room?.state.players.has(obj?.uuid)) {
             console.warn("Collaboration: Object is a player, skipping addition:", obj.uuid);
             return;
@@ -112,7 +112,7 @@ export class CollaborationWorker {
         postMessage({event: SNAPSHOT_EVENTS.REMOVE.OBJECT, object: obj});
     }
 
-    onSnapshotObjectUpdate(obj: any): void {
+    onSnapshotObjectUpdate(obj: {uuid: string}): void {
         if (this.room?.state.players.has(obj?.uuid)) {
             console.warn("Collaboration: Object is a player, skipping addition:", obj.uuid);
             return;
@@ -189,7 +189,7 @@ export class CollaborationWorker {
     getSyncCheckData(): void {
         if (!this.room?.state) return;
 
-        const objectsData: any[] = [];
+        const objectsData: unknown[] = [];
 
         this.room.state.snapshot.forEach(objectStr => {
             try {

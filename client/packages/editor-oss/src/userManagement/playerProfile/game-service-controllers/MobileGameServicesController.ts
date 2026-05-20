@@ -72,12 +72,12 @@ export class MobileGameServicesController extends BaseGameServiceController {
 
         // 2. Replace common separators (spaces, dots, underscores) with hyphens
         // This adheres to RFC 5322 (which allows dots/underscores but hyphens are safer for many systems)
-        sanitizedUsername = sanitizedUsername.replace(/[ \._]/g, '-');
+        sanitizedUsername = sanitizedUsername.replace(/[ ._]/g, '-');
 
         // 3. Remove any characters that are NOT letters, numbers, or hyphens
         // This creates a very strict and safe local part.
         // The pattern [^a-z0-9\-] matches any character that is not a lowercase letter, a digit, or a hyphen.
-        sanitizedUsername = sanitizedUsername.replace(/[^a-z0-9\-]/g, '');
+        sanitizedUsername = sanitizedUsername.replace(/[^a-z0-9-]/g, '');
 
         // 4. Remove duplicate hyphens (e.g., --) that might have been created
         sanitizedUsername = sanitizedUsername.replace(/--+/g, '-');
@@ -170,7 +170,7 @@ export class MobileGameServicesController extends BaseGameServiceController {
             this.handleUserAuthenticated(user);
             console.log("User authenticated:", user);
 
-        } catch (error: any) {
+        } catch (error) {
             this.logError("signInWithFirebaseCredentials() - Failed:", error);
             this.logError(`Authentication failed for ${this.activeService}:`, error);
             super.handleAuthenticationFailure(error);

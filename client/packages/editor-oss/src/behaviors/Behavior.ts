@@ -347,7 +347,7 @@ export class BehaviorBase implements Behavior {
     }
 
     [key: string]: any;
-    onStateUpdated(key: string, value: string | undefined): void {}
+    onStateUpdated(_key: string, _value: string | undefined): void {}
 
     init(game: GameManager): void | Promise<void> {
         (this as any)._behaviorBaseGame = game;
@@ -355,7 +355,7 @@ export class BehaviorBase implements Behavior {
 
     dispose(): void {}
     // Throttling is handled automatically by BehaviorManager based on throttlePriority
-    update(deltaTime: number): void {}
+    update(_deltaTime: number): void {}
 
     setTarget(newTarget: Object3D): void {
         this.target = newTarget;
@@ -367,11 +367,11 @@ export class BehaviorBase implements Behavior {
     onPaused(): void {}
     onResumed(): void {}
     onReset(): void {}
-    onEvent(msg: string, data: any): void | Promise<void> | Generator {}
+    onEvent(_msg: string, _data: any): void | Promise<void> | Generator {}
     onAttributesUpdated(): void {}
 
     // Main thread worker communication
-    onWorkerMessage(type: string, data: any): void {}
+    onWorkerMessage(_type: string, _data: any): void {}
     postToWorker(type: string, data: any): void {
         if (this._workerPool) {
             this._workerPool.sendMessage(type, data);

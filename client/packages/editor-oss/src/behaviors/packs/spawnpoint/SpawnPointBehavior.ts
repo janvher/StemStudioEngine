@@ -17,7 +17,7 @@ class SpawnPointBehavior extends BehaviorBase {
         this.game = game;
     }
 
-    update(deltaTime: number) {}
+    update() {}
 
     onAdded(): void {}
 

@@ -1,5 +1,4 @@
-import * as THREE from "three";
-import {Box3, Mesh, Object3D} from "three";
+import {Object3D} from "three";
 
 export default class CameraUtils {
 

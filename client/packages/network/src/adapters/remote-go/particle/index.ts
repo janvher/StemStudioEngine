@@ -33,9 +33,10 @@ export const saveParticle = async (id: string, name: string, data: string): Prom
         }
 
         return response.data.Data;
-    } catch (error: any) {
-        console.error("Error saving particle:", error.message || error);
-        throw new Error(error.message || "Failed to save particle.");
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error("Error saving particle:", message || error);
+        throw new Error(message || "Failed to save particle.");
     }
 };
 
@@ -65,9 +66,10 @@ export const editParticle = async (id: string, name: string, thumbnail?: string,
         }
 
         return response.data.Data;
-    } catch (error: any) {
-        console.error("Error editing particle:", error.message || error);
-        throw new Error(error.message || "Failed to edit particle.");
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error("Error editing particle:", message || error);
+        throw new Error(message || "Failed to edit particle.");
     }
 };
 
@@ -82,9 +84,10 @@ export const getParticle = async (id: string): Promise<ParticleBackendData & {Da
         }
 
         return response.data.Data;
-    } catch (error: any) {
-        console.error("Error getting particle:", error.message || error);
-        throw new Error(error.message || "Failed to get particle.");
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error("Error getting particle:", message || error);
+        throw new Error(message || "Failed to get particle.");
     }
 };
 
@@ -100,9 +103,10 @@ export const getParticlesList = async (): Promise<ParticleBackendData[]> => {
         }
 
         return response.data.Data;
-    } catch (error: any) {
-        console.error("Error listing particles:", error.message || error);
-        throw new Error(error.message || "Failed to list particles.");
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error("Error listing particles:", message || error);
+        throw new Error(message || "Failed to list particles.");
     }
 };
 
@@ -121,8 +125,9 @@ export const deleteParticle = async (id: string): Promise<any> => {
         }
 
         return response.data;
-    } catch (error: any) {
-        console.error("Error deleting particle:", error.message || error);
-        throw new Error(error.message || "Failed to delete particle.");
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error("Error deleting particle:", message || error);
+        throw new Error(message || "Failed to delete particle.");
     }
 };

@@ -51,8 +51,8 @@ class QuestUIBinaryImages {
     }
 
     async initializeImages() {
-        const imagePromises = this.imageEntries.map(async ({key, path: imagePath}) => {
-            const base64 = await this.imageToBase64(imagePath);
+        const imagePromises = this.imageEntries.map(async ({path: imagePath}) => {
+            await this.imageToBase64(imagePath);
             //this.scene.userData[key] = base64; // DO NOT USE userData
         });
 

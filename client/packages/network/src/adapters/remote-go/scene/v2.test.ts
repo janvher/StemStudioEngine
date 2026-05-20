@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockCreateSceneRevisionApi = vi.fn();
-const mockUploadScenePayload = vi.fn();
 
 vi.mock("../client", () => ({
     getScenesApiClient: () => ({
@@ -22,101 +21,16 @@ vi.mock("../asset", () => ({
 
 vi.mock("@web-shared/global", () => ({ default: { app: null } }));
 
-import { createSceneRevision, sceneSettingsToCreateRequest } from "./v2";
+import { sceneSettingsToCreateRequest } from "./v2";
 import type { SceneSettings } from "./index";
 
 beforeEach(() => {
     vi.clearAllMocks();
-    // Stub uploadScenePayload by spying on createAssetUpload chain isn't trivial;
-    // instead, mock the API client directly and let the upload path run with mocked deps.
-    mockUploadScenePayload.mockResolvedValue("upload-1");
 });
 
-// Helper: mock the upload path by stubbing createAssetUpload + uploadAssetData to no-ops
-const setupUploadMock = async () => {
-    const asset = await import("../asset");
-    vi.mocked(asset.createAssetUpload).mockResolvedValue({
-        upload: { id: "upload-1" },
-        uploadUrl: "https://example.com/upload",
-    } as any);
-    vi.mocked(asset.uploadAssetData).mockResolvedValue(undefined as any);
-};
-
-describe("createSceneRevision", () => {
-    beforeEach(async () => {
-        await setupUploadMock();
-    });
-
-    it("returns the created revision on success", async () => {
-        mockCreateSceneRevisionApi.mockResolvedValue({
-            status: 201,
-            data: { revisionId: "rev-1" },
-        });
-
-        const result = await createSceneRevision("scene-1", "{}", { metadata: {} as any });
-
-        expect(result).toEqual({ revisionId: "rev-1" });
-        expect(mockCreateSceneRevisionApi).toHaveBeenCalledTimes(1);
-    });
-
-    it("retries once on 409 when retryOnConflict is true", async () => {
-        mockCreateSceneRevisionApi
-            .mockRejectedValueOnce({ statusCode: 409 })
-            .mockResolvedValueOnce({ status: 201, data: { revisionId: "rev-2" } });
-
-        const result = await createSceneRevision("scene-1", "{}", {
-            metadata: {} as any,
-            retryOnConflict: true,
-        });
-
-        expect(result).toEqual({ revisionId: "rev-2" });
-        expect(mockCreateSceneRevisionApi).toHaveBeenCalledTimes(2);
-    });
-
-    it("reuses the same uploadId on retry (does not re-upload)", async () => {
-        const asset = await import("../asset");
-        mockCreateSceneRevisionApi
-            .mockRejectedValueOnce({ statusCode: 409 })
-            .mockResolvedValueOnce({ status: 201, data: { revisionId: "rev-2" } });
-
-        await createSceneRevision("scene-1", "{}", {
-            metadata: {} as any,
-            retryOnConflict: true,
-        });
-
-        // Upload helper should be called only once even though the API call ran twice
-        expect(asset.createAssetUpload).toHaveBeenCalledTimes(1);
-        expect(mockCreateSceneRevisionApi).toHaveBeenCalledTimes(2);
-        // Both API calls should use the same uploadId
-        const firstCallRequest = mockCreateSceneRevisionApi.mock.calls[0]![1];
-        const secondCallRequest = mockCreateSceneRevisionApi.mock.calls[1]![1];
-        expect(firstCallRequest.uploadId).toBe("upload-1");
-        expect(secondCallRequest.uploadId).toBe("upload-1");
-    });
-
-    it("does not retry on 409 when retryOnConflict is false", async () => {
-        mockCreateSceneRevisionApi.mockRejectedValue({ statusCode: 409 });
-
-        await expect(
-            createSceneRevision("scene-1", "{}", { metadata: {} as any }),
-        ).rejects.toMatchObject({ statusCode: 409 });
-
-        expect(mockCreateSceneRevisionApi).toHaveBeenCalledTimes(1);
-    });
-
-    it("does not retry on non-409 errors even when retryOnConflict is true", async () => {
-        mockCreateSceneRevisionApi.mockRejectedValue({ statusCode: 500, message: "Server error" });
-
-        await expect(
-            createSceneRevision("scene-1", "{}", {
-                metadata: {} as any,
-                retryOnConflict: true,
-            }),
-        ).rejects.toMatchObject({ statusCode: 500 });
-
-        expect(mockCreateSceneRevisionApi).toHaveBeenCalledTimes(1);
-    });
-});
+// NOTE: tests for `createSceneRevision` were removed — that path exercises the
+// hosted server revision API (409-retry, server-assigned ids), which does not
+// exist in the OSS build (the adapter generates local `oss-rev-*` ids).
 
 describe("sceneSettingsToCreateRequest", () => {
     it("maps PascalCase SceneSettings to v2 createScene request fields", () => {

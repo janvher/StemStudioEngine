@@ -148,7 +148,9 @@ async function pickFiles(type: string, message?: string): Promise<File[]> {
                         types: [{description: config.description, accept: config.accept}],
                         multiple: type === "model",
                     });
-                    const files = await Promise.all(handles.map((handle: any) => handle.getFile()));
+                    const files = await Promise.all(
+                        (handles as FileSystemFileHandle[]).map(handle => handle.getFile()),
+                    );
                     cleanup();
                     if (files.length === 0) reject(new Error("No files selected"));
                     else resolve(files);
@@ -219,8 +221,10 @@ export async function handleImport(type: string, message?: string): Promise<Impo
             file: files[0],
             companionFiles: files.slice(1),
         };
-    } catch (e: any) {
-        if (e.message === "AbortError" || e.name === "AbortError") {
+    } catch (e) {
+        const errMessage = e instanceof Error ? e.message : String(e);
+        const errName = e instanceof Error ? e.name : "";
+        if (errMessage === "AbortError" || errName === "AbortError") {
             const label = message ? `${type} (${message})` : type;
             showToast({
                 type: "warning",
@@ -229,7 +233,7 @@ export async function handleImport(type: string, message?: string): Promise<Impo
             });
             return {output: `Import skipped: ${label}. The game may not work correctly without this asset.`, status: "info"};
         }
-        return {output: `Import error: ${e.message}`, status: "error"};
+        return {output: `Import error: ${errMessage}`, status: "error"};
     }
 }
 
@@ -406,13 +410,13 @@ export async function processImportedFile(
                         app?.call("objectChanged", null, scene);
                         registerLambda(newRevision.id);
                         return {success: true, message: `Lambda "${config.name}" updated (new revision)`};
-                    } catch (revisionErr: any) {
+                    } catch (revisionErr) {
                         if (isNoChangesError(revisionErr)) {
                             registerLambda(existingLambdaMeta.revisionId);
                             return {success: true, message: `Lambda "${config.name}" not modified`};
                         }
                         // Retry once on 409 Conflict (stale parent race condition)
-                        if (revisionErr.statusCode === 409) {
+                        if ((revisionErr as {statusCode?: number})?.statusCode === 409) {
                             const freshHead = (await getAsset(lambdaAssetId)).headRevisionId;
                             const newRevision = await createRevision(freshHead);
                             setAssetRevision(scene, lambdaAssetId, newRevision.id);
@@ -472,7 +476,7 @@ export async function processImportedFile(
                 let model;
                 try {
                     ({model} = await loadModelFromFile(file, abortSignal, companionFiles));
-                } catch (loadErr: any) {
+                } catch (loadErr) {
                     if (loadErr instanceof AnimationOnlyModelError) {
                         return {success: true, message: `Skipped "${modelName}": This file contains only animations (no 3D geometry). Animation files should be imported via the Animation Combiner tool.`};
                     }
@@ -649,7 +653,7 @@ export async function processImportedFile(
                             }
                         }
                         return {success: true, message: `Script import "${importName}" updated (new revision)`};
-                    } catch (err: any) {
+                    } catch (err) {
                         if (isNoChangesError(err)) {
                             return {success: true, message: `Script import "${importName}" not modified`};
                         }
@@ -728,8 +732,9 @@ export async function processImportedFile(
             default:
                 return {success: false, message: `Unknown import type: ${type}`};
         }
-    } catch (err: any) {
-        const msg = err.message?.length > 1024 ? err.message.slice(0, 1024) + '...' : err.message;
+    } catch (err) {
+        const rawMsg = err instanceof Error ? err.message : String(err);
+        const msg = rawMsg.length > 1024 ? rawMsg.slice(0, 1024) + '...' : rawMsg;
         return {success: false, message: `Import failed for ${type} "${file.name}": ${msg}`};
     }
 }

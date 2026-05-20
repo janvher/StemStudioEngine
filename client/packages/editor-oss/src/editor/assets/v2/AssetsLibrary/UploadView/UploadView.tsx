@@ -354,9 +354,8 @@ export const UploadView = ({
                 type="file"
                 ref={folderInputRef}
                 style={{display: "none"}}
-                // @ts-ignore webkitdirectory is a non-standard attribute for directory selection
+                // @ts-expect-error - webkitdirectory is a non-standard attribute for directory selection
                 webkitdirectory=""
-                directory=""
                 multiple
                 onChange={e => setModelFiles(e.target.files)}
             />

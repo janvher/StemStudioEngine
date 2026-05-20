@@ -69,7 +69,7 @@ const useModelUploader = () => {
     const abortControllerRef = useRef<AbortController>(new AbortController());
     const createModel = useCreateModel();
     const createModelRevision = useCreateModelRevision();
-    const {animations, isLoading: isLoadingAnimations} = useLoadAnimations();
+    const {isLoading: isLoadingAnimations} = useLoadAnimations();
     const {context: assetResolutionContext, setAssetRevision} = useAssetResolutionContext();
     const assetResolutionContextRef = useRef(assetResolutionContext);
 

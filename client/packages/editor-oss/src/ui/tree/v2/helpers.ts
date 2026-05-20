@@ -132,7 +132,12 @@ export const handleDragLeave = (event: React.DragEvent<HTMLLIElement>, currentDr
     target.classList.remove("drag");
 };
 
-export const handleClone = (args: {event: any; value: any; app: any; scrollToSelected: () => void}) => {
+export const handleClone = (args: {
+    event: {stopPropagation: () => void};
+    value: string;
+    app: EngineRuntime | null | undefined;
+    scrollToSelected: () => void;
+}) => {
     const {event, value, app, scrollToSelected} = args;
     event.stopPropagation();
     app?.editor?.cloneObjectByUuid(value);

@@ -450,7 +450,7 @@ const CrazyGamesKeysModal = ({sceneId, onClose}: {sceneId: string; onClose: (sav
                 if (id) {
                     setGameId(id);
                 }
-            } catch (error) {
+            } catch {
                 // Game ID not configured yet, that's fine
             }
         };

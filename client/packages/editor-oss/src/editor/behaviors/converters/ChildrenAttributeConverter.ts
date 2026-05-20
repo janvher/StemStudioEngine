@@ -1,3 +1,5 @@
+import type {Bone, Mesh, Object3D} from "three";
+
 import global from "@stem/editor-oss/global";
 import {BehaviorAttributeData, ObjectAttribute} from "../BehaviorAttributes";
 import BehaviorAttributeType from "../BehaviorAttributeType";
@@ -5,8 +7,8 @@ import AttributeConverter from "./AttributeConverter";
 import {BehaviorContext} from "../BehaviorContextProvider";
 
 class ChildrenAttributeConverter implements AttributeConverter {
-    private containsMesh(object: any): boolean {
-        if (object.isMesh) {
+    private containsMesh(object: Object3D): boolean {
+        if ((object as Mesh).isMesh) {
             return true;
         }
         if (object.children) {
@@ -19,16 +21,16 @@ class ChildrenAttributeConverter implements AttributeConverter {
         return false;
     }
 
-    private isBoneNode(object: any): boolean {
-        return object?.isBone || object?.type === "Bone";
+    private isBoneNode(object: Object3D): boolean {
+        return (object as Bone)?.isBone || object?.type === "Bone";
     }
 
-    private isHiddenNode(object: any): boolean {
+    private isHiddenNode(object: Object3D): boolean {
         if (!object?.userData?.isStemObject) {
             return true;
         }
 
-        let current = object;
+        let current: Object3D | null = object;
         while (current) {
             if (current.visible === false) {
                 return true;
@@ -39,8 +41,8 @@ class ChildrenAttributeConverter implements AttributeConverter {
     }
 
     convertAttribute(attributeData: BehaviorAttributeData, behaviorContext: BehaviorContext): ObjectAttribute {
-        const app = (global as any).app;
-        const editor = app.editor;
+        const app = global.app!;
+        const editor = app.editor!;
         const options: {name: string; uuid: string}[] = [];
         const filter = attributeData.filter as string | undefined;
         const seenUuids = new Set<string>();
@@ -50,7 +52,7 @@ class ChildrenAttributeConverter implements AttributeConverter {
             : null;
 
         if (rootObject) {
-            rootObject.traverse((child: any) => {
+            rootObject.traverse((child: Object3D) => {
                 if (child.uuid === rootObject.uuid || seenUuids.has(child.uuid)) {
                     return;
                 }

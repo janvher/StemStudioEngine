@@ -5,17 +5,6 @@ import Ajax from "./Ajax";
 import {backendUrlFromPath} from "./UrlUtils";
 import global from "../global";
 
-enum GenerateModelStyles {
-    CARTOON = "person:person2cartoon",
-    CLAY = "object:clay",
-    STEAMPUNK = "object:steampunk",
-    VENOM = "animal:venom",
-    BARBIE = "object:barbie",
-    CHRISTMAS = "object:christmas",
-    GOLD = "gold",
-    ANCIENT_BRONZE = "ancient_bronze",
-}
-
 enum Topology {
     BIPED = "bip",
     QUADRUPED = "quad",
@@ -186,7 +175,7 @@ class ModelGeneratorProvider {
             }
 
             const taskId = res.data.task_id;
-            onTaskCreated && onTaskCreated(taskId);
+            if (onTaskCreated) onTaskCreated(taskId);
 
             if (currentGenerator === GENERATOR_TYPES.MESHY) {
                 // Determine progress splits based on refine and autoRig options

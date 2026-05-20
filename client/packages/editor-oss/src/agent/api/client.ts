@@ -17,7 +17,7 @@ const BASE_URL = (process.env.REACT_APP_COPILOT_SERVER_URL ?? "http://localhost:
  *
  */
 function getAuthToken(): string | null {
-    return (global as any).app?.authManager?.getAuthToken() ?? null;
+    return global.app?.authManager?.getAuthToken() ?? null;
 }
 
 type RequestOptions = {

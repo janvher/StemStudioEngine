@@ -512,7 +512,7 @@ describe("FrameOrchestrator time-slicing", () => {
             writes: [],
             requiresMainThread: true,
             supportsTimeSlicing: true,
-            *update(context: FrameContext): Generator {
+            *update(_context: FrameContext): Generator {
                 generatorRunCount++;
                 yield;
                 generatorRunCount++;
@@ -556,10 +556,7 @@ describe("FrameOrchestrator time-slicing", () => {
 
         // Tick 1: Force the generator to be suspended by making budget appear exhausted
         // after the first yield. Mock performance.now() to return past the deadline.
-        const realNow = performance.now;
-        const budgetMgr = orchestrator.getBudgetManager();
         orchestrator.tick(0.016);
-        const deadline = budgetMgr.deadline;
 
         // The generator completed because real time was within budget.
         // Instead, spy on timeSliceRunner.run to force suspension.

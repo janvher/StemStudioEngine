@@ -1,4 +1,4 @@
-import {Object3D, AnimationClip} from "three";
+import {AnimationClip} from "three";
 import {GLTFLoaderPlugin, GLTFParser} from "three/examples/jsm/loaders/GLTFLoader.js";
 
 import {EARTHAnimationGraphExtension, EARTHAnimationGraphExtensionData} from "./EARTH_animation_graph";

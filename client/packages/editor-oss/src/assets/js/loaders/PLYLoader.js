@@ -1,5 +1,5 @@
 
-import {Mesh, MeshBasicMaterial, MeshStandardMaterial, Group, TextureLoader, LoadingManager} from "three";
+import {Mesh, MeshBasicMaterial, MeshStandardMaterial, Group, TextureLoader} from "three";
 import {PLYLoader as PLYLoaderImpl} from "three/examples/jsm/loaders/PLYLoader.js";
 
 import BaseLoader from "./BaseLoader";
@@ -14,7 +14,7 @@ class PLYLoader extends BaseLoader {
         super();
     }
 
-    load(url, options, environment) {
+    load(url, options) {
         // For blob URLs or absolute URLs, use them directly
         // For relative URLs, prepend server if available
         const path =

@@ -1,5 +1,5 @@
 import {describe, it, expect, vi, beforeEach} from "vitest";
-import {stringify, parse} from "yaml";
+import {stringify} from "yaml";
 
 import {exportBehavior, exportLambda, exportImportAsset, buildImportDocument, exportStem, importBehaviorFile, importLambdaFile, importImportFile, importStemFile, resolveImportedLambdaId, EXPORT_VERSION} from "./exportImportUtils";
 import type {LambdaConfig} from "../../../../lambdas/Lambda";

@@ -4,7 +4,7 @@ import {AnimationGraph} from "../AnimationGraph";
 
 export interface EARTHAnimationGraphExtensionData {
     base: {
-        animationGraph: any;
+        animationGraph: unknown;
     };
 }
 
@@ -25,7 +25,7 @@ export class EARTHAnimationGraphExtension {
      * @param graph
      * @param clips
      */
-    public static serialize(graph: AnimationGraph, clips: AnimationClip[]): EARTHAnimationGraphExtensionData {
+    public static serialize(graph: AnimationGraph, _clips: AnimationClip[]): EARTHAnimationGraphExtensionData {
         const graphData = graph.toJSON();
 
         return {
@@ -57,7 +57,8 @@ export class EARTHAnimationGraphExtension {
      * Validate extension data
      * @param data
      */
-    public static validate(data: any): boolean {
-        return !!(data && data.base && data.base.animationGraph);
+    public static validate(data: unknown): boolean {
+        const d = data as {base?: {animationGraph?: unknown}} | null | undefined;
+        return !!(d && d.base && d.base.animationGraph);
     }
 }

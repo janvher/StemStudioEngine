@@ -1,10 +1,9 @@
 import {BehaviorAttributeData,BooleanAttribute} from "../BehaviorAttributes";
 import BehaviorAttributeType from "../BehaviorAttributeType";
-import {BehaviorContext} from "../BehaviorContextProvider";
 import AttributeConverter from "./AttributeConverter";
 
 class BooleanAttributeConverter implements AttributeConverter {
-    convertAttribute(attributeData: BehaviorAttributeData, behaviorContext: BehaviorContext): BooleanAttribute {
+    convertAttribute(attributeData: BehaviorAttributeData): BooleanAttribute {
         return {
             name: attributeData.name,
             type: BehaviorAttributeType.Boolean,

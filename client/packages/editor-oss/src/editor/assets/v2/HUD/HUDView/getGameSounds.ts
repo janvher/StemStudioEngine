@@ -24,8 +24,9 @@ export const getSoundsFromUI = async (gameUI: any, isStartMenu: boolean, pauseMe
         const menuMusic = gameUI[pauseMenu ? IN_GAME_MENU_IDS.MENU_MUSIC : START_MENU_IDS.MENU_MUSIC] as FileData;
         if (menuMusic) {
             let url = "";
-            if ((menuMusic as any).NewApi) {
-                const derivatives = await getAssetDerivatives(menuMusic.ID, (menuMusic as any).headRevisionId, {
+            const menuMusicExt = menuMusic as FileData & {NewApi?: boolean; headRevisionId?: string};
+            if (menuMusicExt.NewApi) {
+                const derivatives = await getAssetDerivatives(menuMusic.ID, menuMusicExt.headRevisionId ?? "", {
                     includeDataUrl: true,
                 });
                 url = derivatives[0]?.dataUrl || "";

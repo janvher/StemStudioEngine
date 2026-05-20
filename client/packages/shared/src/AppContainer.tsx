@@ -8,7 +8,6 @@ import {toast, Toaster} from "toastywave";
 import "./bootstrap/integrated";
 
 import {AppRouter} from "./AppRouter";
-import global from "./global";
 import AppGlobalContextProvider from "./context/AppGlobalContext";
 import AssetsTabContextProvider from "./context/AssetsTabContext";
 import AuthorizationContextProvider from "./context/AuthorizationContext";

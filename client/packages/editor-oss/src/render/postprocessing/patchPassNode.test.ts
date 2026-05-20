@@ -39,7 +39,7 @@ describe("patchPassNode", () => {
             shouldHideObject: object => (object as THREE.Line).isLine === true,
         });
 
-        (passNode as any).updateBefore({renderer: fakeRenderer});
+        (passNode as {updateBefore: (arg: {renderer: typeof fakeRenderer}) => void}).updateBefore({renderer: fakeRenderer});
 
         expect(passNode.opaque).toBe(true);
         expect(passNode.transparent).toBe(false);

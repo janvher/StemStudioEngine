@@ -1,4 +1,4 @@
-import { Material, Mesh } from "three";
+import { Color, Material, Mesh, Object3D } from "three";
 
 import { LambdaBase } from "../../LambdaBase";
 
@@ -11,7 +11,10 @@ type SetMaterialData = {
 
 export default class SetMaterialLambda extends LambdaBase {
     private applyMaterial(material: Material, data: SetMaterialData): void {
-        const anyMaterial = material as any;
+        const anyMaterial = material as Material & {
+            color?: Color;
+            emissive?: Color;
+        };
         if (data.color && anyMaterial.color) {
             anyMaterial.color.set(data.color);
         }
@@ -28,7 +31,7 @@ export default class SetMaterialLambda extends LambdaBase {
         anyMaterial.needsUpdate = true;
     }
 
-    private applyToObject(target: any, data: SetMaterialData): void {
+    private applyToObject(target: Object3D, data: SetMaterialData): void {
         const mesh = target as Mesh;
         if (!mesh.isMesh || !mesh.material) {
             return;

@@ -63,7 +63,7 @@ export const WhitelistManagement = ({loading, setLoading}: Props) => {
             // Clear the input after successful submission
             setAddEmails("");
             await getWhitelist();
-        } catch (error) {
+        } catch {
             showToast({type: "error", title: "Failed to update Approved Users."});
         } finally {
             setLoading(false);
@@ -80,7 +80,7 @@ export const WhitelistManagement = ({loading, setLoading}: Props) => {
                 throw Error("Request failed");
             }
             setCurrentWhitelist(response.data.Data.emails || []);
-        } catch (error) {
+        } catch {
             showToast({type: "error", title: "Failed to fetch Approved Users."});
         } finally {
             setLoading(false);
@@ -103,7 +103,7 @@ export const WhitelistManagement = ({loading, setLoading}: Props) => {
             }
             showToast({type: "success", title: "Emails successfully removed from Approved Users."});
             setCurrentWhitelist(prev => prev.filter(el => el !== email));
-        } catch (error) {
+        } catch {
             showToast({type: "error", title: "Failed to update Approved Users."});
         } finally {
             setPendingEmail(null);
@@ -188,7 +188,7 @@ export const WhitelistManagement = ({loading, setLoading}: Props) => {
                     headers: {Authorization: `Bearer ${authToken}`},
                 },
             );
-        } catch (error) {
+        } catch {
             showToast({type: "error", title: "Failed to clear Approved Users."});
         } finally {
             setLoading(false);

@@ -78,33 +78,6 @@ const UploadButton = styled.label`
     }
 `;
 
-const Button = styled.button<{ variant?: "primary" | "secondary" }>`
-    width: 100%;
-    padding: 10px 24px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    border: ${props =>
-        props.variant === "primary" ? "none" : "1px solid var(--theme-grey-bg)"};
-    background: ${props =>
-        props.variant === "primary"
-            ? "var(--theme-primary-color)"
-            : "transparent"};
-    color: var(--theme-font-main-selected-color);
-
-    &:hover {
-        opacity: 0.8;
-        transform: translateY(-1px);
-    }
-
-    &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-        transform: none;
-    }
-`;
 
 const defaultSVGPath = "M 0,50 L 15,15 L 50,10 L 20,-10 L 30,-50 L 0,-20 L -30,-50 L -20,-10 L -50,10 L -15,15 Z";
 

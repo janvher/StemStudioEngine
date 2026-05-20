@@ -13,7 +13,7 @@ interface Props {
     border?: boolean;
 }
 
-export const ColorSelectionRow = ({label, value, setValue, disabled, $margin, border}: Props) => {
+export const ColorSelectionRow = ({label, value, setValue, $margin, border}: Props) => {
     const [pickerVisible, setPickerVisible] = useState(false);
 
     return (

@@ -1,6 +1,5 @@
 import * as THREE from "three";
 
-import BaseSerializer from "../BaseSerializer";
 import TextureSerializer from "./TextureSerializer";
 
 /**

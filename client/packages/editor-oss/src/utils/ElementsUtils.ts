@@ -17,8 +17,8 @@ const {t} = i18n;
  */
 export function createElement(
     type: React.ComponentType<any>,
-    props: any,
-    children: any,
+    props: Record<string, unknown>,
+    children: React.ReactNode,
 ): React.ReactElement | undefined {
     return global.app?.editor?.component?.createElement(type, props, children);
 }
@@ -28,7 +28,7 @@ export function createElement(
  * @param element
  */
 export function addElement(element: React.ReactElement): void {
-    global.app?.editor && global.app.editor.component?.addElement(element, () => {});
+    if (global.app?.editor) global.app.editor.component?.addElement(element, () => {});
 }
 
 /**
@@ -36,7 +36,7 @@ export function addElement(element: React.ReactElement): void {
  * @param element
  */
 export function removeElement(element: React.ReactElement): void {
-    global.app?.editor && global.app.editor.component?.removeElement(element, () => {});
+    if (global.app?.editor) global.app.editor.component?.removeElement(element, () => {});
 }
 
 /**
@@ -70,7 +70,7 @@ export function confirm(
     let component: React.ReactElement | undefined;
 
     let close = () => {
-        component && removeElement(component);
+        if (component) removeElement(component);
     };
 
     let handleOK = () => {
@@ -81,7 +81,7 @@ export function confirm(
     };
 
     let handleCancel = () => {
-        onCancel && onCancel();
+        if (onCancel) onCancel();
         close();
     };
 
@@ -89,7 +89,7 @@ export function confirm(
         if (onClose) {
             onClose();
         } else {
-            onCancel && onCancel();
+            if (onCancel) onCancel();
         }
         close();
     };
@@ -146,7 +146,7 @@ export function prompt(
     let component: React.ReactElement | undefined;
 
     let close = () => {
-        component && removeElement(component);
+        if (component) removeElement(component);
     };
 
     let handleOK = (newValue: string) => {
@@ -157,7 +157,7 @@ export function prompt(
     };
 
     let handleClose = () => {
-        onClose && onClose();
+        if (onClose) onClose();
         close();
     };
 

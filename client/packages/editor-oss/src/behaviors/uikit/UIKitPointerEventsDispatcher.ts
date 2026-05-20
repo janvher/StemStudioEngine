@@ -2,12 +2,17 @@ import {Object3D, PerspectiveCamera, Raycaster, Vector2, WebGLRenderer} from "th
 import {WebGPURenderer} from "three/webgpu";
 
 type ClickableObject = Object3D & { onClick?: (event: PointerEvent) => void };
+type HoverableObject = Object3D & {
+    hover?: unknown;
+    onHoverChange?: (arg: boolean) => void;
+    onClick?: (event: PointerEvent) => void;
+};
 
 export const UIKitPointerEventsDispatcher = (() => {
     const raycaster = new Raycaster();
     const pointer = new Vector2();
     let canvas: HTMLCanvasElement | null, camera: PerspectiveCamera | null, rootScene: Object3D | null;
-    let hoveredObject: Object3D & { onHoverChange: (arg: boolean) => void } | null = null;
+    let hoveredObject: HoverableObject | null = null;
 
     // Custom click handling state
     const downPointer = new Vector2();
@@ -80,16 +85,16 @@ export const UIKitPointerEventsDispatcher = (() => {
             raycaster.setFromCamera(pointer, camera);
             const intersects = raycaster.intersectObjects(rootScene.children, true);
 
-            let hit: any = null;
+            let hit: HoverableObject | null = null;
             if (intersects.length > 0) {
                 for (const h of intersects) {
-                    let obj = h.object as any;
+                    let obj: HoverableObject | null = h.object as HoverableObject;
                     while (obj) {
                         if (obj.hover || obj.onHoverChange || obj.onClick) {
                             hit = obj;
                             break;
                         }
-                        obj = obj.parent;
+                        obj = obj.parent as HoverableObject | null;
                         if (obj === rootScene || !obj) break;
                     }
                     if (hit) break;
@@ -99,7 +104,7 @@ export const UIKitPointerEventsDispatcher = (() => {
             if (hoveredObject !== hit) {
                 if (hoveredObject) {
                     if (hoveredObject.onHoverChange) hoveredObject.onHoverChange(false);
-                    if (hoveredObject.dispatchEvent) { // @ts-ignore
+                    if (hoveredObject.dispatchEvent) { // @ts-expect-error - synthetic pointer event shape is not in the typed dispatchEvent signature
                         hoveredObject.dispatchEvent({ type: 'pointerout', target: hoveredObject });
                     }
                 }
@@ -108,7 +113,7 @@ export const UIKitPointerEventsDispatcher = (() => {
 
                 if (hoveredObject) {
                     if (hoveredObject.onHoverChange) hoveredObject.onHoverChange(true);
-                    if (hoveredObject.dispatchEvent) { // @ts-ignore
+                    if (hoveredObject.dispatchEvent) { // @ts-expect-error - synthetic pointer event shape is not in the typed dispatchEvent signature
                         hoveredObject.dispatchEvent({ type: 'pointerover', target: hoveredObject });
                     }
                 }

@@ -6,18 +6,45 @@ import {HERO_CODE} from "../content/features";
 // Lightweight, syntax-class-only highlighter. Not a real parser — produces
 // the same colour buckets as the prose around the showcase. Good enough for a
 // static snippet, avoids pulling in a megabyte of Prism / Shiki.
+//
+// Single-pass tokenizer: each character is consumed exactly once, so later
+// passes never re-scan (and corrupt) the markup emitted by earlier ones — the
+// `class="tok-*"` attributes are not themselves re-tokenized.
+const KEYWORDS = new Set([
+    "import", "export", "from", "class", "extends", "return",
+    "const", "let", "var", "if", "else", "new", "this", "async", "await",
+]);
+
+function escapeHtml(s: string): string {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 function highlight(code: string): string {
-    return code
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/(\/\/[^\n]*)/g, '<span class="tok-comment">$1</span>')
-        .replace(/("[^"]*"|'[^']*')/g, '<span class="tok-string">$1</span>')
-        .replace(
-            /\b(import|export|from|class|extends|return|const|let|var|if|else|new|this|async|await)\b/g,
-            '<span class="tok-keyword">$1</span>',
-        )
-        .replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="tok-num">$1</span>')
-        .replace(/\b([A-Za-z_$][A-Za-z0-9_$]*)\(/g, '<span class="tok-fn">$1</span>(');
+    // Ordered alternation: comment | string | number | identifier | any char.
+    const token = /(\/\/[^\n]*)|("[^"]*"|'[^']*')|(\d+(?:\.\d+)?)|([A-Za-z_$][\w$]*)|([\s\S])/g;
+    let html = "";
+    let match: RegExpExecArray | null;
+    while ((match = token.exec(code))) {
+        const [, comment, str, num, ident, other] = match;
+        if (comment !== undefined) {
+            html += `<span class="tok-comment">${escapeHtml(comment)}</span>`;
+        } else if (str !== undefined) {
+            html += `<span class="tok-string">${escapeHtml(str)}</span>`;
+        } else if (num !== undefined) {
+            html += `<span class="tok-num">${num}</span>`;
+        } else if (ident !== undefined) {
+            if (KEYWORDS.has(ident)) {
+                html += `<span class="tok-keyword">${ident}</span>`;
+            } else if (code[token.lastIndex] === "(") {
+                html += `<span class="tok-fn">${ident}</span>`;
+            } else {
+                html += escapeHtml(ident);
+            }
+        } else {
+            html += escapeHtml(other ?? "");
+        }
+    }
+    return html;
 }
 
 export function CodeShowcase() {

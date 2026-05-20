@@ -190,6 +190,8 @@ export async function getAnimationDownloadUrl(animationId: string): Promise<Asse
  * regular Model assets; resolve via getMeshDownloadUrl instead.
  */
 export async function getAvatarDownloadUrl(_avatarId: string): Promise<AssetDownloadResult> {
+    // _avatarId kept for signature parity; legacy avatar download path was removed
+    if (_avatarId) { /* no-op */ }
     return {
         success: false,
         url: "",

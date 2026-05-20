@@ -28,7 +28,7 @@ interface Props {
     emptyHUD: boolean;
 }
 
-export const GameHUDView = ({gameData, isGameOver, emptyHUD}: Props) => {
+export const GameHUDView = ({gameData, isGameOver}: Props) => {
     const app = (global as any).app;
 
     const [gameUI, setGameUI] = useState<GameDataType>();

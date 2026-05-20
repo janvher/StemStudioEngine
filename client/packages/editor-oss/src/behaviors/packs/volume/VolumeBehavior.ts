@@ -9,16 +9,6 @@ import {BehaviorBase} from "../../Behavior";
 import GameManager from "../../game/GameManager";
 
 
-interface VolumeOptions {
-    volumeType: string;
-    blockEnemies: boolean;
-    blockThrowables: boolean;
-    blockCharacters: boolean;
-    damageAmount: number;
-    losePoints: number;
-    loseTime: number;
-}
-
 export enum VOLUME_TYPES {
     BLOCKING = "Blocking",
     KILL_VOLUME = "Kill Volume",
@@ -34,7 +24,7 @@ class VolumeBehavior extends BehaviorBase {
     protected game: GameManager | null = null;
     private removed = false;
     private physicsEnabled = false;
-    private toastId: any = "";
+    private toastId: string | number = "";
     private collisionPauseTime: number = 1500;
     private physicsRemoved: boolean = false;
     private lastCollisionTime: number = 0;
@@ -46,7 +36,7 @@ class VolumeBehavior extends BehaviorBase {
         this.game = game;
     }
 
-    update(_deltaTime: number) {}
+    update() {}
 
     onStart(): void {
         this.volumeData.target = this.target;

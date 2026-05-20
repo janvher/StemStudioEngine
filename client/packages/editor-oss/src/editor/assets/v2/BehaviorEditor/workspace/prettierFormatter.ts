@@ -35,7 +35,7 @@ function loadPrettier() {
                 import("prettier/plugins/estree"),
             ]);
             return {
-                format: (source: string, options: any) =>
+                format: (source: string, options?: import("prettier").Options) =>
                     prettier.format(source, {
                         ...options,
                         plugins: [parserBabel.default ?? parserBabel, pluginEstree.default ?? pluginEstree],
@@ -43,7 +43,7 @@ function loadPrettier() {
             };
         })();
     }
-    return prettierPromise;
+    return prettierPromise!;
 }
 
 /**

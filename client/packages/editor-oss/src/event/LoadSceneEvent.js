@@ -6,7 +6,6 @@
 
 
 import * as THREE from "three";
-import {MathUtils} from "three";
 
 import BaseEvent from "./BaseEvent";
 // import GISScene from '@web-shared/gis/Scene';

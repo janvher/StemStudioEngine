@@ -1,7 +1,7 @@
 import {Object3D} from "three";
 
 import {AssetLoader} from "@stem/editor-oss/asset-management/AssetLoader";
-import { resolveAssetRevisionId } from '@stem/editor-oss/asset-management/AssetResolutionContext';
+import { resolveAssetRevisionId, type AssetResolutionContext } from '@stem/editor-oss/asset-management/AssetResolutionContext';
 import {loadModel, loadModelWithLoader} from "@stem/editor-oss/model/load-util";
 import {setModelId, setModelRevisionId} from "@stem/editor-oss/model/util";
 import {PhysicsUtil} from '@stem/editor-oss/physics/PhysicsUtil';
@@ -43,7 +43,11 @@ export class ModelSerializer {
         };
     }
 
-    async fromJSON(json: unknown, parent: any, options: any): Promise<Object3D | null> {
+    async fromJSON(
+        json: unknown,
+        parent: Object3D | null,
+        options: {assetResolutionContext: AssetResolutionContext; assetLoader?: AssetLoader},
+    ): Promise<Object3D | null> {
         const context = options.assetResolutionContext;
         const result = ModelSchema.safeParse(json);
         if (!result.success) {

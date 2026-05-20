@@ -9,7 +9,6 @@ import {
     LoaderUtils,
     Mesh,
     MeshPhongMaterial,
-    TextureLoader,
 } from 'three';
 
 import BaseLoader from './BaseLoader';
@@ -24,7 +23,6 @@ const CHUNK_MESH = 0x4100;
 const CHUNK_VERTICES = 0x4110;
 const CHUNK_FACES = 0x4120;
 const CHUNK_TEXCOORDS = 0x4140;
-const CHUNK_SMOOTH_GROUP = 0x4150;
 const CHUNK_MESH_MATRIX = 0x4160;
 const CHUNK_MATERIAL_NAME = 0xA000;
 const CHUNK_MATERIAL_AMBIENT = 0xA010;
@@ -33,7 +31,6 @@ const CHUNK_MATERIAL_SPECULAR = 0xA030;
 const CHUNK_MATERIAL_SHININESS = 0xA040;
 const CHUNK_MATERIAL_TRANSPARENCY = 0xA050;
 const CHUNK_MATERIAL_TEXTURE = 0xA200;
-const CHUNK_MATERIAL_BUMPMAP = 0xA230;
 const CHUNK_RGB = 0x0010;
 const CHUNK_RGB24 = 0x0011;
 const CHUNK_LIN_RGB = 0x0012;
@@ -73,7 +70,7 @@ class TDSLoaderImpl extends Loader {
         }, onProgress, onError);
     }
 
-    parse(buffer, path) {
+    parse(buffer) {
         const group = new Group();
         const data = new DataView(buffer);
         let offset = 0;
@@ -96,10 +93,11 @@ class TDSLoaderImpl extends Loader {
             const chunk = this.readChunk(data, offset);
 
             switch (chunk.id) {
-                case CHUNK_VERSION:
+                case CHUNK_VERSION: {
                     const version = data.getUint32(offset + 6, true);
                     if (this.debug) console.log('3DS Version:', version);
                     break;
+                }
 
                 case CHUNK_SCENE:
                     this.parseScene(data, offset + 6, chunk.size - 6);
@@ -228,11 +226,12 @@ class TDSLoaderImpl extends Loader {
                     mesh.vertices = this.readVertices(data, offset + 6);
                     break;
 
-                case CHUNK_FACES:
+                case CHUNK_FACES: {
                     const facesData = this.readFaces(data, offset + 6, chunk.size - 6);
                     mesh.faces = facesData.faces;
                     mesh.materials = facesData.materials;
                     break;
+                }
 
                 case CHUNK_TEXCOORDS:
                     mesh.uvs = this.readTexCoords(data, offset + 6);
@@ -355,7 +354,7 @@ class TDSLoaderImpl extends Loader {
             const a = data.getUint16(offset, true);
             const b = data.getUint16(offset + 2, true);
             const c = data.getUint16(offset + 4, true);
-            const flags = data.getUint16(offset + 6, true);
+            // Byte offset 6 holds the face edge-visibility flags, unused here.
 
             faces.push(a, b, c);
             offset += 8;
@@ -477,7 +476,7 @@ class TDSLoader extends BaseLoader {
         super();
     }
 
-    load(url, options, environment) {
+    load(url, options) {
         // For blob URLs or absolute URLs, use them directly
         // For relative URLs, prepend server if available
         const path = url.startsWith('blob:') || url.startsWith('http') || url.startsWith('https')

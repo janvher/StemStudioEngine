@@ -43,7 +43,7 @@ describe('ObjectPool', () => {
         expect(pool.getStats()).toEqual({ total: 0, available: 0, inUse: 0 });
 
         const a = pool.get();
-        const b = pool.get();
+        pool.get();
         expect(pool.getStats().inUse).toBe(2);
         expect(pool.getStats().total).toBe(2);
 

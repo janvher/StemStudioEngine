@@ -30,7 +30,7 @@ export interface HUDContextProviderProps {
     children: React.ReactNode;
 }
 
-const HUDContextProvider: ({children}: {children: any}) => React.ReactElement = ({children}) => {
+const HUDContextProvider: ({children}: HUDContextProviderProps) => React.ReactElement = ({children}) => {
     const [activeScreen, setActiveScreen] = useState(HUD_TABS.GAME_START_MENU);
     const [popupType, setPopupType] = useState<LAYOUT_BUTTON_TYPE>();
     const [popupId, setPopupId] = useState<string>();

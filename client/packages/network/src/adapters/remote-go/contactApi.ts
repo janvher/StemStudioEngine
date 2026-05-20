@@ -2,7 +2,7 @@ import Ajax from "@web-shared/utils/Ajax";
 import {backendUrlFromPath} from "@web-shared/utils/UrlUtils";
 import {ContactFormData} from "@web-shared/v2/pages/ContactUs/types";
 
-export const submitContactForm = async (data: ContactFormData): Promise<any> => {
+export const submitContactForm = async (data: ContactFormData): Promise<unknown> => {
     const response = await Ajax.post({
         url: backendUrlFromPath(`/api/Contact/Submit`),
         msgBodyType: "multipart",

@@ -1,4 +1,4 @@
-import {AnimationClip, AnimationMixer, AnimationAction, Object3D, EventDispatcher} from "three";
+import {AnimationClip, AnimationMixer, AnimationAction, EventDispatcher} from "three";
 
 export type ParameterType = "float" | "int" | "bool" | "trigger";
 

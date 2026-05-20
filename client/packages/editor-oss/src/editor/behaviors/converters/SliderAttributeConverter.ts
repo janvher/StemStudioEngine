@@ -1,10 +1,9 @@
 import {BehaviorAttributeData,SliderAttribute} from "../BehaviorAttributes";
 import BehaviorAttributeType from "../BehaviorAttributeType";
-import {BehaviorContext} from "../BehaviorContextProvider";
 import AttributeConverter from "./AttributeConverter";
 
 class SliderAttributeConverter implements AttributeConverter {
-    convertAttribute(attributeData: BehaviorAttributeData, behaviorContext: BehaviorContext): SliderAttribute {
+    convertAttribute(attributeData: BehaviorAttributeData): SliderAttribute {
         return {
             name: attributeData.name,
             type: BehaviorAttributeType.Slider,

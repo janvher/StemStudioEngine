@@ -41,10 +41,10 @@ class OutlinerHelper extends BaseHelper {
         // Listen to outline events
         this.app.on(`objectOutlined.${this.id}`, this.onObjectOutlined);
         this.app.on(`objectUnoutlined.${this.id}`, this.onObjectUnoutlined);
-        EventBus.instance.subscribe(`objectOutlined`, (_, data: any) => {
+        EventBus.instance.subscribe(`objectOutlined`, (_, data: THREE.Object3D) => {
             this.onObjectOutlined(data);
         });
-        EventBus.instance.subscribe(`objectUnoutlined`, (_, data: any) => {
+        EventBus.instance.subscribe(`objectUnoutlined`, (_, data: THREE.Object3D) => {
             this.onObjectUnoutlined(data);
         });
 

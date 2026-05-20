@@ -258,10 +258,10 @@ export class ObjectHandlers {
         if (object instanceof THREE.Group) {
             return "group";
         }
-        if ((object as any).isCamera) {
+        if (object instanceof THREE.Camera) {
             return "camera";
         }
-        if ((object as any).isLight) {
+        if (object instanceof THREE.Light) {
             return "light";
         }
 
@@ -287,7 +287,9 @@ export class ObjectHandlers {
         return {
             type: mesh.geometry.type,
             kind: GEOMETRY_KIND_BY_TYPE[mesh.geometry.type] ?? "mesh",
-            parameters: this.clonePlainValue((mesh.geometry as any).parameters ?? {}),
+            parameters: this.clonePlainValue(
+                (mesh.geometry as THREE.BufferGeometry & {parameters?: Record<string, unknown>}).parameters ?? {},
+            ),
         };
     }
 

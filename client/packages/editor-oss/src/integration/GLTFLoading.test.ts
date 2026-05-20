@@ -4,7 +4,7 @@ import { isAssetId } from '../utils/AssetDownloadUtils';
 
 // Mock all dependencies
 vi.mock('../utils/AssetDownloadUtils', async () => {
-    const actual = await vi.importActual('../utils/AssetDownloadUtils') as any;
+    const actual = await vi.importActual('../utils/AssetDownloadUtils') as Record<string, unknown>;
     return {
         ...actual,
         resolveAssetUrl: vi.fn(),
@@ -13,7 +13,7 @@ vi.mock('../utils/AssetDownloadUtils', async () => {
 });
 
 vi.mock('../utils/LoaderWrappers', async () => {
-    const actual = await vi.importActual('../utils/LoaderWrappers') as any;
+    const actual = await vi.importActual('../utils/LoaderWrappers') as Record<string, unknown>;
     return {
         ...actual,
         resolveMeshUrl: vi.fn(),

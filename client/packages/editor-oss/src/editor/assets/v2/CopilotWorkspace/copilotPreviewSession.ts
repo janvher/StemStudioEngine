@@ -5,6 +5,8 @@ import {
     setAssetResolutionContext,
 } from "@stem/editor-oss/asset-management/AssetResolutionContext";
 import EngineRuntime from "@stem/editor-oss/EngineRuntime";
+import type {PerspectiveCamera} from "three";
+
 import Converter from "../../../../serialization/Converter";
 
 export type CopilotPreviewStatus =
@@ -202,7 +204,7 @@ export const createCopilotPreviewSnapshotFromSceneJson = (
     },
 });
 
-const copyCameraState = (app: EngineRuntime, camera: any): void => {
+const copyCameraState = (app: EngineRuntime, camera: PerspectiveCamera | undefined): void => {
     if (!camera) return;
 
     app.camera.position.copy(camera.position);

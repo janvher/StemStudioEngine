@@ -1,4 +1,4 @@
-import {Clock, Vector3} from "three";
+import {Clock} from "three";
 
 import BaseEvent from "./BaseEvent";
 import global from "../global";

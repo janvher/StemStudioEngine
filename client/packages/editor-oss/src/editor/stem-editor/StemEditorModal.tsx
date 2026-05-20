@@ -2,7 +2,6 @@ import {useCallback, useEffect, useRef, useState} from "react";
 import ReactDOM from "react-dom";
 import styled from "styled-components";
 
-import type {AssetType} from "@stem/network/api/asset";
 import {useAsset} from "../asset-management/hooks/assets";
 import {useEnsureEditableAsset} from "../assets/v2/common/hooks/useEnsureEditableAsset";
 import {RemixBanner} from "../assets/v2/common/RemixBanner";

@@ -1,8 +1,5 @@
-import * as THREE from "three";
-
 import BaseSerializer from "../BaseSerializer";
 import TextureSerializer from "./TextureSerializer";
-import ImageUtils from "@web-shared/utils/ImageUtils";
 
 class GifTextureSerializer extends BaseSerializer {
     toJSON(obj) {

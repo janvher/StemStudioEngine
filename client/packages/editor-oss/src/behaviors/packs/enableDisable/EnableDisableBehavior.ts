@@ -35,7 +35,7 @@ class EnableDisableBehavior extends BehaviorBase {
         // Nothing to do on removed
     }
 
-    update(_delta: number): void {
+    update(): void {
         // This behavior doesn't need continuous updates
     }
 

@@ -32,7 +32,7 @@ export default function loadModel(
             .then((object: any) => {
                 if (!object) {
                     showToast({type: "error", title: "Failed to save model"});
-                    handleError && handleError();
+                    if (handleError) handleError();
                     return;
                 }
 
@@ -60,34 +60,8 @@ export default function loadModel(
             })
             .catch((e: any) => {
                 showToast({type: "error", title: "Failed to save model"});
-                handleError && handleError();
+                if (handleError) handleError();
                 console.log(e);
             });
     }
 }
-
-const renameChildren = (object: any) => {
-    // Funkcja rekurencyjna do zmiany nazw dzieci obiektu
-    const rename = (object: any) => {
-        object.children.forEach((child: any) => {
-            // Zmieniamy nazwę dziecka
-            child.name = child.name.replace("mixamorig", "");
-            // Rekurencyjnie zmieniamy nazwę dzieci tego dziecka
-            if (child.children.length > 0) {
-                rename(child);
-            }
-        });
-    };
-
-    // Wywołanie funkcji z początkowym obiektem i nową nazwą
-    rename(object);
-};
-
-const renameObjAnimations = (object: any) => {
-    object?._obj.animations.forEach((anim: any) => {
-        // Zmieniamy nazwę dziecka
-        anim.tracks.forEach((track: any) => {
-            track.name = track.name.replace("mixamorig", "");
-        });
-    });
-};

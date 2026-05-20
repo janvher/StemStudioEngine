@@ -1,10 +1,9 @@
 import {BehaviorAttributeData, StringAttribute} from "../BehaviorAttributes";
 import BehaviorAttributeType from "../BehaviorAttributeType";
-import {BehaviorContext} from "../BehaviorContextProvider";
 import AttributeConverter from "./AttributeConverter";
 
 class ColorAttributeConverter implements AttributeConverter {
-    convertAttribute(attributeData: BehaviorAttributeData, behaviorContext: BehaviorContext): StringAttribute {
+    convertAttribute(attributeData: BehaviorAttributeData): StringAttribute {
         return {
             name: attributeData.name,
             type: BehaviorAttributeType.Color,

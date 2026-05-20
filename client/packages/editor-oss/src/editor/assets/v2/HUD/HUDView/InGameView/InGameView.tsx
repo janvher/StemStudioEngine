@@ -52,7 +52,7 @@ export const InGameView = ({setView, setBgImage, emptyHUD}: Props) => {
     const handleGameButtonClick = (customStyle: IGameButtonInterface) => {
         const clickSound = customStyle.clickSound;
         const btn = customStyle.UIButtonType;
-        clickSound && EventBus.instance.send("game.playSound", clickSound.ID);
+        if (clickSound) EventBus.instance.send("game.playSound", clickSound.ID);
         if (checkIfStartBtn(btn)) {
             EventBus.instance.send("game.resume");
             EventBus.instance.send("game.clear_sounds");
@@ -78,7 +78,7 @@ export const InGameView = ({setView, setBgImage, emptyHUD}: Props) => {
             const loadSounds = async () => {
                 const img = inGameUI[IN_GAME_MENU_IDS.MENU_BG] as string;
                 const soundsToLoad = await getSoundsFromUI(inGameUI, true, true);
-                img && setBgImage(img);
+                if (img) setBgImage(img);
                 setSounds(soundsToLoad);
             };
             loadSounds();
@@ -95,13 +95,13 @@ export const InGameView = ({setView, setBgImage, emptyHUD}: Props) => {
 
     useEffect(() => {
         return () => {
-            sounds && EventBus.instance.send("game.clear_sounds");
+            if (sounds) EventBus.instance.send("game.clear_sounds");
         };
     }, []);
 
     const handleHover = (customStyle: IGameButtonInterface) => {
         const hoverSound = customStyle.hoverSound;
-        hoverSound && EventBus.instance.send("game.playSound", hoverSound.ID);
+        if (hoverSound) EventBus.instance.send("game.playSound", hoverSound.ID);
     };
 
     return inGameUI ? 

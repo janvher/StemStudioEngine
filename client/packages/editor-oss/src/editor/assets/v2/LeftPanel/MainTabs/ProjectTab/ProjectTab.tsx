@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import {useQueryClient} from "@tanstack/react-query";
 import {debounce, isArray} from "lodash";
 import {useCallback, useEffect, useMemo, useRef, useState, type RefObject} from "react";
 import * as THREE from "three";
@@ -52,7 +51,6 @@ export const ProjectTab = ({isVisible, setIsAddObjectViewOpen, unlockedPanelStat
     const [foundObjects, setFoundObjects] = useState<THREE.Object3D[]>([]);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const {setActiveRightPanel} = useAppGlobalContext();
-    const queryClient = useQueryClient();
     const [anchorUuid, setAnchorUuid] = useState<string | null>(null);
     const foundObjectsRef = useRef<THREE.Object3D[]>([]);
     const searchRef = useRef("");
@@ -389,7 +387,8 @@ export const ProjectTab = ({isVisible, setIsAddObjectViewOpen, unlockedPanelStat
             value: obj.uuid,
             text: obj.name,
             vertices:
-                obj instanceof THREE.Mesh && obj.geometry.attributes.hasOwnProperty("position")
+                obj instanceof THREE.Mesh &&
+                Object.prototype.hasOwnProperty.call(obj.geometry.attributes, "position")
                     ? obj.geometry.attributes.position.count
                     : -1,
             expanded: !!expanded[obj.uuid] || isChildSelectedAndFound,

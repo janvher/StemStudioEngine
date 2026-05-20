@@ -39,11 +39,11 @@ export const ModelAnimationCombiner = ({ model, onClose }: Props) => {
         // no local graph; rely on context animationGraph exclusively
     }, [animationGraph]);
 
-    const getModelUrl = (model: any) => {
-        return backendUrlFromPath(model?.Url);
+    const getModelUrl = (model: {Url?: string} | null | undefined) => {
+        return backendUrlFromPath(model?.Url ?? null);
     };
 
-    const getModelExtension = (model: any) => {
+    const getModelExtension = (model: {Url?: string} | null | undefined) => {
         const url = getModelUrl(model);
         return url?.split(".").pop() || "gltf";
     };

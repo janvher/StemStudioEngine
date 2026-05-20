@@ -70,8 +70,8 @@ export const SelectSettings = ({ particleSystem, updateProperties }: Props) => {
     const getCurrentMaterialType = () => {
         const mat = particleSystem.material;
         if (!mat) return materialTypeOptions[0];
-        if ((mat as any).isMeshStandardMaterial) return materialTypeOptions[1];
-        if ((mat as any).isMeshPhysicalMaterial) return materialTypeOptions[2];
+        if ((mat as {isMeshStandardMaterial?: boolean}).isMeshStandardMaterial) return materialTypeOptions[1];
+        if ((mat as {isMeshPhysicalMaterial?: boolean}).isMeshPhysicalMaterial) return materialTypeOptions[2];
         return materialTypeOptions[0]; // fallback
     };
 

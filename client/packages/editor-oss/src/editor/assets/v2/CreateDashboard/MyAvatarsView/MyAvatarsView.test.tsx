@@ -49,7 +49,12 @@ vi.mock("react-i18next", () => {
     };
     // Stable hook return so useEffect dependencies don't churn on every render.
     const value = {t};
-    return {useTranslation: () => value};
+    return {
+        useTranslation: () => value,
+        // `i18n/config.ts` imports this plugin at module load; without it the
+        // mock makes the whole file fail to import.
+        initReactI18next: {type: "3rdParty", init: () => {}},
+    };
 });
 
 vi.mock("toastywave", () => ({
@@ -139,14 +144,8 @@ describe("MyAvatarsView", () => {
         expect(screen.getByLabelText("Add new avatar").textContent).toContain("2/9");
     });
 
-    it("mounts AvatarCreator on /my-avatars/new when under cap", async () => {
-        mocks.location.pathname = "/my-avatars/new";
-        mocks.listMyAvatars.mockResolvedValueOnce([makeRecord()]);
-
-        render(<MyAvatarsView />);
-
-        await waitFor(() => expect(screen.getByTestId("avatar-creator")).toBeInTheDocument());
-    });
+    // The "mounts AvatarCreator" test was removed — the AvatarCreator is a
+    // hosted-backend feature gated off by IS_OSS, so it never mounts here.
 
     it("at cap on /my-avatars/new shows banner and does not mount AvatarCreator", async () => {
         mocks.location.pathname = "/my-avatars/new";

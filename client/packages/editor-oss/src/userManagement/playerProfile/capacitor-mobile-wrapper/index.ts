@@ -104,15 +104,16 @@ export class CapacitorMobileServices {
             });
 
             return player;
-        } catch (error: any) {
+        } catch (error) {
+            const err = error as {message?: unknown; name?: unknown; code?: unknown; stack?: unknown} | null | undefined;
             console.error("❌ [CapacitorMobileServices] signIn() - CapacitorGameConnect.signIn() threw exception:");
-            console.error("❌ [CapacitorMobileServices] signIn() - Error message:", error?.message);
-            console.error("❌ [CapacitorMobileServices] signIn() - Error name:", error?.name);
-            console.error("❌ [CapacitorMobileServices] signIn() - Error code:", error?.code);
-            console.error("❌ [CapacitorMobileServices] signIn() - Error stack:", error?.stack);
+            console.error("❌ [CapacitorMobileServices] signIn() - Error message:", err?.message);
+            console.error("❌ [CapacitorMobileServices] signIn() - Error name:", err?.name);
+            console.error("❌ [CapacitorMobileServices] signIn() - Error code:", err?.code);
+            console.error("❌ [CapacitorMobileServices] signIn() - Error stack:", err?.stack);
             console.error("❌ [CapacitorMobileServices] signIn() - Full error object:", error);
             console.error("❌ [CapacitorMobileServices] signIn() - Error type:", typeof error);
-            console.error("❌ [CapacitorMobileServices] signIn() - Error constructor:", error?.constructor?.name);
+            console.error("❌ [CapacitorMobileServices] signIn() - Error constructor:", (error as {constructor?: {name?: string}} | null)?.constructor?.name);
 
             const serviceName = service === GameServiceType.GAME_CENTER ? "Game Center" : "Google Play Games";
             console.log(`📱 [CapacitorMobileServices] signIn() - Service name for error: ${serviceName}`);
@@ -138,7 +139,7 @@ export class CapacitorMobileServices {
             const result = await CapacitorGameConnect.getGameCenterCredential();
             console.log("🔐 [CapacitorMobileServices] getGameCenterCredential() - Success:", result);
             return result;
-        } catch (error: any) {
+        } catch (error) {
             console.error("❌ [CapacitorMobileServices] getGameCenterCredential() - Failed:", error);
             throw error;
         }
@@ -155,7 +156,7 @@ export class CapacitorMobileServices {
             const result = await CapacitorGameConnect.getGooglePlayCredential({serverClientId});
             console.log("🔐 [CapacitorMobileServices] getGooglePlayCredential() - Success:", result);
             return result;
-        } catch (error: any) {
+        } catch (error) {
             console.error("❌ [CapacitorMobileServices] getGooglePlayCredential() - Failed:", error);
             throw error;
         }
@@ -298,7 +299,7 @@ export class CapacitorMobileServices {
 }
 
 //reloader function to reload the page when the app is moved to the background
-const initializeAppReloader = () => {
+const _initializeAppReloader = () => {
     // Check if the code is running on a native platform (iOS or Android)
     if (!App) {
         console.warn('Capacitor App plugin not available. Skipping background reload setup.');

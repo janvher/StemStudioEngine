@@ -4,6 +4,14 @@ import EngineRuntime from "../../EngineRuntime";
 import * as Commands from "../../command/Commands";
 import {CommandResult} from "../types/ACPTypes";
 
+type LightLike = THREE.Object3D & {
+    isLight?: boolean;
+    shadow?: THREE.LightShadow;
+    intensity?: number;
+    color?: THREE.Color;
+    castShadow?: boolean;
+};
+
 /**
  * Light property command handlers for CommandsRegistry
  */
@@ -29,11 +37,12 @@ export class LightHandlers {
         shadowNormalBias?: number;
         shadowRadius?: number;
     }): CommandResult {
-        const object = this.findObject(target);
-        if (!object) {
+        const found = this.findObject(target);
+        if (!found) {
             return {status: "failed", message: `Object not found: ${target}`, data: null};
         }
-        if (!(object as any).isLight) {
+        const object = found as LightLike;
+        if (!object.isLight) {
             return {status: "failed", message: `"${target}" is not a light object.`, data: null};
         }
 
@@ -48,18 +57,18 @@ export class LightHandlers {
         }
 
         // Shadow properties — only if light supports shadows
-        if (shadowMapSize !== undefined && (object as any).shadow) {
-            (object as any).shadow.mapSize.set(shadowMapSize, shadowMapSize);
-            (object as any).shadow.needsUpdate = true;
+        if (shadowMapSize !== undefined && object.shadow) {
+            object.shadow.mapSize.set(shadowMapSize, shadowMapSize);
+            (object.shadow as THREE.LightShadow & {needsUpdate?: boolean}).needsUpdate = true;
         }
-        if (shadowBias !== undefined && (object as any).shadow) {
-            (object as any).shadow.bias = shadowBias;
+        if (shadowBias !== undefined && object.shadow) {
+            object.shadow.bias = shadowBias;
         }
-        if (shadowNormalBias !== undefined && (object as any).shadow) {
-            (object as any).shadow.normalBias = shadowNormalBias;
+        if (shadowNormalBias !== undefined && object.shadow) {
+            object.shadow.normalBias = shadowNormalBias;
         }
-        if (shadowRadius !== undefined && (object as any).shadow) {
-            (object as any).shadow.radius = shadowRadius;
+        if (shadowRadius !== undefined && object.shadow) {
+            object.shadow.radius = shadowRadius;
         }
 
         this.engine.call("objectChanged", this.engine.editor, object);
@@ -71,9 +80,9 @@ export class LightHandlers {
                 uuid: object.uuid,
                 name: object.name,
                 type: object.type,
-                intensity: (object as any).intensity,
-                color: `#${(object as any).color?.getHexString?.() ?? "ffffff"}`,
-                castShadow: (object as any).castShadow,
+                intensity: object.intensity,
+                color: `#${object.color?.getHexString?.() ?? "ffffff"}`,
+                castShadow: object.castShadow,
             },
         };
     }
@@ -83,16 +92,11 @@ export class LightHandlers {
         if (!object) {
             return {status: "failed", message: `Object not found: ${target}`, data: null};
         }
-        if (!(object as any).isLight) {
+        if (!(object as LightLike).isLight) {
             return {status: "failed", message: `"${target}" is not a light object.`, data: null};
         }
 
-        const light = object as THREE.Light & {
-            shadow?: THREE.LightShadow;
-            intensity?: number;
-            color?: THREE.Color;
-            castShadow?: boolean;
-        };
+        const light = object as LightLike;
 
         return {
             status: "success",
@@ -134,7 +138,7 @@ export class LightHandlers {
             const expectedType = `${lower}light`;
             this.engine.scene.traverse(candidate => {
                 if (object) return;
-                if (!(candidate as any).isLight) return;
+                if (!(candidate as LightLike).isLight) return;
                 const candidateType = (candidate.type || "").toLowerCase();
                 if (candidateType === expectedType || candidateType.startsWith(lower)) {
                     object = candidate;

@@ -17,8 +17,8 @@ const COMMUNITY_FILTER_OPTIONS: {label: string; value: CommunityFilterType}[] = 
 export const CommunityFilters = () => {
     const [filtersOpen, setFiltersOpen] = useState(false);
     const {communityFilter, setCommunityFilter} = useHomepageContext();
-    const ref = useRef(null);
-    useOnClickOutside(ref as any, () => setFiltersOpen(false));
+    const ref = useRef<HTMLDivElement>(null);
+    useOnClickOutside(ref as React.RefObject<HTMLElement>, () => setFiltersOpen(false));
 
     return (
         <FilterButton

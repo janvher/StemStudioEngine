@@ -87,7 +87,7 @@ class TouchButton {
             height: window.innerHeight,
         };
 
-        const position = this.convertPosition(this.config.buttonPosition, viewport);
+        const position = this.convertPosition(this.config.buttonPosition);
         const size = this.convertSize(this.config.buttonSize);
 
         // Apply frame offset to position
@@ -164,7 +164,7 @@ class TouchButton {
             height: window.innerHeight,
         };
 
-        const position = this.convertPosition(this.config.buttonPosition, viewport);
+        const position = this.convertPosition(this.config.buttonPosition);
         const size = this.convertSize(this.config.buttonSize);
 
         // Apply frame offset to position
@@ -195,7 +195,7 @@ class TouchButton {
         }
     }
 
-    private convertPosition(position: {x: number; y: number}, viewport: {width: number; height: number}) {
+    private convertPosition(position: {x: number; y: number}) {
         return this.scaler.scalePosition(position);
     }
 
@@ -211,7 +211,7 @@ class TouchButton {
 
         // Create the handler but don't register it yet
         this.buttonHandler = {
-            onPointerDown: (event: PointerEvent) => {
+            onPointerDown: () => {
                 if (!this.isPressed) {
                     this.isPressed = true;
                     this.animatePress();
@@ -219,7 +219,7 @@ class TouchButton {
                 }
                 return true;
             },
-            onPointerUp: (event: PointerEvent) => {
+            onPointerUp: () => {
                 if (this.isPressed) {
                     this.isPressed = false;
                     this.animateRelease();

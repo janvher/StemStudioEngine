@@ -1,11 +1,11 @@
 import {BasicShadowMap, PCFShadowMap, PCFSoftShadowMap, VSMShadowMap} from "three";
 
 // ShadowMapType options
-export const shadowMapTypeOptions: {key: any; value: string}[] = [
-    {key: BasicShadowMap, value: "Basic"},
-    {key: PCFShadowMap, value: "PCF"},
-    {key: PCFSoftShadowMap, value: "PCF Soft"},
-    {key: VSMShadowMap, value: "VSM"},
+export const shadowMapTypeOptions: {key: string; value: string}[] = [
+    {key: String(BasicShadowMap), value: "Basic"},
+    {key: String(PCFShadowMap), value: "PCF"},
+    {key: String(PCFSoftShadowMap), value: "PCF Soft"},
+    {key: String(VSMShadowMap), value: "VSM"},
 ];
 // Fog type options
 export const fogTypeOptions = [

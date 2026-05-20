@@ -12,7 +12,7 @@ class GISLoader extends PlayerComponent {
         super(app);
     }
 
-    create(jsons) {
+    create(_jsons) {
          
     }
 

@@ -1,12 +1,11 @@
 import {BehaviorAttributeData,NumberAttribute} from "../BehaviorAttributes";
 import BehaviorAttributeType from "../BehaviorAttributeType";
-import {BehaviorContext} from "../BehaviorContextProvider";
 import AttributeConverter from "./AttributeConverter";
 
 class NumberAttributeConverter implements AttributeConverter {
     constructor() {}
 
-    convertAttribute(attributeData: BehaviorAttributeData, behaviorContext: BehaviorContext): NumberAttribute {
+    convertAttribute(attributeData: BehaviorAttributeData): NumberAttribute {
         return {
             name: attributeData.name,
             type: BehaviorAttributeType.Number,

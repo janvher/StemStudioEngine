@@ -1,10 +1,9 @@
 import { BehaviorAttributeData, ButtonAttribute } from "../BehaviorAttributes";
 import BehaviorAttributeType from "../BehaviorAttributeType";
-import { BehaviorContext } from "../BehaviorContextProvider";
 import AttributeConverter from "./AttributeConverter";
 
 class ButtonAttributeConverter implements AttributeConverter {
-    convertAttribute(attributeData: BehaviorAttributeData, behaviorContext: BehaviorContext): ButtonAttribute {
+    convertAttribute(attributeData: BehaviorAttributeData): ButtonAttribute {
         return {
             name: attributeData.name,
             type: BehaviorAttributeType.Button,

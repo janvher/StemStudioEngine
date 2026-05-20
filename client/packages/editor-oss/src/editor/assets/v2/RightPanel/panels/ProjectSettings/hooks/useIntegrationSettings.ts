@@ -29,7 +29,7 @@ export interface IntegrationSetters {
 }
 
 const getDefaultDiscordIntegration = (): DiscordIntegrationSettings => {
-    const app = (global as any).app as EngineRuntime;
+    const app = global.app as EngineRuntime;
     const savedSettings = app?.editor?.scene?.userData?.discordIntegration;
     return {
         enabled: savedSettings?.enabled || false,
@@ -39,7 +39,7 @@ const getDefaultDiscordIntegration = (): DiscordIntegrationSettings => {
 };
 
 const getDefaultMobileGameServices = (): MobileGamesIntegrationSettings => {
-    const app = (global as any).app as EngineRuntime;
+    const app = global.app as EngineRuntime;
     const savedSettings = app?.editor?.scene?.userData?.mobileGameServices;
     return {
         enabled: savedSettings?.enabled || false,
@@ -52,7 +52,7 @@ const getDefaultMobileGameServices = (): MobileGamesIntegrationSettings => {
 };
 
 const getDefaultSteamIntegration = (): SteamIntegrationSettings => {
-    const app = (global as any).app as EngineRuntime;
+    const app = global.app as EngineRuntime;
     const savedSettings = app?.editor?.scene?.userData?.steamIntegration;
     return {
         enabled: savedSettings?.enabled || false,
@@ -61,7 +61,7 @@ const getDefaultSteamIntegration = (): SteamIntegrationSettings => {
 };
 
 const getDefaultCrazyGamesIntegration = (): CrazyGamesIntegrationSettings => {
-    const app = (global as any).app as EngineRuntime;
+    const app = global.app as EngineRuntime;
     const savedSettings = app?.editor?.scene?.userData?.crazyGamesIntegration;
     return {
         enabled: savedSettings?.enabled || false,
@@ -75,7 +75,7 @@ const getDefaultCrazyGamesIntegration = (): CrazyGamesIntegrationSettings => {
 };
 
 const getDefaultEmailPasswordAuth = (): EmailPasswordAuthSettings => {
-    const app = (global as any).app as EngineRuntime;
+    const app = global.app as EngineRuntime;
     const savedSettings = app?.editor?.scene?.userData?.emailPasswordAuth;
     return {
         enabled: savedSettings?.enabled || false,
@@ -85,7 +85,7 @@ const getDefaultEmailPasswordAuth = (): EmailPasswordAuthSettings => {
 };
 
 const getDefaultPlayerSupport = (): {enabled: boolean} => {
-    const app = (global as any).app as EngineRuntime;
+    const app = global.app as EngineRuntime;
     const savedSettings = app?.editor?.scene?.userData?.playerSupport;
     return {
         enabled: savedSettings?.enabled !== false,
@@ -93,7 +93,7 @@ const getDefaultPlayerSupport = (): {enabled: boolean} => {
 };
 
 export const useIntegrationSettings = () => {
-    const app = (global as any).app as EngineRuntime;
+    const app = global.app as EngineRuntime;
     const editor = app.editor;
 
     const [discordIntegration, setDiscordIntegration] = useState<DiscordIntegrationSettings>(getDefaultDiscordIntegration);

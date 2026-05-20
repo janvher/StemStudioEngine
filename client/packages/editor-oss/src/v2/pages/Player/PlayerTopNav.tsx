@@ -1,5 +1,4 @@
 import {useState} from "react";
-import styled from "styled-components";
 
 import {createTrackedShareUrl} from "@stem/network/api/rewards";
 import {fetchRemixesOfScene} from "@stem/network/api/scene";

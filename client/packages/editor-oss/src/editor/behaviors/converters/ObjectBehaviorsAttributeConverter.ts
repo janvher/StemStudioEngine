@@ -1,3 +1,5 @@
+import {Object3D} from "three";
+
 import global from "@stem/editor-oss/global";
 import {BehaviorAttributeData, ObjectBehaviorsAttribute} from "../BehaviorAttributes";
 import BehaviorAttributeType from "../BehaviorAttributeType";
@@ -19,7 +21,7 @@ class ObjectBehaviorsAttributeConverter implements AttributeConverter {
         );
         const excludeSelf = attributeData.excludeSelf === true;
         const objectOptions: {name: string; uuid: string}[] = includeNone ? [{name: "none", uuid: ""}] : [];
-        editor.scene.traverse((child: any) => {
+        editor.scene.traverse((child: Object3D & {isGroup?: boolean}) => {
             // Skip runtime-only and internal objects
             if (child.name === DYNAMIC_ROOT_NAME || child.name === "BatchRoot" || child.userData?.isRuntimeOnly) {
                 return;

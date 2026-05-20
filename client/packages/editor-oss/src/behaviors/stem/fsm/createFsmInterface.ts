@@ -13,7 +13,7 @@ const loadLib = (): Promise<XStateModule> => {
 };
 
 const toSnapshot = (actor: AnyActorRef): FsmSnapshot => {
-    const snap = actor.getSnapshot() as {value: any; context: any; status: string};
+    const snap = actor.getSnapshot() as {value: FsmSnapshot["value"]; context: FsmSnapshot["context"]; status: string};
     return {
         value: snap.value,
         context: snap.context,

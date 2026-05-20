@@ -193,7 +193,7 @@ class EnemyBehavior extends BehaviorBase {
         enemy: THREE.Object3D,
         animationName?: string,
         forceRestart = false,
-        finishCallback: any = null,
+        finishCallback: (() => void) | null = null,
     ) {
         if (animationName && (enemy.userData.currentAnimation !== animationName || forceRestart)) {
             let playOnce = this.isDead();
@@ -207,7 +207,6 @@ class EnemyBehavior extends BehaviorBase {
     };
 
     private moveInRandomDirection = (directionDuration: number) => {
-        const currentDirectiom = this.moveDirection;
         if (this.moveTimer <= 0) {
             this.moveTimer = Math.random() * directionDuration + directionDuration;
             this.moveDirection = new THREE.Vector3(Math.random() * 2 - 1, 0, Math.random() * 2 - 1).normalize();

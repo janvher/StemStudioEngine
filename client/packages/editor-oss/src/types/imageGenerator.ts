@@ -42,7 +42,7 @@ export type GenerateResponse = {
 };
 
 export type Asset = {
-    metadata: any;
+    metadata: Record<string, unknown>;
     nsfw: string[];
     automaticCaptioning: string;
     description: string;

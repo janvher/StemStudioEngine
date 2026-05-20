@@ -12,7 +12,7 @@ class PDBLoader extends BaseLoader {
         super();
     }
 
-    load(url, options) {
+    load(url) {
 
         return new Promise(resolve => {
             var loader = new ThreePDBLoader();

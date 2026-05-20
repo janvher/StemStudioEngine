@@ -866,7 +866,6 @@ class EffectRenderer extends BaseRenderer {
         }
         if (typeof durationSec !== "number" || durationSec <= 0) return;
 
-        const baseline = uniform.value;
         const peak = typeof peakIntensity === "number" ? peakIntensity : 1.0;
 
         if (!this._flashTimers) this._flashTimers = {};

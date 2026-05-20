@@ -156,7 +156,7 @@ export const GameButton = () => {
                     onChange={item => {
                         const nextFontFamily = item.value;
                         setFontFamily(nextFontFamily);
-                        popupCallback &&
+                        if (popupCallback)
                             popupCallback({
                                 UIButtonType,
                                 fontFamily: nextFontFamily,
@@ -219,7 +219,7 @@ export const GameButton = () => {
                 margin="16px 0 0"
                 isBlue
                 onClick={() => {
-                    popupCallback &&
+                    if (popupCallback)
                         popupCallback({
                             UIButtonType,
                             fontFamily,

@@ -109,7 +109,7 @@ export class CurveEditorControls extends THREE.Object3D {
         // Create gizmos for each control point
         const points = object.userData.curvePoints || [];
 
-        points.forEach((p: any, index: number) => {
+        points.forEach((p: {x: number; y: number; z: number}, index: number) => {
             const worldPos = new THREE.Vector3(p.x, p.y, p.z);
             // Transform to world space
             object.localToWorld(worldPos);

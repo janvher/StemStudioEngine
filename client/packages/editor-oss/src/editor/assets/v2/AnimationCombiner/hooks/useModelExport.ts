@@ -50,6 +50,7 @@ export const useModelExport = () => {
     const {mainModel, animations, toggleLoading, action, animationGraph} = useModelAnimationCombinerContext();
 
     const exportGLB = useCallback(async () => {
+        if (!mainModel) return;
         action?.stop();
         toggleLoading();
         try {
@@ -80,15 +81,15 @@ export const useModelExport = () => {
                     saveArrayBuffer(arrayBuffer, `${name}.glb`, toggleLoading);
                 },
                 () => {},
-                //@ts-ignore
                 {trs: true, binary: true, includeCustomExtensions: true, animations: clips},
             );
-        } catch (error) {
+        } catch {
             toggleLoading();
         }
     }, [mainModel, animations, toggleLoading, action, animationGraph]);
 
     const exportGLTF = useCallback(() => {
+        if (!mainModel) return;
         action?.stop();
         try {
             toggleLoading();

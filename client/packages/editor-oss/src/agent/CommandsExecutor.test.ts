@@ -2,6 +2,7 @@ import {PCFSoftShadowMap} from "three";
 import {describe, expect, it, vi} from "vitest";
 
 import {CommandsExecutor} from "./CommandsExecutor";
+import type {CommandsRegistry} from "./CommandsRegistry";
 
 describe("CommandsExecutor parameter normalization", () => {
     it("normalizes gradient objects before validating scene background params", async () => {
@@ -19,7 +20,7 @@ describe("CommandsExecutor parameter normalization", () => {
                 ],
                 handler,
             })),
-        } as any);
+        } as unknown as CommandsRegistry);
 
         const result = await executor.executeCommand("set_scene_background", {
             type: "Gradient",
@@ -45,7 +46,7 @@ describe("CommandsExecutor parameter normalization", () => {
                 parameters: [{name: "shadowMapType", type: "number", required: false}],
                 handler,
             })),
-        } as any);
+        } as unknown as CommandsRegistry);
 
         const result = await executor.executeCommand("set_rendering_settings", {
             shadowMapType: "PCFSoftShadowMap",
@@ -69,7 +70,7 @@ describe("CommandsExecutor parameter normalization", () => {
                 parameters: [{name: "enabled", type: "boolean", required: true}],
                 handler,
             })),
-        } as any);
+        } as unknown as CommandsRegistry);
 
         const result = await executor.executeCommand("set_scene_compartments", {
             enabled: "on",

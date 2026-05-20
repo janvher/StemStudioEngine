@@ -11,7 +11,6 @@ import {ButtonsColumn, Grid} from "../../HUDEditView/GameStartMenu/GameStartMenu
 import {
     HUD_TABS,
     IGameButtonInterface,
-    START_MENU_BUTTON_TYPES,
     START_MENU_IDS,
     StartGameMenuDataType,
 } from "../../HUDEditView/types";
@@ -84,7 +83,7 @@ export const GameStartView = ({setView, setBgImage, emptyHUD}: Props) => {
             const loadSounds = async () => {
                 const img = startUI[START_MENU_IDS.MENU_BG] as string;
                 const soundsToLoad = await getSoundsFromUI(startUI, true);
-                img && setBgImage(img);
+                if (img) setBgImage(img);
                 setSounds(soundsToLoad);
             };
             loadSounds();
@@ -101,7 +100,7 @@ export const GameStartView = ({setView, setBgImage, emptyHUD}: Props) => {
 
     useEffect(() => {
         return () => {
-            sounds && EventBus.instance.send("game.clear_sounds");
+            if (sounds) EventBus.instance.send("game.clear_sounds");
         };
     }, []);
 
@@ -121,7 +120,7 @@ export const GameStartView = ({setView, setBgImage, emptyHUD}: Props) => {
     const handleGameButtonClick = (customStyle: IGameButtonInterface) => {
         const clickSound = customStyle.clickSound;
         const btn = customStyle.UIButtonType;
-        clickSound && EventBus.instance.send("game.playSound", clickSound.ID);
+        if (clickSound) EventBus.instance.send("game.playSound", clickSound.ID);
 
         if (checkIfStartBtn(btn)) {
             setIsLoading(true);
@@ -139,7 +138,7 @@ export const GameStartView = ({setView, setBgImage, emptyHUD}: Props) => {
 
     const handleHover = (customStyle: IGameButtonInterface) => {
         const hoverSound = customStyle.hoverSound;
-        hoverSound && EventBus.instance.send("game.playSound", hoverSound.ID);
+        if (hoverSound) EventBus.instance.send("game.playSound", hoverSound.ID);
     };
 
     useEffect(() => {

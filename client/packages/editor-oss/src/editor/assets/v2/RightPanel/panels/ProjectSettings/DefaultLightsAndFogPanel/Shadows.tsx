@@ -71,7 +71,7 @@ export const Shadows = ({useShadows, shadowMapType, setUseShadows, setShadowMapT
             <SelectRow
                 label="Shadow Map Type"
                 data={shadowMapTypeOptions}
-                value={shadowMapTypeOptions.find(opt => opt.key === shadowMapType) || shadowMapTypeOptions[2]}
+                value={shadowMapTypeOptions.find(opt => opt.key === String(shadowMapType)) || shadowMapTypeOptions[2]}
                 onChange={handleShadowMapTypeChange}
                 disableTyping
                 width="80px"

@@ -36,7 +36,7 @@ export class DiscordService {
      * Handle successful Discord authentication
      * @param user
      */
-    private handleAuthSuccess(user: any): void {
+    private handleAuthSuccess(user: unknown): void {
         // The token should be available from the auth manager
 
         if (this.authManager?.getDiscordAccessToken()) {

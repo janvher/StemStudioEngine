@@ -33,7 +33,7 @@ export function downloadTexture(
     })
         .then(response => {
             const data = response?.data as TextureDownloadResponse;
-            callback && callback(data);
+            if (callback) callback(data);
             return data;
         })
         .catch(error => {
@@ -42,7 +42,7 @@ export function downloadTexture(
                 Code: 500,
                 Msg: "Texture download failed",
             };
-            callback && callback(errorResponse);
+            if (callback) callback(errorResponse);
             return errorResponse;
         });
 }

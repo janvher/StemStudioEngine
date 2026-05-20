@@ -2,11 +2,20 @@ import type {Object3D} from "three";
 
 import {LambdaBase} from "../../LambdaBase";
 
+/** Per-object collider component data. */
+interface ColliderData {
+    shape: string;
+    sizeX: number;
+    sizeY: number;
+    sizeZ: number;
+    [key: string]: unknown;
+}
+
 export default class ColliderLambda extends LambdaBase {
     private _activeCollisions: Set<string> = new Set();
     // Reuse between frames to avoid allocation
     private _currentCollisions: Set<string> = new Set();
-    private _entriesCache: [Object3D, Record<string, any>][] = [];
+    private _entriesCache: [Object3D, ColliderData][] = [];
     private _entriesDirty: boolean = true;
 
     onObjectAdded(): void {
@@ -26,7 +35,7 @@ export default class ColliderLambda extends LambdaBase {
     update(_deltaTime: number = 0.016): void {
         // Rebuild entries array only when objects change
         if (this._entriesDirty) {
-            this._entriesCache = Array.from(this._registeredObjects.entries());
+            this._entriesCache = Array.from(this._registeredObjects.entries()) as [Object3D, ColliderData][];
             this._entriesDirty = false;
         }
 
@@ -74,11 +83,11 @@ export default class ColliderLambda extends LambdaBase {
     }
 
     private _intersects(
-        objA: Object3D, dataA: Record<string, any>,
-        objB: Object3D, dataB: Record<string, any>,
+        objA: Object3D, dataA: ColliderData,
+        objB: Object3D, dataB: ColliderData,
     ): boolean {
-        const shapeA = dataA.shape as string;
-        const shapeB = dataB.shape as string;
+        const shapeA = dataA.shape;
+        const shapeB = dataB.shape;
 
         if (shapeA === "sphere" && shapeB === "sphere") {
             return this._sphereSphere(objA, dataA.sizeX, objB, dataB.sizeX);
@@ -104,8 +113,8 @@ export default class ColliderLambda extends LambdaBase {
     }
 
     private _boxBox(
-        a: Object3D, dA: Record<string, any>,
-        b: Object3D, dB: Record<string, any>,
+        a: Object3D, dA: ColliderData,
+        b: Object3D, dB: ColliderData,
     ): boolean {
         const hxA = dA.sizeX * 0.5, hyA = dA.sizeY * 0.5, hzA = dA.sizeZ * 0.5;
         const hxB = dB.sizeX * 0.5, hyB = dB.sizeY * 0.5, hzB = dB.sizeZ * 0.5;

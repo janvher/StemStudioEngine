@@ -3,6 +3,7 @@ import {AssetType} from "@stem/network/api/asset";
 import {AssetRef} from "@stem/editor-oss/asset-management/AssetRef";
 import {useLibrariesContext} from "@stem/editor-oss/context";
 import {BasicComboboxNoPortal} from "../../common/BasicCombobox/BasicComboboxNoPortal";
+import type {Item} from "../../common/BasicCombobox/BasicCombobox";
 import {SearchInput} from "../../common/SearchInput";
 import {StyledButton} from "../../common/StyledButton";
 import {StyledSwitch} from "../../common/StyledSwitch";
@@ -27,7 +28,7 @@ export const Filters = ({isFullScreen}: {isFullScreen: boolean}) => {
 
     const areAssetsSelected = assetsToAdd.length > 0;
 
-    const handleChange = (index: number, value: any) => {
+    const handleChange = (index: number, value: Item) => {
         const newValues = [...filterValues];
         newValues[index] = value;
         setFilterValues(newValues);
@@ -44,12 +45,16 @@ export const Filters = ({isFullScreen}: {isFullScreen: boolean}) => {
             if (asset.type === AssetType.Behavior) {
                 behaviorAssetRefs.push({
                     assetId: asset.id,
-                    revisionId: (asset as any).importRevisionId || asset.headRevisionId,
+                    revisionId:
+                        (asset as typeof asset & {importRevisionId?: string}).importRevisionId ||
+                        asset.headRevisionId,
                 });
             } else {
                 assetRefs.push({
                     assetId: asset.id,
-                    revisionId: (asset as any).importRevisionId || asset.headRevisionId,
+                    revisionId:
+                        (asset as typeof asset & {importRevisionId?: string}).importRevisionId ||
+                        asset.headRevisionId,
                 });
             }
         });

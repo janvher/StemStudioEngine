@@ -241,8 +241,8 @@ export class JoltPhysicsEngine implements PhysicsEngine, VehiclePhysics, JointPh
         this.collisionObjectToShapeMap.clear();
 
         for (const joint of this.jointMap.values()) {
-            try { this.physicsSystem.RemoveConstraint(joint); } catch {}
-            try { joint.Release?.(); } catch {}
+            try { this.physicsSystem.RemoveConstraint(joint); } catch { /* already removed */ }
+            try { joint.Release?.(); } catch { /* already released */ }
         }
         this.jointMap.clear();
 
@@ -258,10 +258,10 @@ export class JoltPhysicsEngine implements PhysicsEngine, VehiclePhysics, JointPh
         for (const shapeEntry of this.shapeCache.values()) {
             try {
                 shapeEntry.shape?.Release?.();
-            } catch {}
+            } catch { /* already released */ }
             try {
                 this.jolt.destroy(shapeEntry.shape);
-            } catch {}
+            } catch { /* already destroyed */ }
         }
         this.shapeCache.clear();
 
@@ -1620,7 +1620,7 @@ export class JoltPhysicsEngine implements PhysicsEngine, VehiclePhysics, JointPh
             try {
                 constraint.SetMotorState?.(this.jolt.EMotorState_Velocity);
                 constraint.SetTargetAngularVelocity?.(motorSpeed);
-            } catch {}
+            } catch { /* motor API unavailable on this constraint type */ }
         }
 
         this.jointMap.set(this.getJointKey(uuidA, uuidB), constraint);
@@ -1659,8 +1659,8 @@ export class JoltPhysicsEngine implements PhysicsEngine, VehiclePhysics, JointPh
         const key = this.getJointKey(uuidA, uuidB);
         const constraint = this.jointMap.get(key);
         if (!constraint) return;
-        try { this.physicsSystem.RemoveConstraint(constraint); } catch {}
-        try { constraint.Release?.(); } catch {}
+        try { this.physicsSystem.RemoveConstraint(constraint); } catch { /* already removed */ }
+        try { constraint.Release?.(); } catch { /* already released */ }
         this.jointMap.delete(key);
     }
 

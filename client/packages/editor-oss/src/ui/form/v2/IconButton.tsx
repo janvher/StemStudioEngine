@@ -26,7 +26,7 @@ const IconButton = ({
     onClick,
 }: Props) => {
     const handleClick = (event: any) => {
-        !disabled && onClick && onClick(name, event);
+        if (!disabled && onClick) onClick(name, event);
     };
 
     return (

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import { FixedBehaviorSystemAdapter } from "../adapters/FixedBehaviorSystemAdapter";
 import { PipelineStage, FrameContext } from "../types";
+import type BehaviorManager from "@stem/editor-oss/behaviors/BehaviorManager";
 
 // Mock behavior with fixedUpdate
 const createMockBehavior = (id: string, hasFixedUpdate = true, isPaused = false) => ({
@@ -16,7 +17,7 @@ const createMockBehavior = (id: string, hasFixedUpdate = true, isPaused = false)
 const createMockBehaviorManager = (behaviors: ReturnType<typeof createMockBehavior>[]) => ({
     behaviors,
     isProcessing: false,
-    fixedUpdate(fixedDeltaTime: number, context?: FrameContext): void {
+    fixedUpdate(fixedDeltaTime: number, _context?: FrameContext): void {
         for (let i = 0; i < behaviors.length; i++) {
             const behavior = behaviors[i]!;
             if (typeof behavior.fixedUpdate !== "function") continue;
@@ -47,7 +48,7 @@ describe("FixedBehaviorSystemAdapter", () => {
 
     beforeEach(() => {
         mockManager = createMockBehaviorManager([]);
-        adapter = new FixedBehaviorSystemAdapter(() => mockManager as any);
+        adapter = new FixedBehaviorSystemAdapter(() => mockManager as unknown as BehaviorManager);
     });
 
     afterEach(() => {
@@ -96,7 +97,7 @@ describe("FixedBehaviorSystemAdapter", () => {
         it("should call fixedUpdate on behavior manager", () => {
             const behavior = createMockBehavior("test");
             mockManager = createMockBehaviorManager([behavior]);
-            adapter = new FixedBehaviorSystemAdapter(() => mockManager as any);
+            adapter = new FixedBehaviorSystemAdapter(() => mockManager as unknown as BehaviorManager);
 
             const context = createFrameContext({ fixedDeltaTime: 0.01667 });
             adapter.update(context);
@@ -108,7 +109,7 @@ describe("FixedBehaviorSystemAdapter", () => {
             const behaviorWithFixed = createMockBehavior("with-fixed", true);
             const behaviorWithoutFixed = createMockBehavior("without-fixed", false);
             mockManager = createMockBehaviorManager([behaviorWithFixed, behaviorWithoutFixed]);
-            adapter = new FixedBehaviorSystemAdapter(() => mockManager as any);
+            adapter = new FixedBehaviorSystemAdapter(() => mockManager as unknown as BehaviorManager);
 
             adapter.update(createFrameContext());
 
@@ -120,7 +121,7 @@ describe("FixedBehaviorSystemAdapter", () => {
             const activeBehavior = createMockBehavior("active", true, false);
             const pausedBehavior = createMockBehavior("paused", true, true);
             mockManager = createMockBehaviorManager([activeBehavior, pausedBehavior]);
-            adapter = new FixedBehaviorSystemAdapter(() => mockManager as any);
+            adapter = new FixedBehaviorSystemAdapter(() => mockManager as unknown as BehaviorManager);
 
             adapter.update(createFrameContext());
 
@@ -131,7 +132,7 @@ describe("FixedBehaviorSystemAdapter", () => {
         it("should pass fixedDeltaTime from FrameContext", () => {
             const behavior = createMockBehavior("test");
             mockManager = createMockBehaviorManager([behavior]);
-            adapter = new FixedBehaviorSystemAdapter(() => mockManager as any);
+            adapter = new FixedBehaviorSystemAdapter(() => mockManager as unknown as BehaviorManager);
 
             const customFixedDt = 0.03333; // 30Hz
             adapter.update(createFrameContext({ fixedDeltaTime: customFixedDt }));
@@ -145,7 +146,7 @@ describe("FixedBehaviorSystemAdapter", () => {
                 createMockBehavior(`behavior-${i}`),
             );
             mockManager = createMockBehaviorManager(behaviors);
-            adapter = new FixedBehaviorSystemAdapter(() => mockManager as any);
+            adapter = new FixedBehaviorSystemAdapter(() => mockManager as unknown as BehaviorManager);
 
             adapter.update(createFrameContext());
 
@@ -160,7 +161,7 @@ describe("FixedBehaviorSystemAdapter", () => {
                 createMockBehavior(`behavior-${i}`),
             );
             mockManager = createMockBehaviorManager(behaviors);
-            adapter = new FixedBehaviorSystemAdapter(() => mockManager as any);
+            adapter = new FixedBehaviorSystemAdapter(() => mockManager as unknown as BehaviorManager);
 
             adapter.update(createFrameContext());
 
@@ -176,7 +177,7 @@ describe("FixedBehaviorSystemAdapter", () => {
             let managerCreated = false;
             const lazyAdapter = new FixedBehaviorSystemAdapter(() => {
                 managerCreated = true;
-                return mockManager as any;
+                return mockManager as unknown as BehaviorManager;
             });
 
             // Manager not resolved yet

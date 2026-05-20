@@ -88,12 +88,13 @@ class Generate3dObjectCommand extends Command {
                 objData: objData,
                 model: this.model,
             };
-        } catch (e: any) {
-            if (e.name === "AbortError" || e.message === "CanceledError") {
+        } catch (e) {
+            const err = e as {name?: string; message?: string; response?: {data?: unknown}};
+            if (err.name === "AbortError" || err.message === "CanceledError") {
                 toast.info("Model generation cancelled");
             }
             // Extract actionable error message from Axios response or error chain
-            let reason = e?.response?.data || e?.message || "Unknown error";
+            let reason = err?.response?.data || err?.message || "Unknown error";
             if (typeof reason !== "string") reason = JSON.stringify(reason);
             console.error("Generate3dObjectCommand: Error during model generation:", e);
             return {

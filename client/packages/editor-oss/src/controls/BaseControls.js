@@ -41,18 +41,18 @@ class BaseControls {
     }
 
     
-    focus(target) {
-         
+    focus() {
+
     }
 
-    
-    update(clock, deltaTime) {
-         
+
+    update() {
+
     }
 
-    
-    setPickPosition(position) {
-         
+
+    setPickPosition() {
+
     }
 
     

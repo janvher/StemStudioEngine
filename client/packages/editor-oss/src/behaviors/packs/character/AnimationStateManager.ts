@@ -41,9 +41,10 @@ export class AnimationStateManager {
         if (!this.character) return;
 
         // Check both object.animations and object._obj.animations (for wrapped objects)
+        const wrapped = this.character as {_obj?: {animations?: THREE.AnimationClip[]}};
         const animations =
-            (this.character as any)._obj?.animations?.length > 0
-                ? ((this.character as any)._obj.animations as THREE.AnimationClip[])
+            (wrapped._obj?.animations?.length ?? 0) > 0
+                ? (wrapped._obj?.animations as THREE.AnimationClip[])
                 : this.character.animations;
 
         if (animations && Array.isArray(animations)) {

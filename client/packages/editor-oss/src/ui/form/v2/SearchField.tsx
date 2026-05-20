@@ -34,25 +34,25 @@ const SearchField = ({
     const [filterShow, setFilterShow] = useState(false);
 
     const handleAdd = (event: any) => {
-        onAdd && onAdd(event);
+        if (onAdd) onAdd(event);
     };
 
     const handleChange = (event: any) => {
         const {value} = event.target;
         setSearchValue(value);
-        onChange && onChange(value, categories, event);
+        if (onChange) onChange(value, categories, event);
     };
 
     const handleInput = (event: any) => {
         const {value} = event.target;
         setSearchValue(value);
-        onInput && onInput(value, categories, event);
+        if (onInput) onInput(value, categories, event);
     };
 
     const handleReset = (event: any) => {
         setSearchValue("");
-        onInput && onInput("", categories, event);
-        onChange && onChange("", categories, event);
+        if (onInput) onInput("", categories, event);
+        if (onChange) onChange("", categories, event);
     };
 
     const handleShowFilter = () => {
@@ -74,8 +74,8 @@ const SearchField = ({
         setCategories(updatedCategories);
 
         const {value} = event.target;
-        onInput && onInput(value, updatedCategories, event);
-        onChange && onChange(value, updatedCategories, event);
+        if (onInput) onInput(value, updatedCategories, event);
+        if (onChange) onChange(value, updatedCategories, event);
     };
 
     const stopPropagation = (event: any) => {

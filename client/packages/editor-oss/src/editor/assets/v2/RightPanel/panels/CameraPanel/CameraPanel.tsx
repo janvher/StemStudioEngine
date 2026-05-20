@@ -5,7 +5,7 @@ import {CustomNumericInput} from "./CustomNumericInput";
 import {useAppGlobalContext} from "@stem/editor-oss/context";
 import {RIGHT_PANEL_VERSIONS} from "@stem/editor-oss/context/appStateTypes";
 import global from "@stem/editor-oss/global";
-import {CAMERA_TYPES, CAMERA_TYPES_NEW, CameraData, OCCLUSION_TYPES} from "@stem/editor-oss/types/editor";
+import {CAMERA_TYPES, CameraData, OCCLUSION_TYPES} from "@stem/editor-oss/types/editor";
 import {Item} from "../../../common/BasicCombobox/BasicCombobox";
 import {Tooltip} from "../../../common/Tooltip";
 import {PanelCheckbox} from "../../common/PanelCheckbox";
@@ -19,12 +19,6 @@ export const CameraPanel = () => {
     const app = global.app;
     const editor = app?.editor;
     const selected = editor?.selected;
-    const cameraTypeOptions: Item[] = [
-        ...Object.values(CAMERA_TYPES_NEW).map((type, index) => ({
-            key: `${index + 1}`,
-            value: type,
-        })),
-    ];
     const occlusionTypeOptions: Item[] = [
         ...Object.values(OCCLUSION_TYPES).map((type, index) => ({
             key: `${index + 1}`,

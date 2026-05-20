@@ -6,7 +6,6 @@ import {useOnClickOutside} from "usehooks-ts";
 import {AssetsListLegacy} from "./AssetsListLegacy";
 import {StyledButton} from "./StyledButton";
 import {flexCenter, regularFont} from "../../../../assets/style";
-import global from "@stem/editor-oss/global";
 import {showToast} from "@stem/editor-oss/showToast";
 import Ajax from "@stem/editor-oss/utils/Ajax";
 import {backendUrlFromPath} from "@stem/editor-oss/utils/UrlUtils";
@@ -168,7 +167,6 @@ export const TexturesModal = ({onClose, onApprove}: Props) => {
     const [search, setSearch] = useState("");
     const [data, setData] = useState<FileData[]>([]);
     const [filteredData, setFilteredData] = useState<FileData[]>([]);
-    const app = (global as any).app;
 
     useOnClickOutside(ref as any, onClose);
     useEscapeDismiss({onEscape: onClose});
@@ -187,7 +185,7 @@ export const TexturesModal = ({onClose, onApprove}: Props) => {
     const handleSave = () => {
         const texture = data.find(n => n.ID === selectedId);
         if (texture) {
-            onApprove && onApprove(texture);
+            if (onApprove) onApprove(texture);
             onClose();
         }
     };

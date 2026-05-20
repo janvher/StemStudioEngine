@@ -77,7 +77,7 @@ class MoveObjectCommand extends Command {
         } else if (this.oldParent) {
             const transform = this.keepLocalSpace ? null : this.getObjectTransform(this.object);
 
-            var children = this.oldParent.children;
+            children = this.oldParent.children;
             children.splice(this.oldIndex, 1); // Remove from old position
             children.splice(this.newIndex, 0, this.object); // Insert at new position
             this.object.parent = this.oldParent;
@@ -119,7 +119,7 @@ class MoveObjectCommand extends Command {
         } else if (this.newParent) {
             const transform = this.keepLocalSpace ? null : this.getObjectTransform(this.object);
 
-            var children = this.newParent.children;
+            children = this.newParent.children;
             children.splice(this.newIndex, 1); // Remove from new position
             children.splice(this.oldIndex, 0, this.object); // Insert at old position
             this.object.parent = this.newParent;

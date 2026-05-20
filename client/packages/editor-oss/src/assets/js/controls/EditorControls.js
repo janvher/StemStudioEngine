@@ -194,9 +194,8 @@ let EditorControlsImpl = function (object, domElement) {
 
     /**
      *
-     * @param event
      */
-    function onMouseUp(event) {
+    function onMouseUp() {
         domElement.removeEventListener("mousemove", onMouseMove, false);
         domElement.removeEventListener("mouseup", onMouseUp, false);
         domElement.removeEventListener("mouseleave", onMouseUp, false);

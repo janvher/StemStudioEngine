@@ -158,7 +158,7 @@ export const AddComponent = () => {
                     onChange={item => {
                         const nextFontFamily = item.value;
                         setFontFamily(nextFontFamily);
-                        popupCallback &&
+                        if (popupCallback)
                             popupCallback({
                                 UIType,
                                 variable,
@@ -212,7 +212,7 @@ export const AddComponent = () => {
             <StyledButton
                 isBlue
                 onClick={() => {
-                    popupCallback &&
+                    if (popupCallback)
                         popupCallback({
                             UIType,
                             variable,

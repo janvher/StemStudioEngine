@@ -132,7 +132,8 @@ export const CreateMenu = () => {
              : isAICreationOpen ? null : 
                 <Menu
                     onClick={() => {
-                        isAILoading ? setIsAICreationOpen(true) : setIsAssetSelectionOpen(true);
+                        if (isAILoading) setIsAICreationOpen(true);
+                        else setIsAssetSelectionOpen(true);
                     }}
                     title={i18n.t("Click to open create menu (or right-click in scene)")}
                 >

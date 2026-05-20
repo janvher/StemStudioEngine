@@ -1637,7 +1637,7 @@ function onPointerUp( event ) {
 
 			break;
 
-		case 1:
+		case 1: {
 
 			const pointerId = this._pointers[ 0 ];
 			const position = this._pointerPositions[ pointerId ];
@@ -1646,6 +1646,8 @@ function onPointerUp( event ) {
 			this._onTouchStart( { pointerId: pointerId, pageX: position.x, pageY: position.y } );
 
 			break;
+
+		}
 
 	}
 

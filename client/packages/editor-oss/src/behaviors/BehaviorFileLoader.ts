@@ -124,7 +124,7 @@ export class BehaviorFileLoader {
      */
     getAvailableBehaviors(): Array<{folder: string; main: string; path: string}> {
         return Array.from(this.pathToModuleMap.entries())
-            .map(([path, moduleKey]) => {
+            .map(([path]) => {
                 const pathMatch = path.match(/\.\/packs\/(.+)\/(.+)/);
                 if (pathMatch) {
                     return {

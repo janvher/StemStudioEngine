@@ -4,7 +4,7 @@ type DebounceData = {
     sourceKey?: string;
     outputKey?: string;
     delaySeconds?: number;
-    _lastSourceValue?: any;
+    _lastSourceValue?: unknown;
     _lastChangedAt?: number;
 };
 

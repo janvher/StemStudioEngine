@@ -9,7 +9,7 @@ export const TOS: React.FC = () => (
             This software is provided under the MIT License (see
             <code>LICENSE</code> at the project root). If a deployment of this
             build offers terms specific to that deployment, refer to that
-            operator's documentation.
+            operator&apos;s documentation.
         </p>
     </main>
 );

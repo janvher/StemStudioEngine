@@ -17,7 +17,7 @@ export class CommandsExecutor {
         string,
         {
             resolve: (results: CommandExecutionResult[]) => void;
-            reject: (error: any) => void;
+            reject: (error: unknown) => void;
             interactiveResult: InteractiveResult;
         }
     > = new Map();
@@ -181,22 +181,23 @@ export class CommandsExecutor {
                 step,
                 result,
             };
-        } catch (error: any) {
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
             step.status = "failed";
-            step.error = error.message;
+            step.error = message;
 
             this.recordExecution({
                 step,
                 startTime,
                 endTime: Date.now(),
                 success: false,
-                error: error.message,
+                error: message,
             });
 
             return {
                 success: false,
                 step,
-                error: error.message,
+                error: message,
             };
         } finally {
             this.currentExecution = null;
@@ -255,8 +256,8 @@ export class CommandsExecutor {
      * @param parameters
      */
     private validateParameters(
-        schema: Array<{name: string; type: string; required: boolean; enum?: any[]}>,
-        parameters: Record<string, any>,
+        schema: Array<{name: string; type: string; required: boolean; enum?: unknown[]}>,
+        parameters: Record<string, unknown>,
     ): void {
         // Check for unsupported parameters
         const knownParams = new Set(schema.map(p => p.name));

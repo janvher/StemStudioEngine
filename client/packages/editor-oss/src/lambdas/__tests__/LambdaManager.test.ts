@@ -2,7 +2,7 @@ import {Object3D} from "three";
 import {describe, it, expect, vi, beforeEach} from "vitest";
 
 import type GameManager from "@stem/editor-oss/behaviors/game/GameManager";
-import {createForeignLambdaView, type LambdaConfig, type LambdaOptions} from "../Lambda";
+import {createForeignLambdaView, type LambdaConfig} from "../Lambda";
 import {LambdaBase} from "../LambdaBase";
 import {LambdaManager} from "../LambdaManager";
 

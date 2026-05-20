@@ -19,7 +19,7 @@ export class TimeSliceRunner {
      * @param deadline
      */
     run(id: string, generator: Generator, deadline: number): boolean {
-        let result: IteratorResult<any, any>;
+        let result: IteratorResult<unknown, unknown>;
         try {
             result = generator.next();
         } catch (error) {

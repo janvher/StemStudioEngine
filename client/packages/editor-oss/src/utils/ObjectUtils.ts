@@ -14,7 +14,7 @@ type ChildData = {
 };
 
 const containsSkinnedMesh = (object: Object3D): boolean => {
-    if ((object as any).isSkinnedMesh) {
+    if ((object as {isSkinnedMesh?: boolean}).isSkinnedMesh) {
         return true;
     }
 
@@ -40,7 +40,7 @@ const processClonedObjectRecursively = (
 
     // Clone materials
     if (options?.cloneMaterials) {
-        const material = (sourceObject as any).material as Material | Material[];
+        const material = (sourceObject as Mesh).material as Material | Material[];
         const cloneMaterial = (m: Material) => {
             if (options.materialCache?.has(m)) {
                 return options.materialCache.get(m)!;
@@ -51,22 +51,22 @@ const processClonedObjectRecursively = (
         };
 
         if (Array.isArray(material)) {
-            (clonedObject as any).material = material.map(cloneMaterial);
+            (clonedObject as Mesh).material = material.map(cloneMaterial);
         } else if (material) {
-            (clonedObject as any).material = cloneMaterial(material);
+            (clonedObject as Mesh).material = cloneMaterial(material);
         }
     }
 
     // Clone geometry
     if (options?.cloneGeometry) {
-        const geometry = (sourceObject as any).geometry as BufferGeometry;
+        const geometry = (sourceObject as Mesh).geometry as BufferGeometry;
         if (geometry) {
             if (options.geometryCache?.has(geometry)) {
-                (clonedObject as any).geometry = options.geometryCache.get(geometry)!;
+                (clonedObject as Mesh).geometry = options.geometryCache.get(geometry)!;
             } else {
                 const cloned = geometry.clone();
                 options.geometryCache?.set(geometry, cloned);
-                (clonedObject as any).geometry = cloned;
+                (clonedObject as Mesh).geometry = cloned;
             }
         }
     }
@@ -84,7 +84,7 @@ const processCloneBehaviors = (clonedObject: Object3D): void => {
         return;
     }
 
-    clonedObject.userData.behaviors = clonedObject.userData.behaviors.map((behavior: any) => ({
+    clonedObject.userData.behaviors = clonedObject.userData.behaviors.map((behavior: {uuid: string; [key: string]: unknown}) => ({
         ...behavior,
         uuid: MathUtils.generateUUID(),
     }));
@@ -145,8 +145,9 @@ export const cloneObject = (object: Object3D, options: CloneObjectOptions = {}):
     // TODO: should we clone this data instead of referencing it?
     // TODO: our objects also have a _root property, but I'm not sure if it
     // makes sense to clone / reference that.
-    (clonedObject as any)._obj = (object as any)._obj;
-    (clonedObject as any)._root = (object as any)._root;
+    type ObjectWithRefs = Object3D & {_obj?: unknown; _root?: unknown};
+    (clonedObject as ObjectWithRefs)._obj = (object as ObjectWithRefs)._obj;
+    (clonedObject as ObjectWithRefs)._root = (object as ObjectWithRefs)._root;
 
     return clonedObject;
 };

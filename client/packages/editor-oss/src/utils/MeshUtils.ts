@@ -134,8 +134,8 @@ const MeshUtils = {
      * @param attr - The attribute to check
      * @returns True if the attribute is a BufferAttribute
      */
-    isBufferAttribute(attr: any): attr is BufferAttribute {
-        return attr && attr.isBufferAttribute;
+    isBufferAttribute(attr: BufferAttribute | InterleavedBufferAttribute): attr is BufferAttribute {
+        return attr && (attr as BufferAttribute).isBufferAttribute;
     },
 
     /**
@@ -143,8 +143,8 @@ const MeshUtils = {
      * @param attr - The attribute to check
      * @returns True if the attribute is an InterleavedBufferAttribute
      */
-    isInterleavedBufferAttribute(attr: any): attr is InterleavedBufferAttribute {
-        return attr && attr.isInterleavedBufferAttribute;
+    isInterleavedBufferAttribute(attr: BufferAttribute | InterleavedBufferAttribute): attr is InterleavedBufferAttribute {
+        return attr && (attr as InterleavedBufferAttribute).isInterleavedBufferAttribute;
     },
 
     /**

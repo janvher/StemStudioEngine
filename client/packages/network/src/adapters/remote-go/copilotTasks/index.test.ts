@@ -1,3 +1,4 @@
+import type {AxiosResponse} from "axios";
 import {beforeEach, describe, expect, it, vi} from "vitest";
 
 import Ajax from "@web-shared/utils/Ajax";
@@ -27,7 +28,7 @@ describe("copilotTasks API", () => {
     it("lists tasks with scene and session filters", async () => {
         vi.mocked(Ajax.get).mockResolvedValue({
             data: {Code: 200, Data: {items: [{ID: "task-1", Title: "Task"}]}},
-        } as any);
+        } as AxiosResponse);
 
         const tasks = await listCopilotTasks({sceneID: "scene-1", sessionID: "session-1", status: "todo", limit: 5});
 
@@ -40,7 +41,7 @@ describe("copilotTasks API", () => {
     it("creates tasks as url encoded form payloads", async () => {
         vi.mocked(Ajax.post).mockResolvedValue({
             data: {Code: 200, Data: {ID: "task-1", Title: "Task"}},
-        } as any);
+        } as AxiosResponse);
 
         await createCopilotTask({sceneID: "scene-1", sessionID: "session-1", title: "Task", order: 2});
 
@@ -62,7 +63,7 @@ describe("copilotTasks API", () => {
     it("updates tasks", async () => {
         vi.mocked(Ajax.post).mockResolvedValue({
             data: {Code: 200, Data: {ID: "task-1", Status: "done"}},
-        } as any);
+        } as AxiosResponse);
 
         await updateCopilotTask({id: "task-1", status: "done"});
 
@@ -76,7 +77,7 @@ describe("copilotTasks API", () => {
     it("deletes tasks", async () => {
         vi.mocked(Ajax.post).mockResolvedValue({
             data: {Code: 200},
-        } as any);
+        } as AxiosResponse);
 
         await deleteCopilotTask("task-1");
 

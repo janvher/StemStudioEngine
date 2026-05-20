@@ -347,7 +347,7 @@ export const RenderingAndPerformancePanel = () => {
     const [splatMinSortIntervalMs, setSplatMinSortIntervalMs] = useState<number>(
         initialSplatSettings.minSortIntervalMs ?? DEFAULT_SPLAT_SETTINGS.minSortIntervalMs,
     );
-    const [splatEnableLod, setSplatEnableLod] = useState<boolean>(
+    const [, setSplatEnableLod] = useState<boolean>(
         initialSplatSettings.enableLod ?? DEFAULT_SPLAT_SETTINGS.enableLod,
     );
     const [splatPixelRatioFactor, setSplatPixelRatioFactor] = useState<number>(

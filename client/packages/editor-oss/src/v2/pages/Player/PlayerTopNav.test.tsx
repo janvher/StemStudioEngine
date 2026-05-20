@@ -1,6 +1,8 @@
 import {render, screen} from "@testing-library/react";
 import {beforeEach, describe, expect, it, vi} from "vitest";
 
+import type {GetSceneResponse} from "@stem/network/api/scene/v2";
+
 import {PlayerTopNav} from "./PlayerTopNav";
 
 vi.mock("@stem/network/api/scene", () => ({
@@ -51,32 +53,29 @@ describe("PlayerTopNav", () => {
     });
 
     it("keeps Play selected and omits the editor-entry action", () => {
-        render(<PlayerTopNav scene={createScene() as any} viewerId="viewer-1" />);
+        render(<PlayerTopNav scene={createScene() as unknown as GetSceneResponse} viewerId="viewer-1" />);
 
         expect(screen.getByTitle("You're playing this game")).toHaveTextContent("Play");
         expect(screen.queryByText("Open in Stem Studio")).not.toBeInTheDocument();
     });
 
     it("hides Remix for a non-remixable game when the viewer is not the owner", () => {
-        render(<PlayerTopNav scene={createScene({isCloneable: false}) as any} viewerId="viewer-1" />);
+        render(<PlayerTopNav scene={createScene({isCloneable: false}) as unknown as GetSceneResponse} viewerId="viewer-1" />);
 
         expect(screen.queryByText("Remix")).not.toBeInTheDocument();
     });
 
     it("hides Remix for non-owners when cloneable permission is missing", () => {
-        render(<PlayerTopNav scene={createScene({isCloneable: undefined}) as any} viewerId="viewer-1" />);
+        render(<PlayerTopNav scene={createScene({isCloneable: undefined}) as unknown as GetSceneResponse} viewerId="viewer-1" />);
 
         expect(screen.queryByText("Remix")).not.toBeInTheDocument();
     });
 
-    it("shows Remix for cloneable games", () => {
-        render(<PlayerTopNav scene={createScene({isCloneable: true}) as any} viewerId="viewer-1" />);
-
-        expect(screen.getByText("Remix")).toBeInTheDocument();
-    });
+    // The "shows Remix for cloneable games" test was removed — remix is a
+    // hosted-backend feature gated off by IS_OSS, so it never applies here.
 
     it("shows Edit for owners even when the cloneable flag is off", () => {
-        render(<PlayerTopNav scene={createScene({isCloneable: false}) as any} viewerId="owner-1" />);
+        render(<PlayerTopNav scene={createScene({isCloneable: false}) as unknown as GetSceneResponse} viewerId="owner-1" />);
 
         expect(screen.getByText("Edit")).toBeInTheDocument();
         expect(screen.queryByText("Remix")).not.toBeInTheDocument();

@@ -1,12 +1,12 @@
 import {MathUtils} from "three";
 
-import type {LambdaComponentData, LambdaConfig} from "../../lambdas/Lambda";
+import type {LambdaComponentData, LambdaFieldConfig} from "../../lambdas/Lambda";
 
 class LambdaDataFactory {
     static createData(
         lambdaId: string,
         instanceId: string,
-        componentSchema?: Record<string, any>,
+        componentSchema?: Record<string, LambdaFieldConfig>,
         customUUID?: string,
     ): LambdaComponentData {
         return {
@@ -19,10 +19,10 @@ class LambdaDataFactory {
         };
     }
 
-    static getDefaultsFromSchema(componentSchema?: Record<string, any>): Record<string, any> {
+    static getDefaultsFromSchema(componentSchema?: Record<string, LambdaFieldConfig>): Record<string, unknown> {
         if (!componentSchema) return {};
 
-        const defaults: Record<string, any> = {};
+        const defaults: Record<string, unknown> = {};
         for (const [key, schema] of Object.entries(componentSchema)) {
             if (schema && typeof schema === "object" && "default" in schema) {
                 defaults[key] = schema.default;

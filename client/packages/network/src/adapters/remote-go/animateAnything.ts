@@ -13,8 +13,8 @@ export const getModelBySearch = async (search: string) => {
         });
 
         return response?.data as IAnythingModel[];
-    } catch (error: any) {
-        throw new Error(error.message);
+    } catch (error) {
+        throw new Error(error instanceof Error ? error.message : String(error));
     }
 };
 
@@ -27,8 +27,8 @@ export const getModelByName = async (name: string) => {
         });
 
         return response?.data as IAnythingModel[];
-    } catch (error: any) {
-        throw new Error(error.message);
+    } catch (error) {
+        throw new Error(error instanceof Error ? error.message : String(error));
     }
 };
 
@@ -42,8 +42,8 @@ export const getModelByID = async (id: string) => {
 
         const data = await response?.data;
         return data as IAnythingModel[];
-    } catch (error: any) {
-        throw new Error(error.message);
+    } catch (error) {
+        throw new Error(error instanceof Error ? error.message : String(error));
     }
 };
 
@@ -64,7 +64,7 @@ export const animateModel = async (file: File, symmetry: boolean, model_type: st
 
         const data = response?.data;
         return data as IAnythingModel[];
-    } catch (error: any) {
-        throw new Error(error.message);
+    } catch (error) {
+        throw new Error(error instanceof Error ? error.message : String(error));
     }
 };

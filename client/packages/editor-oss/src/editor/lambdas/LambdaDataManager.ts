@@ -1,13 +1,13 @@
 import {Object3D} from "three";
 
 import LambdaDataFactory from "./LambdaDataFactory";
-import type {LambdaComponentData} from "../../lambdas/Lambda";
+import type {LambdaComponentData, LambdaFieldConfig} from "../../lambdas/Lambda";
 
 class LambdaDataManager {
     createLambdaComponentData(
         lambdaId: string,
         instanceId: string,
-        componentSchema?: Record<string, any>,
+        componentSchema?: Record<string, LambdaFieldConfig>,
         customUUID?: string,
     ): LambdaComponentData {
         return LambdaDataFactory.createData(lambdaId, instanceId, componentSchema, customUUID);
@@ -51,7 +51,7 @@ class LambdaDataManager {
     updateLambdaComponentData(
         object: Object3D,
         uuid: string,
-        newComponentData: Record<string, any>,
+        newComponentData: Record<string, unknown>,
     ): boolean {
         const component = this.getLambdaComponentByUUID(object, uuid);
         if (!component) return false;

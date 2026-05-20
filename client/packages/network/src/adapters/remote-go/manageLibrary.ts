@@ -38,7 +38,7 @@ export const addAssetToLibrary = async (asset: Asset, options: {libraryType?: TA
             showToast({type: "success", title: "Asset added to the library."});
             return response.data.Data;
         }
-    } catch (err: any) {
+    } catch (err) {
         showToast({type: "error", title: "Request failed."});
         console.error("Request failed", err);
         return null;

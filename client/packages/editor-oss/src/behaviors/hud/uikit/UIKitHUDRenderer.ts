@@ -18,7 +18,6 @@ import {InGameMenuDataType, StartGameMenuDataType} from "@stem/editor-oss/editor
 import {getSoundsFromUI} from "@stem/editor-oss/editor/assets/v2/HUD/HUDView/getGameSounds";
 import {InGameData} from "@stem/editor-oss/editor/assets/v2/HUD/HUDView/types";
 import global from "@stem/editor-oss/global";
-import {ISoundSettings} from "@stem/editor-oss/types/editor";
 import EventBus from "../../event/EventBus";
 import GameManager from "../../game/GameManager";
 import UIKitPointerEvents from "../../uikit/UIKitPointerEvents";
@@ -50,7 +49,7 @@ export class UIKitHUDRenderer {
         isWinner: false,
         timeRemaining: "00:00:00",
         playerWeapons: [],
-        pickedWeaponOrItem: null,
+        pickedWeaponOrItem: undefined,
     };
     private keydownHandler?: (e: KeyboardEvent) => void;
     private gameOverTimeout?: ReturnType<typeof setTimeout>;
@@ -186,7 +185,7 @@ export class UIKitHUDRenderer {
             isWinner: game.isWinner(),
             timeRemaining: game.time_remaining || "00:00:00",
             playerWeapons: game.playerWeapons,
-            pickedWeaponOrItem: game.pickedWeaponOrItem ?? null,
+            pickedWeaponOrItem: game.pickedWeaponOrItem ?? undefined,
         };
     }
 

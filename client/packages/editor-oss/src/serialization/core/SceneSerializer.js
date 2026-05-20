@@ -9,7 +9,6 @@ import * as THREE from "three";
 
 import BaseSerializer from "../BaseSerializer";
 import Object3DSerializer from "./Object3DSerializer";
-import MaterialUtils from "@web-shared/utils/MaterialUtils";
 import ShadowUtils from "@web-shared/utils/ShadowUtils";
 import MaterialsSerializer from "../material/MaterialsSerializer";
 import TexturesSerializer from "../texture/TexturesSerializer";

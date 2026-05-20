@@ -118,7 +118,7 @@ function detectMethodCallContext(
  */
 function getLambdaIds(): {id: string; name: string}[] {
     const configs = global.app?.editor?.lambdaConfigRegistry?.getAllConfigs() || [];
-    return configs.map((c: any) => ({id: c.id, name: c.name}));
+    return configs.map(c => ({id: c.id, name: c.name}));
 }
 
 /**
@@ -126,7 +126,7 @@ function getLambdaIds(): {id: string; name: string}[] {
  */
 function getBehaviorIds(): {id: string; name: string}[] {
     const configs = global.app?.editor?.behaviorConfigRegistry?.getAllConfigs() || [];
-    return configs.map((c: any) => ({id: c.id, name: c.name}));
+    return configs.map(c => ({id: c.id, name: c.name}));
 }
 
 // ---------------------------------------------------------------------------

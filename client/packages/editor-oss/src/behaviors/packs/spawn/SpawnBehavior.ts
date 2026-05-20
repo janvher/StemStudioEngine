@@ -25,7 +25,7 @@ class SpawnBehavior extends BehaviorBase {
         this.scene = game.scene;
     }
 
-    update(deltaTime: number) {
+    update() {
         if (!this.attributes.startOnTrigger){
             this.checkCollision();
         } 

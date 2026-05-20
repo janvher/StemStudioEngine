@@ -16,7 +16,7 @@ export const handleAddBox = (callback?: any, editor?: any, app?: any, addAsChara
     box.name = uniqueName;
 
     addObjectToSceneInCameraView(box, editor);
-    callback && callback(box);
+    if (callback) callback(box);
 
     if (app && addAsCharacter) {
         const behaviorData = editor!.addBehaviorToObject(box, "character");
@@ -40,7 +40,7 @@ export const handleAddBox = (callback?: any, editor?: any, app?: any, addAsChara
 
 const addObjectToSceneInCameraView = (object: THREE.Object3D, editor: any) => {
     editor.moveObjectToCameraClosestPoint(object);
-    const geometry = (object as any).geometry as THREE.BufferGeometry;
+    const geometry = (object as THREE.Mesh).geometry as THREE.BufferGeometry;
     if (geometry && geometry.boundingBox === null) {
         geometry.computeBoundingBox();
     }
@@ -55,5 +55,5 @@ const addObjectToSceneInCameraView = (object: THREE.Object3D, editor: any) => {
 };
 
 export const getExistingNames: (editor: any) => Set<string> = editor => {
-    return new Set(editor.scene.children.map((obj: any) => obj.name));
+    return new Set(editor.scene.children.map((obj: THREE.Object3D) => obj.name));
 };

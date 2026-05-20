@@ -21,8 +21,8 @@ class BlendLoader extends BaseLoader {
         super();
     }
 
-    load(url, options, environment) {
-        return new Promise((resolve, reject) => {
+    load(url, options) {
+        return new Promise(resolve => {
             console.error(
                 `BlendLoader: Cannot load .blend files directly.\n` +
                 `Blender files must be exported to a web-compatible format:\n` +

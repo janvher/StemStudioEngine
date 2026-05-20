@@ -58,7 +58,7 @@ export class DiscordShopExample extends BehaviorBase {
     
     async onEvent(msg: string, data: any) {
         if (msg === "shop.getPricing" && data.itemId) {
-            const basePrice = this.getBasePrice(data.itemId);
+            const basePrice = this.getBasePrice();
             const finalPrice = basePrice * (1 - this.discountPercentage / 100);
             
             // Send pricing back
@@ -94,7 +94,7 @@ export class DiscordShopExample extends BehaviorBase {
         }
     }
     
-    private getBasePrice(itemId: string): number {
+    private getBasePrice(): number {
         // Return base price for item
         return 100; // Example
     }

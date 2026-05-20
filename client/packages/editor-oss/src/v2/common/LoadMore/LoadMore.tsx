@@ -3,14 +3,14 @@ import {useTranslation} from "react-i18next";
 
 import {StyledButton} from "../../../editor/assets/v2/common/StyledButton";
 
-interface Props {
+interface Props<T> {
     visibilityCounter: number;
-    itemsToLoad: any[];
-    setVisibleResults: Dispatch<SetStateAction<any[]>>;
+    itemsToLoad: T[];
+    setVisibleResults: Dispatch<SetStateAction<T[]>>;
     margin?: string;
 }
 
-export const LoadMore = ({visibilityCounter, itemsToLoad, setVisibleResults, margin}: Props) => {
+export const LoadMore = <T,>({visibilityCounter, itemsToLoad, setVisibleResults, margin}: Props<T>) => {
     const {t} = useTranslation();
     const [visibleGamesCount, setVisibleGamesCount] = useState(visibilityCounter);
     const hasMoreGamesToLoad = visibleGamesCount < itemsToLoad.length;

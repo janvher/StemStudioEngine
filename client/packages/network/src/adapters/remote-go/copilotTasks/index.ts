@@ -37,7 +37,10 @@ export type CopilotTaskUpdateInput = {
     order?: number;
 };
 
-function assertSuccess(response: any, fallback: string): any {
+function assertSuccess(
+    response: {data?: {Code?: number; Msg?: string; Data?: unknown}} | undefined,
+    fallback: string,
+): any {
     if (response?.data?.Code !== 200) {
         throw new Error(response?.data?.Msg || fallback);
     }

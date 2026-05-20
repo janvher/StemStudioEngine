@@ -426,7 +426,6 @@ export function getPlotBudgetOptionsFromQuality(
 
     const base = PlotBudgetPolicy.resolveOptions({isMobile});
     const scene = settings.scene;
-    const rendering = settings.rendering;
     const lodDistances = scene?.lodDistances ?? [];
     const pressure = getQualityPressure(settings, isMobile);
     const distanceScale = THREE.MathUtils.clamp(1 - pressure * 0.45, 0.45, 1.05);

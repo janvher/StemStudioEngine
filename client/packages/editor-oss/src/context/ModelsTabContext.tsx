@@ -1,7 +1,7 @@
 import I18n from "i18next";
 import {debounce, DebouncedFunc} from "lodash";
 import React, {useCallback, useEffect, useMemo, useState} from "react";
-import {Box3, Object3D, Vector3} from "three";
+import {Box3, Mesh, Object3D, Vector3} from "three";
 
 import {useLibrariesContext} from ".";
 import {saveScene} from "@stem/network/api/scene";
@@ -21,7 +21,7 @@ interface ModelsTabContextValue {
     selectedItemId: string;
     handleFetchingModels: DebouncedFunc<(skipEventEmit?: boolean) => Promise<void>>;
     loadModelToScene: (id: string, onSuccess?: (obj: Object3D) => void, onError?: (error: unknown) => void) => void;
-    handleDeleteFromScene: (id: any) => void;
+    handleDeleteFromScene: (id: string) => void;
     addLibraryIDToReq: boolean;
     setModelUploadCallback: React.Dispatch<React.SetStateAction<((modelData: any) => void) | null>>;
     modelUploadCallback: ((modelData: any) => void) | null;
@@ -102,7 +102,7 @@ const ModelsTabContextProvider: React.FC<ModelsTabContextProviderProps> = ({chil
                 }
 
                 obj.traverse(function (child: Object3D) {
-                    if ((child as any).isMesh) {
+                    if (child instanceof Mesh) {
                         child.castShadow = true;
                         child.receiveShadow = true;
                     }
@@ -136,7 +136,7 @@ const ModelsTabContextProvider: React.FC<ModelsTabContextProviderProps> = ({chil
             });
     };
 
-    const handleObjectSelected = (object: any) => {
+    const handleObjectSelected = (object: Object3D | null) => {
         if (!object) {
             setSelectedItemId("");
             return;
@@ -179,7 +179,7 @@ const ModelsTabContextProvider: React.FC<ModelsTabContextProviderProps> = ({chil
         };
     }, [handleFetchingModels]);
 
-    const addToCenter = (obj: any) => {
+    const addToCenter = (obj: Object3D) => {
         console.log("Adding model to center", obj);
         if (obj.userData.DefaultSize) {
             const newSize = new Vector3(
@@ -198,19 +198,19 @@ const ModelsTabContextProvider: React.FC<ModelsTabContextProviderProps> = ({chil
         app?.editor?.execute(new (AddObjectCommand as any)(obj)).catch(console.error);
 
         if (obj.userData.scripts) {
-            obj.userData.scripts.forEach((n: any) => {
+            obj.userData.scripts.forEach((n: unknown) => {
                 app?.scripts.push(n);
             });
             app?.call("scriptChanged", obj);
         }
     };
 
-    const clickSceneToAdd = (obj: any) => {
+    const clickSceneToAdd = (obj: Object3D) => {
         let added = false;
         if (app?.editor) {
             app.editor.gpuPickNum += 1;
         }
-        app?.on(`gpuPick.ModelPanel`, (intersect: {point: any}) => {
+        app?.on(`gpuPick.ModelPanel`, (intersect: {point: Vector3}) => {
             if (!intersect.point) {
                 return;
             }
@@ -221,7 +221,7 @@ const ModelsTabContextProvider: React.FC<ModelsTabContextProviderProps> = ({chil
             }
             obj.position.copy(intersect.point);
         });
-        app?.on(`raycast.ModelPanel`, (intersect: {point: any}) => {
+        app?.on(`raycast.ModelPanel`, (intersect: {point: Vector3}) => {
             app.on(`gpuPick.ModelPanel`, null);
             app.on(`raycast.ModelPanel`, null);
             obj.position.copy(intersect.point);
@@ -232,10 +232,10 @@ const ModelsTabContextProvider: React.FC<ModelsTabContextProviderProps> = ({chil
         });
     };
 
-    const handleDeleteFromScene = (id: any) => {
+    const handleDeleteFromScene = (id: string) => {
         if (!app?.editor) return;
 
-        const deleteInstance = (id: any) => {
+        const deleteInstance = (id: string) => {
             const object = app?.editor?.modelByID(id);
 
             if (!object || !object.parent) {

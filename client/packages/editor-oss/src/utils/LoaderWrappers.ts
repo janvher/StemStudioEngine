@@ -1,6 +1,5 @@
 import * as THREE from "three";
 
-import {resolveAssetUrl} from "./AssetDownloadUtils";
 import {smartResolveAssetUrl} from "./RuntimeAssetLoader";
 
 /**

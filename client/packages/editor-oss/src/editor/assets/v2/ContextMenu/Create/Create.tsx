@@ -3,7 +3,6 @@ import * as THREE from "three";
 
 import { Finalization } from "./Finalization";
 import { GenerationStepsList } from "./GenerationStepsList";
-import { Loading } from "./Loading";
 import { PromptStep } from "./PromptStep";
 import { Result } from "./Result";
 import EngineRuntime from "@stem/editor-oss/EngineRuntime";
@@ -79,7 +78,7 @@ export const Create = ({
     const [step, setStep] = useState(AI_BUILDER_STEPS.PROMPT);
     const [foundModels, setFoundModels] = useState<any[]>([]);
     const [followUpMessage, setFollowUpMessage] = useState("");
-    const [loadingDescription, setLoadingDescription] = useState("");
+    const [, setLoadingDescription] = useState("");
     const [modelData, setModelData] = useState<{
         width: number;
         height: number;
@@ -188,7 +187,7 @@ export const Create = ({
         }
     };
 
-    const generateAndUploadModel = async (prompt: string, uuid: string, name: string, tags: string[] = []) => {
+    const generateAndUploadModel = async (prompt: string, uuid: string, name: string, _tags: string[] = []) => {
         let url = "";
         let imageToken = "";
         let displayedProgress = 0;

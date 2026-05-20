@@ -1,60 +1,32 @@
-import {type FormEvent, useCallback, useEffect, useMemo, useRef, useState} from "react";
+import {useEffect, useMemo, useState} from "react";
 import i18n from "i18next";
 import {useNavigate} from "react-router-dom";
-import {ClipLoader} from "react-spinners";
 import {useMediaQuery} from "usehooks-ts";
 
-import createNewGameProjectPreview from "./assets/create-new-game-project-preview.png";
-import createProjectCardPlaceholder from "./assets/create-project-card-placeholder.png";
-import createPromptBackground from "./assets/create-prompt-background.png";
-import magicAiIcon from "./assets/magic-ai-dark.svg";
 import {BaseGamePickerModal} from "./BaseGamePickerModal";
 import {savePickerPrompt, readPickerPrompt, clearPickerPrompt, readPickerPromptAutoStart} from "./baseGamePickerStorage";
 import {
-    CarouselIndicator,
-    CarouselButton,
     CreateDashboardWrapper,
     EmptyProjects,
     InlineTools,
     PlaceholderCard,
-    PrimaryButton,
     ProjectCardsGrid,
-    PromptForm,
-    PromptInput,
     Section,
-    SectionActions,
     SectionHeader,
     SectionTitle,
-    SecondaryButton,
-    StarterCard,
-    StarterCardHeader,
-    StarterSubtitle,
-    StarterTitle,
-    StartingProjectsLayout,
-    TemplateCard,
-    TemplateCardBody,
-    TemplateCarouselTrack,
-    TemplateCarouselViewport,
-    TemplatesEmpty,
-    WelcomeBlock,
-    WelcomeSubtitle,
-    WelcomeTitle,
 } from "./CreateDashboardView.style";
 import {extractKeywords, getPromptMatchedTemplates} from "./templateMatching";
 import {getSceneBatch, getStartersStats, updateStarterStats} from "@stem/network/api/scene";
 import {cloneScene} from "@stem/network/api/scene/v2";
 import {useTemplateIds} from "@stem/network/api/templates/hooks";
-import {addLikedGame} from "@stem/network/api/updateUser";
 import {ROUTES} from "@web-shared/routes";
 import {useAppGlobalContext, useAuthorizationContext, useHomepageContext} from "@stem/editor-oss/context";
 import {writePendingProjectAdvancedModePreference} from "@stem/editor-oss/context/advancedModeStorage";
-import {getThumbnail} from "@stem/editor-oss/services";
 import {IS_OSS} from "@stem/editor-oss/mode/buildMode";
 import {getOSSPersistenceMode} from "@stem/editor-oss/persistence";
 import {showToast} from "@stem/editor-oss/showToast";
 import {isStripeCreditsPurchasingEnabled} from "@stem/editor-oss/utils/featureFlags";
 import {PRODUCT_ANALYTICS_EVENTS, trackProductEvent} from "@stem/editor-oss/utils/productAnalytics";
-import {HeartIcon} from "../../../../../v2/pages/Home/PlayPage/HeartIcon";
 import {openEditorRoute} from "../../../../../v2/pages/editorHandoff";
 import {generateProjectLink} from "../../../../../v2/pages/links";
 import {
@@ -63,27 +35,12 @@ import {
     prepareRemixCopilotEntry,
 } from "../../AiCopilot/copilotWorkspaceEntry";
 import {CreditsPurchaseModal} from "../../CreditsPurchaseModal/CreditsPurchaseModal";
-import arrowLeftIcon from "../../icons/arrow-left.svg";
 import {ImportIcon} from "../../TemplatePanel/ImportIcon";
 import {TEMPLATES} from "../../TemplatePanel/constants/templates";
 import {FileData} from "../../types/file";
-import {ProgressiveImage} from "../../common/ProgressiveImage/ProgressiveImage";
-import {
-    CardStatsRow as CompactFooter,
-    CardStat as CompactStat,
-    CardThumbnail as CompactMedia,
-    CardGradientOverlay,
-    CardTitleOverlay,
-    CardOverlayTitle,
-} from "../common/GameCard.style";
 import {MOBILE_DASHBOARD_BREAKPOINT} from "../DashboardLayout/DashboardHeader/DashboardHeader.style";
 import {getKeywordMatchedPlaceholder, getRandomPlaceholderIdentifier} from "../GameOverview/placeholderThumbnails";
 import {CreateHomepageHero} from "../CreateHomepageHero/CreateHomepageHero";
-import heartOutlineIcon from "../icons/heart-outline.svg";
-import playStatIcon from "../icons/play-stat.svg";
-import remixStatIcon from "../icons/remix-stat.svg";
-import shareStatIcon from "../icons/share-stat.svg";
-import zeroCountIcon from "../icons/zero-count.svg";
 import {getNextProjectPageFetcher} from "../projectPagination";
 import {Filters} from "../SceneList/GamesSections/SectionHeader/Filters/Filters";
 import {SceneListItem} from "../SceneList/SceneListItem";
@@ -118,110 +75,24 @@ type Props = {
     view?: "create" | "projects";
 };
 
-const formatMetricValue = (value?: number) => {
-    const safeValue = value ?? 0;
-    if (safeValue >= 1_000_000) {
-        const compact = Math.round((safeValue / 1_000_000) * 10) / 10;
-        return `${compact}M`;
-    }
-    if (safeValue >= 1000) {
-        const compact = Math.round((safeValue / 1000) * 10) / 10;
-        return `${compact}k`;
-    }
-    return `${safeValue}`;
-};
-
-const MarqueeTitle = ({children}: {children: string}) => {
-    const ref = useRef<HTMLHeadingElement>(null);
-    const [isOverflowing, setIsOverflowing] = useState(false);
-
-    useEffect(() => {
-        const el = ref.current;
-        if (el) setIsOverflowing(el.scrollWidth > el.clientWidth);
-    }, [children]);
-
-    return (
-        <CardOverlayTitle
-            ref={ref}
-            className={isOverflowing ? "overflowing" : ""}
-        >
-            <span>{children}</span>
-        </CardOverlayTitle>
-    );
-};
-
-const LikeStat = ({scene, noHover}: {scene: FileData; noHover?: boolean}) => {
-    const {setDbUser, handleGetLikedGames, likedGamesIds} = useAuthorizationContext();
-    const navigate = useNavigate();
-    const [localLikes, setLocalLikes] = useState(scene.Likes ?? 0);
-    const [loadingLike, setLoadingLike] = useState(false);
-    const userLikedGame = likedGamesIds?.includes(scene.ID) ?? false;
-
-    useEffect(() => {
-        setLocalLikes(scene.Likes ?? 0);
-    }, [scene.Likes]);
-
-    const handleClick = useCallback(
-        async (e: React.MouseEvent) => {
-            e.stopPropagation();
-            setLoadingLike(true);
-            const res = await addLikedGame(scene.ID, setDbUser, () =>
-                navigate(ROUTES.LOGIN, {state: {from: location.pathname}}),
-            );
-            await handleGetLikedGames();
-            if (res) setLocalLikes(res.likes);
-            setLoadingLike(false);
-        },
-        [scene.ID, setDbUser, handleGetLikedGames, navigate],
-    );
-
-    return (
-        <CompactStat
-            as="div"
-            $noHover={noHover}
-            onClick={handleClick}
-            style={{cursor: "pointer"}}
-        >
-            {loadingLike ? (
-                <ClipLoader
-                    loading
-                    size={14}
-                    color="#0284c7"
-                />
-            ) : userLikedGame ? (
-                <HeartIcon
-                    userLikedGame
-                    variant="dashboard"
-                />
-            ) : (
-                <img
-                    src={heartOutlineIcon}
-                    alt="like"
-                />
-            )}
-            <span>{formatMetricValue(localLikes)}</span>
-        </CompactStat>
-    );
-};
-
-export const CreateDashboardView = ({hasAnyProjects, projects, view = "create"}: Props) => {
+export const CreateDashboardView = ({projects, view = "create"}: Props) => {
     const {search, myGamesSection, collaborativeGamesSection, archivedGamesSection} = useHomepageContext();
-    const {setMainLoaderState, setAdvancedMode} = useAppGlobalContext();
+    const {setAdvancedMode} = useAppGlobalContext();
     const {data: templateIds = [], isLoading: isLoadingTemplateIds} = useTemplateIds();
     const isPhonePortrait = useMediaQuery("(max-width: 480px)");
     const isMobileLandscape = useMediaQuery(`(max-width: ${MOBILE_DASHBOARD_BREAKPOINT})`);
     const isTablet = useMediaQuery("(max-width: 1280px)");
-    const [copilotPrompt, setCopilotPrompt] = useState("");
+    const [, setCopilotPrompt] = useState("");
     const [templates, setTemplates] = useState<FileData[]>([]);
     const [isLoadingTemplates, setIsLoadingTemplates] = useState(true);
     const [starterStats, setStarterStats] = useState({blankProjectCount: 0, sandboxStarterCount: 0});
-    const [activeTemplateIndex, setActiveTemplateIndex] = useState(0);
+    const [, setActiveTemplateIndex] = useState(0);
     const [busyAction, setBusyAction] = useState<"copilot" | "engine" | "template" | null>(null);
     const [showBaseGamePicker, setShowBaseGamePicker] = useState(false);
     const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
     const [pendingPromptDecision, setPendingPromptDecision] = useState<string | null>(null);
     const [showCreditsPurchaseModal, setShowCreditsPurchaseModal] = useState(false);
-    const {aiCredits, dbUser, isAuthorized} = useAuthorizationContext();
+    const {aiCredits, isAuthorized} = useAuthorizationContext();
     const navigate = useNavigate();
     const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
 
@@ -274,10 +145,10 @@ export const CreateDashboardView = ({hasAnyProjects, projects, view = "create"}:
             try {
                 const response = await getSceneBatch(templateIds);
                 if (!cancelled) setTemplates(response || []);
-            } catch (error: any) {
+            } catch (error) {
                 if (!cancelled) {
                     console.error("[CreateDashboardView] Failed to load templates:", error);
-                    showToast({type: "error", title: error.message || "Failed to load templates."});
+                    showToast({type: "error", title: (error instanceof Error && error.message) || "Failed to load templates."});
                 }
             } finally {
                 if (!cancelled) setIsLoadingTemplates(false);
@@ -296,7 +167,7 @@ export const CreateDashboardView = ({hasAnyProjects, projects, view = "create"}:
                 if (!cancelled && response) {
                     setStarterStats(response);
                 }
-            } catch (error: any) {
+            } catch (error) {
                 if (!cancelled) {
                     console.error("[CreateDashboardView] Failed to load starter stats:", error);
                 }
@@ -345,28 +216,13 @@ export const CreateDashboardView = ({hasAnyProjects, projects, view = "create"}:
         setActiveTemplateIndex(prev => Math.min(prev, maxIndex));
     }, [dashboardTemplates.length, visibleTemplateCount]);
 
-    const canShowPreviousTemplates = activeTemplateIndex > 0;
-    const canShowMoreTemplates = activeTemplateIndex + visibleTemplateCount < dashboardTemplates.length;
     const isBusy = busyAction !== null;
     const isTemplateMatchingReady = !isLoadingTemplateIds && !isLoadingTemplates;
     const myProjectPlaceholders = Math.max(0, rowCardCount - filteredProjects.length);
-    const templateCarouselPages = Math.max(1, dashboardTemplates.length - visibleTemplateCount + 1);
-    const visibleCarouselIndicators = Math.min(3, templateCarouselPages);
     const matchingPickerTemplates = useMemo(
         () => pendingPrompt ? getPromptMatchedTemplates(templates, pendingPrompt) : [],
         [pendingPrompt, templates],
     );
-
-    const renderStats = (project: FileData) => {
-        const remixCount = project.RemixCount ?? 0;
-        return [
-            {icon: shareStatIcon, value: "0", disabled: false},
-            ...(remixCount === 0
-                ? [{icon: remixStatIcon, value: null, disabled: true, zeroIcon: zeroCountIcon}]
-                : [{icon: remixStatIcon, value: formatMetricValue(remixCount), disabled: false}]),
-            {icon: playStatIcon, value: formatMetricValue(project.PlayCount), disabled: false},
-        ];
-    };
 
     const startBlankProject = async (options?: {prompt?: string}) => {
         const trimmedPrompt = options?.prompt?.trim();
@@ -406,9 +262,9 @@ export const CreateDashboardView = ({hasAnyProjects, projects, view = "create"}:
             }
 
             openEditorRoute(generateProjectLink(), {autoCreate: true});
-        } catch (error: any) {
+        } catch (error) {
             console.error("[CreateDashboardView] Failed to create blank project:", error);
-            showToast({type: "error", title: error.message || "Failed to create project."});
+            showToast({type: "error", title: (error instanceof Error && error.message) || "Failed to create project."});
             setBusyAction(null);
         }
     };
@@ -465,19 +321,6 @@ export const CreateDashboardView = ({hasAnyProjects, projects, view = "create"}:
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [view, isAuthorized, isTemplateMatchingReady, pendingPromptDecision, pendingPrompt, showBaseGamePicker]);
 
-    const startSandboxProject = async () => {
-        setBusyAction("engine");
-
-        try {
-            await updateStarterStats("SandboxStarter");
-            openEditorRoute(generateProjectLink(), {autoCreate: true, sandboxStarter: true});
-        } catch (error: any) {
-            console.error("[CreateDashboardView] Failed to create sandbox project:", error);
-            showToast({type: "error", title: error.message || "Failed to create sandbox project."});
-            setBusyAction(null);
-        }
-    };
-
     const beginPromptCreation = (prompt: string) => {
         const trimmed = prompt.trim();
         if (!trimmed || isBusy) return;
@@ -504,11 +347,6 @@ export const CreateDashboardView = ({hasAnyProjects, projects, view = "create"}:
         }
 
         continuePromptCreation(trimmed);
-    };
-
-    const handleCopilotSubmit = (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        beginPromptCreation(copilotPrompt);
     };
 
     const handlePickerSelectGame = async (gameId: string) => {
@@ -539,9 +377,9 @@ export const CreateDashboardView = ({hasAnyProjects, projects, view = "create"}:
             setShowBaseGamePicker(false);
             setPendingPrompt(null);
             openEditorRoute(generateProjectLink(result.newSceneId));
-        } catch (error: any) {
+        } catch (error) {
             console.error("[CreateDashboardView] Failed to remix for picker:", error);
-            showToast({type: "error", title: error.message || i18n.t("Failed to remix project.")});
+            showToast({type: "error", title: (error instanceof Error && error.message) || i18n.t("Failed to remix project.")});
             setBusyAction(null);
         }
     };
@@ -558,50 +396,6 @@ export const CreateDashboardView = ({hasAnyProjects, projects, view = "create"}:
         setShowBaseGamePicker(false);
         clearPickerPrompt();
         setPendingPrompt(null);
-    };
-
-    const handleTemplateSelect = async (template: DashboardTemplate) => {
-        if (isBusy || !template.ID) return;
-
-        if (template.starterType === "sandbox") {
-            trackProductEvent(PRODUCT_ANALYTICS_EVENTS.CREATE_BLANK_STARTED, {
-                source: "sandbox_starter",
-            });
-            await startSandboxProject();
-            return;
-        }
-
-        setBusyAction("template");
-        trackProductEvent(PRODUCT_ANALYTICS_EVENTS.TEMPLATE_REMIX_STARTED, {
-            scene_id: template.ID,
-            source: "create_template",
-        });
-        setMainLoaderState({
-            visible: true,
-            message: "Remixing scene, this may take a moment...",
-        });
-
-        try {
-            const result = await cloneScene(template.ID);
-            if (!result?.newSceneId) {
-                throw new Error("Template remix did not return a new project.");
-            }
-
-            setAdvancedMode(false);
-            prepareRemixCopilotEntry({
-                newSceneId: result.newSceneId,
-                sourceScene: template,
-            });
-            openEditorRoute(generateProjectLink(result.newSceneId));
-        } catch (error: any) {
-            console.error("[CreateDashboardView] Failed to remix template:", error);
-            showToast({type: "error", title: error.message || "Failed to remix project."});
-            setBusyAction(null);
-            setMainLoaderState({
-                visible: false,
-                message: "",
-            });
-        }
     };
 
     return (

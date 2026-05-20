@@ -1,7 +1,7 @@
-import {Object3D, AnimationClip} from "three";
+import {AnimationClip} from "three";
 import {GLTFExporterPlugin, GLTFWriter} from "three/examples/jsm/exporters/GLTFExporter.js";
 
-import {EARTHAnimationGraphExtension, EARTHAnimationGraphExtensionData} from "./EARTH_animation_graph";
+import {EARTHAnimationGraphExtension} from "./EARTH_animation_graph";
 import {AnimationGraph} from "../AnimationGraph";
 
 export class EARTHAnimationGraphExporterPlugin implements GLTFExporterPlugin {
@@ -25,15 +25,15 @@ export class EARTHAnimationGraphExporterPlugin implements GLTFExporterPlugin {
 
     /**
      * Called before parsing begins
-     * @param input
      */
-    beforeParse?(input: Object3D | Object3D[]): void {}
+    beforeParse(): void {
+        // No pre-parse work required for this extension.
+    }
 
     /**
      * Called after parsing is complete
-     * @param input
      */
-    afterParse?(input: Object3D | Object3D[]): void {
+    afterParse(): void {
         if (!this.animationGraph || this.clips.length === 0) {
             return;
         }

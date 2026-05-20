@@ -53,7 +53,7 @@ export class BehaviorLoadingService {
     }
 
     /**
-     * Set of behavior IDs that came from `packs/**​/behavior.json` files
+     * Set of behavior IDs that came from `packs/** /behavior.json` files
      * (built-in pack behaviors shipped with the editor). Populated by
      * `loadDefaultConfigs()` at editor startup. Used by the save path to
      * skip serializing the full `BehaviorClassConfig` for built-ins —

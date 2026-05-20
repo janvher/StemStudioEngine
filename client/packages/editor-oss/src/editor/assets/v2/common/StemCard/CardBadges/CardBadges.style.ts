@@ -1,6 +1,6 @@
 import styled from "styled-components";
 
-import {flexCenter, regularFont} from "../../../../../../assets/style";
+import {flexCenter} from "../../../../../../assets/style";
 
 export const Wrapper = styled.div`
     position: absolute;

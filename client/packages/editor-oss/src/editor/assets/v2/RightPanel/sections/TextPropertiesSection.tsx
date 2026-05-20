@@ -71,12 +71,6 @@ const Select = styled.select`
     }
 `;
 
-const TwoColumnInputs = styled.div`
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 8px;
-`;
 
 const SliderRow = styled.div`
     display: flex;
@@ -163,8 +157,6 @@ const fontCache = new Map<string, any>();
 
 export const TextPropertiesSection = ({ isLocked }: Props) => {
     const app = global.app;
-    const editor = app?.editor;
-    const selected = editor?.selected as any;
 
     const [isTextObject, setIsTextObject] = useState(false);
     const defaultConfig = {

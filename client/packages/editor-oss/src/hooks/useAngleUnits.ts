@@ -25,7 +25,7 @@ export const useAngleUnits = () => {
     useEffect(() => {
         if (!app) return;
 
-        const handleAngleUnitsChanged = (_editor: any, settings: AngleUnitsSettings) => {
+        const handleAngleUnitsChanged = (_editor: unknown, settings: AngleUnitsSettings) => {
             if (settings) {
                 setAngleUnitsSettings({ ...DEFAULT_ANGLE_UNITS, ...settings });
             }

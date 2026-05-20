@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { QualityAssessmentStateMachine } from "./QualityAssessmentWorker";
 import type { WorkerRecommendChangeMessage } from "./QualityAssessmentWorker";

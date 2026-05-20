@@ -5,7 +5,6 @@ import {CameraControl} from "src/controls/CameraControl";
 import BipedalControl from "./BipedalControl";
 import {CharacterSwap} from "./CharacterSwap";
 import {IPlayerAnimationController} from "./IPlayerAnimationController";
-import ModelLoader from "../../../assets/js/loaders/ModelLoader";
 import {markLocalPlayerAvatar} from "../../../core/budget/AvatarBudgetPolicy";
 import {PhysicsUtil} from "../../../physics/PhysicsUtil";
 import {CAMERA_TYPES, CharacterOptionsInterface} from "@stem/editor-oss/types/editor";

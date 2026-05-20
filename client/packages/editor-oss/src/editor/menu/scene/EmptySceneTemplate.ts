@@ -16,8 +16,8 @@ import {getOrCreateDynamicRoot, getOrCreateSceneHelpersRoot} from "@stem/editor-
 
 class EmptySceneTemplate extends BaseSceneTemplate {
     create() {
-        const app = (global as any).app;
-        const editor = app.editor;
+        const app = global.app!;
+        const editor = app.editor!;
         editor.scene.userData = {
             ...editor.scene.userData,
             cesium: {

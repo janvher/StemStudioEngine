@@ -188,7 +188,7 @@ export async function getScene(sceneId: string): Promise<any> {
             sceneError.status = Number.isFinite(statusCode) ? statusCode : undefined;
             throw sceneError;
         }
-    } catch (error: any) {
+    } catch (error) {
         console.error("Request failed.", error);
         if (error instanceof Error) {
             throw error;
@@ -217,8 +217,8 @@ export async function getSceneBatch(sceneIds: string[]): Promise<any> {
         }
 
         return response?.data.Data;
-    } catch (error: any) {
-        throw new Error(error.message || "Failed to get scenes");
+    } catch (error) {
+        throw new Error((error instanceof Error ? error.message : "") || "Failed to get scenes");
     }
 }
 
@@ -237,8 +237,8 @@ export async function getStartersStats(): Promise<{blankProjectCount: number; sa
         }
 
         return response?.data.Data;
-    } catch (error: any) {
-        throw new Error(error.message || "Failed to get scenes");
+    } catch (error) {
+        throw new Error((error instanceof Error ? error.message : "") || "Failed to get scenes");
     }
 }
 
@@ -268,8 +268,8 @@ export async function updateStarterStats(starterType: StarterType): Promise<any>
         }
 
         return response?.data.Data;
-    } catch (error: any) {
-        throw new Error(error.message || "Failed to get scenes");
+    } catch (error) {
+        throw new Error((error instanceof Error ? error.message : "") || "Failed to get scenes");
     }
 }
 
@@ -641,7 +641,7 @@ export const commitSaveScene = async (
 
         options?.onError?.();
         app.call(`sceneSaveFailed`);
-        const message = (err as any).message || "Request failed.";
+        const message = (err instanceof Error ? err.message : "") || "Request failed.";
         showToast({
             type: "error",
             title: "Error!",
@@ -707,7 +707,7 @@ export const publishCurrentScene = async (
             isCloneable: options.isCloneable,
         });
     } catch (err) {
-        const message = (err as any)?.message ?? "Failed to save settings.";
+        const message = (err instanceof Error ? err.message : undefined) ?? "Failed to save settings.";
         showToast({type: "error", title: message});
         options.onError?.();
         return;
@@ -770,7 +770,7 @@ export const publishCurrentScene = async (
         options.onSuccess?.();
     } catch (err) {
         const verb = action === "publish" ? "publish" : "unpublish";
-        const message = (err as any)?.message ?? "Please try again.";
+        const message = (err instanceof Error ? err.message : undefined) ?? "Please try again.";
         showToast({
             type: "error",
             title: `Failed to ${verb}`,
@@ -970,7 +970,7 @@ export async function createSceneScreenShot(): Promise<File | undefined> {
                         }
 
                         resolve(file);
-                    } catch (e: any) {
+                    } catch (e) {
                         if (app.editor?.isSandbox) {
                             camera.position.copy(currentCameraPosition);
                             camera.rotation.copy(currentCameraRotation);
@@ -984,8 +984,8 @@ export async function createSceneScreenShot(): Promise<File | undefined> {
             const result = currentScreenShotPromise;
             currentScreenShotPromise = null;
             return result;
-        } catch (e: any) {
-            throw new Error(e);
+        } catch (e) {
+            throw e instanceof Error ? e : new Error(String(e));
         } finally {
             app?.game?.cameraControl?.resume();
         }
@@ -1028,7 +1028,7 @@ export async function loadScene(
             sceneError.status = Number.isFinite(statusCode) ? statusCode : undefined;
             throw sceneError;
         }
-    } catch (error: any) {
+    } catch (error) {
         console.error("Failed to load game", error);
         if (error instanceof Error) {
             throw error;
@@ -1162,8 +1162,8 @@ export async function getSceneCollaborators(sceneId: string): Promise<string[]> 
         }
 
         return response?.data.collaborators || [];
-    } catch (error: any) {
-        throw new Error(error.message || "Failed to get collaborators");
+    } catch (error) {
+        throw new Error((error instanceof Error ? error.message : "") || "Failed to get collaborators");
     }
 }
 
@@ -1186,8 +1186,8 @@ export async function addSceneCollaborator(sceneId: string, email: string): Prom
         if (response?.data.Code !== 200) {
             throw new Error(response?.data.Msg || "Failed to add collaborator");
         }
-    } catch (error: any) {
-        throw new Error(error.message || "Failed to add collaborator");
+    } catch (error) {
+        throw new Error((error instanceof Error ? error.message : "") || "Failed to add collaborator");
     }
 }
 
@@ -1210,8 +1210,8 @@ export async function removeSceneCollaborator(sceneId: string, email: string): P
         if (response?.data.Code !== 200) {
             throw new Error(response?.data.Msg || "Failed to remove collaborator");
         }
-    } catch (error: any) {
-        throw new Error(error.message || "Failed to remove collaborator");
+    } catch (error) {
+        throw new Error((error instanceof Error ? error.message : "") || "Failed to remove collaborator");
     }
 }
 
@@ -1232,8 +1232,8 @@ export async function checkIsSceneCollaborator(sceneId: string): Promise<boolean
         }
 
         return response?.data.Data?.isCollaborator || false;
-    } catch (error: any) {
-        throw new Error(error.message || "Failed to check collaborator status");
+    } catch (error) {
+        throw new Error((error instanceof Error ? error.message : "") || "Failed to check collaborator status");
     }
 }
 
@@ -1304,11 +1304,11 @@ export async function fetchMyScenes(params?: FetchScenesParams): Promise<Paginat
             page: data?.Page,
             returned: data?.Scenes?.length ?? 0,
             total: data?.TotalCount,
-            firstIds: (data?.Scenes ?? []).slice(0, 5).map((s: any) => s.ID),
+            firstIds: (data?.Scenes ?? []).slice(0, 5).map(s => s.ID),
         });
         return data;
-    } catch (error: any) {
-        console.error("Fetching scenes error:", error.message);
+    } catch (error) {
+        console.error("Fetching scenes error:", error instanceof Error ? error.message : error);
         throw error;
     }
 }
@@ -1335,8 +1335,8 @@ export async function fetchRemixesOfScene(
         }
 
         return response?.data.Data;
-    } catch (error: any) {
-        console.error("Fetching remixes error:", error.message);
+    } catch (error) {
+        console.error("Fetching remixes error:", error instanceof Error ? error.message : error);
         throw error;
     }
 }
@@ -1360,8 +1360,8 @@ export async function fetchArchivedScenes(params?: FetchScenesParams): Promise<P
         }
 
         return response?.data.Data;
-    } catch (error: any) {
-        console.error("Fetching archived scenes error:", error.message);
+    } catch (error) {
+        console.error("Fetching archived scenes error:", error instanceof Error ? error.message : error);
         throw error;
     }
 }
@@ -1384,8 +1384,8 @@ export async function fetchCollaborativeScenes(params?: FetchScenesParams): Prom
         }
 
         return response?.data.Data;
-    } catch (error: any) {
-        console.error("Fetching collaborative scenes error:", error.message);
+    } catch (error) {
+        console.error("Fetching collaborative scenes error:", error instanceof Error ? error.message : error);
         throw error;
     }
 }
@@ -1414,7 +1414,7 @@ export async function fetchPublishedScenes(params?: FetchScenesParams): Promise<
             page: data?.Page,
             returned: data?.Scenes?.length ?? 0,
             total: data?.TotalCount,
-            firstIds: (data?.Scenes ?? []).slice(0, 5).map((s: any) => ({
+            firstIds: (data?.Scenes ?? []).slice(0, 5).map(s => ({
                 id: s.ID,
                 name: s.Name,
                 IsPublic: s.IsPublic,
@@ -1422,8 +1422,8 @@ export async function fetchPublishedScenes(params?: FetchScenesParams): Promise<
             })),
         });
         return data;
-    } catch (error: any) {
-        console.error("Fetching published scenes error:", error.message);
+    } catch (error) {
+        console.error("Fetching published scenes error:", error instanceof Error ? error.message : error);
         throw error;
     }
 }
@@ -1443,8 +1443,8 @@ export async function fetchTopPicksScenes(): Promise<FileData[]> {
         }
 
         return response?.data.Data || [];
-    } catch (error: any) {
-        console.error("Fetching published scenes error:", error.message);
+    } catch (error) {
+        console.error("Fetching published scenes error:", error instanceof Error ? error.message : error);
         throw error;
     }
 }
@@ -1465,8 +1465,8 @@ export async function fetchAssetPacks(params?: FetchScenesParams): Promise<Pagin
         }
 
         return response?.data.Data;
-    } catch (error: any) {
-        console.error("Fetching asset packs error:", error.message);
+    } catch (error) {
+        console.error("Fetching asset packs error:", error instanceof Error ? error.message : error);
         throw error;
     }
 }

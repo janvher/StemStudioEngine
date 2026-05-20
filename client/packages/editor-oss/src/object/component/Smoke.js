@@ -22,7 +22,6 @@ import {
     mod,
     mix,
     smoothstep,
-    fract,
 } from "three/tsl";
 import {PointsNodeMaterial} from "three/webgpu";
 

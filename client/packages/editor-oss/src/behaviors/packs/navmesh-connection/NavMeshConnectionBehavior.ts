@@ -1,4 +1,3 @@
-import type * as Nav from 'navcat';
 import { addOffMeshConnection, OffMeshConnectionDirection } from 'navcat';
 import * as THREE from 'three';
 
@@ -291,7 +290,7 @@ class NavMeshConnectionBehavior extends BehaviorBase {
         }
     }
 
-    update(deltaTime: number): void {
+    update(): void {
         // No frame updates needed
         // Connection is added once when NavMesh is ready
     }

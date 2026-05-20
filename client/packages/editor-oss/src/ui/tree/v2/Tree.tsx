@@ -227,7 +227,7 @@ export const Tree = ({
         }
 
         const leaf =
-            (!singleDataObj.children || singleDataObj.children.length === 0) && (singleDataObj as any).leaf !== false;
+            (!singleDataObj.children || singleDataObj.children.length === 0) && singleDataObj.leaf !== false;
         const isBehaviors = Boolean(singleDataObj.userData?.behaviors?.length);
         const isPrefab = Boolean(singleDataObj.userData?.prefabId);
         const isPrefabLocked = !singleDataObj.userData?.prefabEditRevisionId;

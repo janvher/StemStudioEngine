@@ -33,7 +33,7 @@ export interface ACPMessage {
 export interface ACPRequest extends ACPMessage {
     type: "request";
     method: string;
-    params?: Record<string, any>;
+    params?: Record<string, unknown>;
 }
 
 export interface ACPResponse extends ACPMessage {
@@ -53,7 +53,7 @@ export interface ACPError {
 export interface ACPNotification extends ACPMessage {
     type: "notification";
     method: string;
-    params?: Record<string, any>;
+    params?: Record<string, unknown>;
 }
 
 export interface CommandResult {
@@ -77,8 +77,8 @@ export interface CommandParameter {
     type: "string" | "number" | "boolean" | "object" | "array";
     description: string;
     required: boolean;
-    default?: any;
-    enum?: any[];
+    default?: unknown;
+    enum?: unknown[];
 }
 
 // Capabilities message - sent by client on connection
@@ -104,7 +104,7 @@ export interface TaskRequest extends ACPRequest {
             sceneData?: string;
             selectedObject?: string;
             playerData?: string;
-            [key: string]: any;
+            [key: string]: unknown;
         };
     };
 }
@@ -120,7 +120,7 @@ export interface TaskResponse extends ACPResponse {
 export interface ExecutionStep {
     id: string;
     command: string;
-    parameters: Record<string, any>;
+    parameters: Record<string, unknown>;
     status: "pending" | "executing" | "completed" | "failed";
     result?: any;
     error?: string;
@@ -131,7 +131,7 @@ export interface CommandRequest extends ACPRequest {
     method: "executeCommand";
     params: {
         command: string;
-        parameters: Record<string, any>;
+        parameters: Record<string, unknown>;
     };
 }
 
@@ -222,8 +222,15 @@ export interface InteractiveResult {
     description?: string;
     items: InteractiveResultItem[];
     command: SupportedCommands;
-    commandParams: Record<string, any>;
+    commandParams: Record<string, unknown>;
     messageId: string;
+}
+
+export interface InteractiveResultItemMetadata {
+    provider?: string;
+    assetType?: string;
+    category?: string;
+    [key: string]: string | number | boolean | string[] | undefined;
 }
 
 export interface InteractiveResultItem {
@@ -232,7 +239,7 @@ export interface InteractiveResultItem {
     description?: string;
     thumbnailUrl?: string;
     previewUrl?: string;
-    metadata?: Record<string, any>;
+    metadata?: InteractiveResultItemMetadata;
     data?: any;
 }
 

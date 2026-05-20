@@ -180,7 +180,7 @@ export class UnifiedGameServicesController {
                     sceneId: sceneId, // Pass sceneId
                 });
                 // Discord controller initialized successfully
-            } catch (error) {
+            } catch {
                 // Failed to initialize Discord controller
             }
         } else if (settings.discord?.enabled) {
@@ -208,7 +208,7 @@ export class UnifiedGameServicesController {
                     activeService,
                 );
                 // Mobile controller initialized
-            } catch (error) {
+            } catch {
                 // Failed to initialize mobile controller
             }
         }
@@ -223,7 +223,7 @@ export class UnifiedGameServicesController {
                     sceneId: sceneId, // Pass sceneId
                 });
                 // CrazyGames controller initialized
-            } catch (error) {
+            } catch {
                 // Failed to initialize CrazyGames controller
             }
         }
@@ -235,7 +235,7 @@ export class UnifiedGameServicesController {
                     sceneId: sceneId, // Pass sceneId
                 });
                 // Steam controller initialized
-            } catch (error) {
+            } catch {
                 // Failed to initialize Steam controller
             }
         }
@@ -249,7 +249,7 @@ export class UnifiedGameServicesController {
                     sceneId: sceneId, // Pass sceneId
                 });
                 // Email/Password controller initialized
-            } catch (error) {
+            } catch {
                 // Failed to initialize Email/Password controller
             }
         }
@@ -412,7 +412,7 @@ export class UnifiedGameServicesController {
                             return;
                         }
                     }
-                } catch (e) {
+                } catch {
                     // Error checking existing authentication
                 }
 
@@ -689,6 +689,8 @@ export class UnifiedGameServicesController {
         serviceType: GameServiceType,
         platformName: string,
     ): Promise<void> {
+        // params kept for call-site parity; auth payload is read from currentUser
+        if (data && serviceType && platformName) { /* no-op */ }
         EventBus.instance.send("gameServices.authenticated", this.currentUser);
     }
 
@@ -907,7 +909,7 @@ export class UnifiedGameServicesController {
                 default:
                     return false;
             }
-        } catch (error) {
+        } catch {
             // Score submission failed
         }
 
@@ -956,7 +958,7 @@ export class UnifiedGameServicesController {
                 default:
                     return false;
             }
-        } catch (error) {
+        } catch {
             // Achievement unlock failed
         }
 
@@ -1009,7 +1011,7 @@ export class UnifiedGameServicesController {
                     });
                     return false;
             }
-        } catch (error) {
+        } catch {
             // Failed to show leaderboards
         }
 
@@ -1061,7 +1063,7 @@ export class UnifiedGameServicesController {
                     });
                     return false;
             }
-        } catch (error) {
+        } catch {
             // Failed to show achievements
         }
 
@@ -1250,7 +1252,7 @@ export class UnifiedGameServicesController {
         try {
             await this.authenticateSteam();
             return true;
-        } catch (error) {
+        } catch {
             return false;
         }
     }
@@ -1263,7 +1265,7 @@ export class UnifiedGameServicesController {
         try {
             await this.authenticateDiscord();
             return true;
-        } catch (error) {
+        } catch {
             return false;
         }
     }
@@ -1276,7 +1278,7 @@ export class UnifiedGameServicesController {
         try {
             await this.authenticateCrazyGames();
             return true;
-        } catch (error) {
+        } catch {
             return false;
         }
     }

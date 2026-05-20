@@ -1,10 +1,8 @@
 import React, {useState, useEffect} from "react";
-import ReactDOM from "react-dom/client";
 import styled from "styled-components";
 
 import {ObjectBehaviorsAttribute} from "../BehaviorAttributes";
 import BaseAttributeWidget from "./BaseAttributeWidget";
-import BehaviorData from "../../../behaviors/BehaviorData";
 import global from "@stem/editor-oss/global";
 import {LambdaComponentData} from "../../../lambdas/Lambda";
 import {MultiselectWithCheckboxes} from "../../assets/v2/RightPanel/common/MultiselectWithCheckboxes";

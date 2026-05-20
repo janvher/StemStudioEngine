@@ -47,7 +47,7 @@ export const RemixDashboardView = () => {
     );
     const [templates, setTemplates] = useState<FileData[]>([]);
     const [platformGames, setPlatformGames] = useState<FileData[]>([]);
-    const [remixFilter, setRemixFilter] = useState<RemixFilterType>("template_order");
+    const [remixFilter] = useState<RemixFilterType>("template_order");
     const [isLoadingPlatformGames, setIsLoadingPlatformGames] = useState(false);
 
     useEffect(() => {

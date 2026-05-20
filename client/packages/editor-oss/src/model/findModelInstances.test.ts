@@ -3,7 +3,7 @@ import {describe, expect, it} from "vitest";
 
 import {findModelInstances} from "./findModelInstances";
 
-const createObject = (userData: Record<string, any> = {}): Object3D => {
+const createObject = (userData: Record<string, unknown> = {}): Object3D => {
     const obj = new Object3D();
     Object.assign(obj.userData, userData);
     return obj;

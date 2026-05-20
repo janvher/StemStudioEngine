@@ -12,7 +12,7 @@ class ParticleAnimator extends PlayerComponent {
         super(app);
     }
 
-    create(scene, camera, renderer) {
+    create(scene, _camera, _renderer) {
          
         this.scene = scene;
 
@@ -21,7 +21,7 @@ class ParticleAnimator extends PlayerComponent {
         });
     }
 
-    update(clock, deltaTime, time) {
+    update(clock, deltaTime, _time) {
          
         var elapsed = clock.elapsedTime;
 

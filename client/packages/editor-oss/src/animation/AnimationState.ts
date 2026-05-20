@@ -126,7 +126,7 @@ export class AnimationState implements IAnimationState {
         }
     }
 
-    toJSON(): any {
+    toJSON() {
         return {
             id: this.id,
             name: this.name,

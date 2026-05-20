@@ -29,7 +29,7 @@ function isValidPolicy(value: unknown): value is RootTransformPolicy {
  * @param urlSearch
  */
 export function resolveRootTransformPolicy(
-    renderingUserData: any,
+    renderingUserData: {rootTransformPolicy?: unknown} | null | undefined,
     urlSearch?: string,
 ): RootTransformPolicy {
     // URL override for safe rollout/debugging:

@@ -14,7 +14,7 @@ class PerlinTerrainSerializer extends BaseSerializer {
         return json;
     }
 
-    fromJSON(json, parent) {
+    fromJSON(json) {
          
         var terrain = new PerlinTerrain(
             json.userData.width,

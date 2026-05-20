@@ -6,7 +6,6 @@ import { PhysicsUtil } from "../../../physics/PhysicsUtil";
 import { isDirectionalLight } from '@stem/editor-oss/utils/LightUtils';
 import { BehaviorBase } from "../../Behavior";
 import GameManager from "../../game/GameManager";
-import { BehaviorThrottlePriority } from "../../performance/interfaces/IThrottleStrategy";
 
 class FollowBehavior extends BehaviorBase {
     protected game: GameManager | null = null;

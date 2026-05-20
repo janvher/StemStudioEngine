@@ -5,7 +5,7 @@ import VolumeHemisphereLightHelper from "./VolumeHemisphereLightHelper";
 
 class HemisphereLightHelpers extends BaseLightHelpers<VolumeHemisphereLightHelper> {
     protected shouldHaveHelper(object: Object3D): boolean {
-        return (object as any)?.isHemisphereLight;
+        return !!(object as Object3D & { isHemisphereLight?: boolean })?.isHemisphereLight;
     }
 
     protected createHelper(object: Object3D): VolumeHemisphereLightHelper {

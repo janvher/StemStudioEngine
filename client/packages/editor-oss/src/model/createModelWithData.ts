@@ -34,7 +34,7 @@ export type CreateModelParams = {
     thumbnail?: Thumbnail;
     assetSource?: AssetSource;
     ERTHLibrary?: boolean;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
 };
 
 /**

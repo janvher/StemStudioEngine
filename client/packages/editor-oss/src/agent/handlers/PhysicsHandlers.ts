@@ -328,7 +328,8 @@ export class PhysicsHandlers {
     }
 
     private isPhysicsCompatible(object: THREE.Object3D): boolean {
-        return !(object as any).isLight && !(object as any).isCamera;
+        const flags = object as THREE.Object3D & {isLight?: boolean; isCamera?: boolean};
+        return !flags.isLight && !flags.isCamera;
     }
 
     private findObject(identifier: string): THREE.Object3D | null {

@@ -31,7 +31,7 @@ class EnumAttributeConverter implements AttributeConverter {
                         if (typeof item === "string" && (item.startsWith("http://") || item.startsWith("https://"))) {
                             label = new URL(item, window.location.origin).pathname.split("/").pop() || item;
                         }
-                    } catch (e) {
+                    } catch {
                         label = item.split("/").pop() || item;
                     }
                     return {

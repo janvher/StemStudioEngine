@@ -1,4 +1,4 @@
-import {Route, Routes} from "react-router-dom";
+import {Route, Routes, useLocation} from "react-router-dom";
 
 import {Footer} from "./components/Footer";
 import {Nav} from "./components/Nav";
@@ -8,9 +8,15 @@ import {NotFound} from "./routes/NotFound";
 import {Playground} from "./routes/Playground";
 
 export function App() {
+    // The playground route renders its own `playground-bar`, so the marketing
+    // nav would just duplicate it. Hide the nav there — the playground bar and
+    // the footer both still carry the GitHub link.
+    const {pathname} = useLocation();
+    const isPlayground = pathname === "/playground" || pathname.startsWith("/playground/");
+
     return (
         <div className="site-shell">
-            <Nav />
+            {!isPlayground && <Nav />}
             <main className="site-main">
                 <Routes>
                     <Route path="/" element={<Landing />} />

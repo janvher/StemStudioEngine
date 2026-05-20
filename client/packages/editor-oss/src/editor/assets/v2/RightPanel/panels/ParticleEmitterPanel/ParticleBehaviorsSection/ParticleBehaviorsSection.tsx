@@ -1,6 +1,5 @@
 import React, {useState, useReducer} from "react";
 import styled from "styled-components";
-import * as THREE from "three";
 import {
     AxisAngleGenerator,
     Behavior,
@@ -8,7 +7,6 @@ import {
     Bezier,
     ColorRange,
     ConstantValue,
-    ParticleEmitter,
     ParticleSystem,
     PiecewiseBezier,
     Vector3 as QuarksVector3,

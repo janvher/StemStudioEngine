@@ -10,7 +10,7 @@ interface Props {
 
 export const BooleanFields = ({ updateProperties, particleSystem }: Props) => {
     const onChangeBoolean = (selectedItem: Item, key: keyof ParticleSystem) => {
-        // @ts-ignore
+        // @ts-expect-error - dynamic key assignment narrows to a non-boolean ParticleSystem field
         particleSystem[key] = selectedItem.value === "true";
         updateProperties();
     };

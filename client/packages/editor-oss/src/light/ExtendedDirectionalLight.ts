@@ -1,4 +1,4 @@
-import { Camera, Color, ColorRepresentation, DirectionalLight, DirectionalLightShadow, Vector3 } from 'three';
+import { Camera, ColorRepresentation, DirectionalLight, DirectionalLightShadow, Vector3 } from 'three';
 
 import { ExtendedDirectionalLightShadow } from './ExtendedDirectionalLightShadow';
 

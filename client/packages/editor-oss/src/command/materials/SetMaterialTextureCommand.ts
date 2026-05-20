@@ -10,7 +10,6 @@ import {applyTextureOverridesToObject} from "../../editor/assets/v2/materials/ma
 import {IMaterialSettingsTextures} from "../../editor/assets/v2/RightPanel/sections/MaterialRenderingSection/types";
 import global from "../../global";
 import {getAIBackend} from "../../ai";
-import {backendUrlFromPath} from "../../utils/UrlUtils";
 import Command from "../Command";
 
 class SetMaterialTextureCommand extends Command {

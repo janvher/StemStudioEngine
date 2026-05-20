@@ -23,7 +23,7 @@ export const TemplateList = ({templates, selectedItemId, onClick, onDoubleClick}
                 if (res) {
                     setStartersStats(res);
                 }
-            } catch (e: any) {
+            } catch (e) {
                 console.error(e);
                 showToast({type: "error", title: "Failed to get starters stats."});
             }

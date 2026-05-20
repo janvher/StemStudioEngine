@@ -268,7 +268,7 @@ export class AnimationGraph extends EventDispatcher<AnimationGraphEvents> implem
         this.states.forEach(s => {
             const transitions = s.getTransitions();
             const transitionsToRemove = transitions.filter(t => t.targetState.id === stateId);
-            transitionsToRemove.forEach(t => {
+            transitionsToRemove.forEach(() => {
                 this.removeTransition(s.id, stateId);
             });
         });

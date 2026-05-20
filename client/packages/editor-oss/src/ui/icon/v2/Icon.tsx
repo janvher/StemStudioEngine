@@ -16,7 +16,7 @@ interface Props {
 const Icon = ({className, style, icon, title, onClick, color}: Props) => {
     const handleClick = (event: any) => {
         const name = event.currentTarget.getAttribute("name");
-        onClick && onClick(name, event);
+        if (onClick) onClick(name, event);
     };
 
     return (

@@ -6,7 +6,7 @@ interface AnimateScrollConfig {
     offsetX?: number;
     offsetY?: number;
     duration?: number;
-    callback?: () => any; // Consider using more specific return type than any
+    callback?: () => void;
     element?: HTMLElement;
     toElement?: HTMLElement;
 }

@@ -232,7 +232,7 @@ export const Create = () => {
                 await app.setUpScene(projectID, {revisionId: revisionIdToLoad});
                 loadedProjectIDRef.current = projectID;
                 setIsEditingOldRevision(!!revisionIdToLoad && revisionIdToLoad !== headRevisionId);
-            } catch (e: any) {
+            } catch (e) {
                 console.error("Error while loading the project:", e);
                 if (isSceneInaccessibleError(e)) {
                     showToast({type: "error", title: i18n.t("Stem Studio project scene could not be loaded.")});

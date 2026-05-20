@@ -19,7 +19,7 @@ import {BasicPropertiesSection} from "./sections/BasicPropertiesSection";
 import {StartOnTriggerLight} from "./StartOnTriggerLight";
 import {LambdaComponentsTab} from "./tabs/LambdaComponents/LambdaComponentsTab";
 import {ObjectBehaviorsTab} from "./tabs/ObjectBehaviors";
-import EngineRuntime, {
+import {
     BILLBOARD_BEHAVIOR_ID,
     GENERIC_SOUND_BEHAVIOR_ID,
     IMAGE_BILLBOARD_BEHAVIOR_ID,
@@ -101,7 +101,7 @@ const RightPanel = ({showModelAnimationCombiner, openUIPanel, onResize, onVisibi
     const [showTexture, setShowTexture] = useState(false);
     const [texture, setTexture] = useState<TextureType>(null);
     const [color, setColor] = useState<string | null>(null);
-    const {selected, selectionVersion, editor, app} = useEditorSelection("RightPanel");
+    const {selected, selectionVersion, app} = useEditorSelection("RightPanel");
     const selectedObj = useMemo(() => app?.editor?.getSelectedObject(), [selectionVersion]);
     const activeRightPanelRef = useRef(activeRightPanel);
     const keepMaterialPanelOpenRef = useRef(false);
@@ -264,8 +264,8 @@ const RightPanel = ({showModelAnimationCombiner, openUIPanel, onResize, onVisibi
             }
 
             if (
-                (currentSelectedObj as any).cls === "Camera" ||
-                (currentSelectedObj as any).isCamera ||
+                (currentSelectedObj as {cls?: string}).cls === "Camera" ||
+                (currentSelectedObj as {isCamera?: boolean}).isCamera ||
                 currentSelectedObj.type === "Scene"
             ) {
                 shouldSetDefaultPanel = false;

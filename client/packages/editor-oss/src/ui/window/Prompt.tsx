@@ -12,24 +12,24 @@ type Props = {
     title: string;
     children?: React.ReactNode;
     hidden?: boolean;
-    mask?: any;
+    mask?: boolean;
     okText?: string;
     value: string;
-    onOK?: (value: string, event: any) => void;
+    onOK?: (value: string, event: React.MouseEvent) => void;
     handleCancel?: () => void;
-    onClose?: (event: any) => void;
+    onClose?: (event: Event | React.SyntheticEvent) => void;
 };
 
 const Prompt = forwardRef<HTMLDivElement, Props>(
     ({className, style, title, children, hidden, mask, okText, value, onOK, onClose, handleCancel}, ref) => {
         const [inputValue, setInputValue] = React.useState(value);
 
-        const handleOK = (event: any) => {
-            onOK && onOK(inputValue, event);
+        const handleOK = (event: React.MouseEvent) => {
+            if (onOK) onOK(inputValue, event);
         };
 
-        const handleClose = (event: any) => {
-            onClose && onClose(event);
+        const handleClose = (event: Event | React.SyntheticEvent) => {
+            if (onClose) onClose(event);
         };
         return (
             <Window

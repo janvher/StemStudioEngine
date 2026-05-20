@@ -5,7 +5,7 @@ import VolumeDirectionalLightHelper from "./VolumeDirectionalLightHelper";
 
 class DirectionalLightHelpers extends BaseLightHelpers<VolumeDirectionalLightHelper> {
     protected shouldHaveHelper(object: Object3D): boolean {
-        return (object as any)?.isDirectionalLight;
+        return (object as { isDirectionalLight?: boolean }).isDirectionalLight === true;
     }
 
     protected createHelper(object: Object3D): VolumeDirectionalLightHelper {

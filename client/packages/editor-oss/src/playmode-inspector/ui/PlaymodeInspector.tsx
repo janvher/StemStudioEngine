@@ -7,7 +7,6 @@ import {PlaymodeHierarchy} from "./PlaymodeHierarchy";
 import {PlaymodeProperties} from "./PlaymodeProperties";
 import {PlaymodeQuickOpen} from "./PlaymodeQuickOpen";
 import {usePopoutWindow} from "./usePopoutWindow";
-import EngineRuntime from "../../EngineRuntime";
 import global from "../../global";
 import {showToast} from "../../showToast";
 import {diffPlaymodeSnapshot, formatPlaymodeDiff} from "../playmodeSnapshot";

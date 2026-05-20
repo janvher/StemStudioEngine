@@ -123,16 +123,16 @@ export class LODProcessor {
         }
     }
 
-    // @ts-ignore
+    // @ts-expect-error - obj3d parameter is implicitly typed any
     private checkVertexColorsConsistency(obj3d) {
-        // @ts-ignore
+        // @ts-expect-error - traverse callback child is implicitly typed any
         obj3d.traverse(child => {
             if (child.isMesh) {
                 const geometry = child.geometry;
                 let materials = child.material;
                 const hasColorAttr = geometry && geometry.attributes && geometry.attributes.color;
                 if (!Array.isArray(materials)) materials = [materials];
-                // @ts-ignore
+                // @ts-expect-error - mat parameter is implicitly typed any
                 materials = materials.map(mat => {
                     if (mat && "vertexColors" in mat) {
                         const usesVertexColors = mat.vertexColors;
@@ -202,15 +202,18 @@ export class LODProcessor {
                                     material instanceof THREE.MeshPhongMaterial ||
                                     material instanceof THREE.MeshLambertMaterial
                                 ) {
+                                    const texMaterial = material as Partial<
+                                        Record<"normalMap" | "roughnessMap" | "metalnessMap" | "aoMap", THREE.Texture | null>
+                                    >;
                                     if (material.map) modelData.textures.set("map", material.map);
-                                    if ((material as any).normalMap)
-                                        modelData.textures.set("normalMap", (material as any).normalMap);
-                                    if ((material as any).roughnessMap)
-                                        modelData.textures.set("roughnessMap", (material as any).roughnessMap);
-                                    if ((material as any).metalnessMap)
-                                        modelData.textures.set("metalnessMap", (material as any).metalnessMap);
-                                    if ((material as any).aoMap)
-                                        modelData.textures.set("aoMap", (material as any).aoMap);
+                                    if (texMaterial.normalMap)
+                                        modelData.textures.set("normalMap", texMaterial.normalMap);
+                                    if (texMaterial.roughnessMap)
+                                        modelData.textures.set("roughnessMap", texMaterial.roughnessMap);
+                                    if (texMaterial.metalnessMap)
+                                        modelData.textures.set("metalnessMap", texMaterial.metalnessMap);
+                                    if (texMaterial.aoMap)
+                                        modelData.textures.set("aoMap", texMaterial.aoMap);
                                     if (material.emissiveMap)
                                         modelData.textures.set("emissiveMap", material.emissiveMap);
                                 }
@@ -507,7 +510,8 @@ export class LODProcessor {
                 material.opacity = sourceMaterial.opacity;
             } else {
                 // Generic material - copy what we can
-                if ((sourceMaterial as any).color) material.color.copy((sourceMaterial as any).color);
+                const coloredSource = sourceMaterial as THREE.Material & { color?: THREE.Color };
+                if (coloredSource.color) material.color.copy(coloredSource.color);
             }
         }
 

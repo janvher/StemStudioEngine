@@ -380,7 +380,7 @@ const SteamKeysModal = ({sceneId, onClose}: {sceneId: string; onClose: (saved: b
                 if (appId) {
                     setSteamAppId(appId);
                 }
-            } catch (error) {
+            } catch {
                 // App ID not configured yet, that's fine
             }
         };

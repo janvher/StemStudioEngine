@@ -3,14 +3,14 @@ import * as THREE from "three";
 import {ISoundSettings} from "@stem/editor-oss/types/editor";
 
 class SoundManager {
-    scene: any = null;
-    audioListener: any = null;
-    loadedSounds: any = {};
+    scene: THREE.Scene | null = null;
+    audioListener: THREE.AudioListener | null = null;
+    loadedSounds: Record<string, any> = {};
     totalSounds: number = -1;
     currentlyPlayingSoundId: string | null = null;
     private activeSounds: Record<string, THREE.Audio> = {};
 
-    constructor(scene: any) {
+    constructor(scene: THREE.Scene | null) {
         this.scene = scene;
         this.audioListener = null;
         this.loadedSounds = {};
@@ -21,7 +21,7 @@ class SoundManager {
     // Method to clear loaded sounds
     clearLoadedSounds() {
         for (const id in this.loadedSounds) {
-            if (this.loadedSounds.hasOwnProperty(id)) {
+            if (Object.prototype.hasOwnProperty.call(this.loadedSounds, id)) {
                 const sound = this.loadedSounds[id];
                 if (sound.isPlaying) sound.stop();
                 if (sound.source) sound.source.disconnect();
@@ -53,11 +53,11 @@ class SoundManager {
     loadSounds(soundSettings: ISoundSettings[]) {
         const audioLoader = new THREE.AudioLoader();
 
-        soundSettings.forEach((setting: any) => {
+        soundSettings.forEach((setting: ISoundSettings) => {
             audioLoader.load(
                 setting.url,
                 buffer => {
-                    const sound = new THREE.Audio(this.audioListener);
+                    const sound = new THREE.Audio(this.audioListener!);
                     sound.setBuffer(buffer);
 
                     sound.setLoop(setting.loop);
@@ -132,7 +132,7 @@ class SoundManager {
 
     muteAllSounds() {
         for (const id in this.loadedSounds) {
-            if (this.loadedSounds.hasOwnProperty(id)) {
+            if (Object.prototype.hasOwnProperty.call(this.loadedSounds, id)) {
                 this.loadedSounds[id].setVolume(0);
             }
         }

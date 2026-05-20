@@ -1,4 +1,4 @@
-import type {AuthProviderId, IAuthProvider, IAuthUser} from "./IAuthProvider";
+import type {IAuthProvider, IAuthUser} from "./IAuthProvider";
 
 const OSS_DUMMY_UID = "stemstudio-local-user";
 const OSS_DUMMY_TOKEN = "stemstudio-token";
@@ -54,23 +54,23 @@ export class NullAuthProvider implements IAuthProvider {
         return ossLocalUser;
     }
 
-    async signInWithCustomToken(_token: string): Promise<IAuthUser> {
+    async signInWithCustomToken(): Promise<IAuthUser> {
         return unsupported("signInWithCustomToken");
     }
 
-    async signInWithEmailAndPassword(_email: string, _password: string): Promise<IAuthUser> {
+    async signInWithEmailAndPassword(): Promise<IAuthUser> {
         return unsupported("signInWithEmailAndPassword");
     }
 
-    async createUserWithEmailAndPassword(_email: string, _password: string): Promise<IAuthUser> {
+    async createUserWithEmailAndPassword(): Promise<IAuthUser> {
         return unsupported("createUserWithEmailAndPassword");
     }
 
-    async signInWithGoogle(_scopes?: string[]): Promise<IAuthUser> {
+    async signInWithGoogle(): Promise<IAuthUser> {
         return unsupported("signInWithGoogle");
     }
 
-    async signInWithOAuth(_providerId: AuthProviderId, _scopes?: string[]): Promise<IAuthUser> {
+    async signInWithOAuth(): Promise<IAuthUser> {
         return unsupported("signInWithOAuth");
     }
 
@@ -78,11 +78,11 @@ export class NullAuthProvider implements IAuthProvider {
         return unsupported("sendEmailVerification");
     }
 
-    async sendPasswordResetEmail(_email: string): Promise<void> {
+    async sendPasswordResetEmail(): Promise<void> {
         return unsupported("sendPasswordResetEmail");
     }
 
-    async linkAnonymousToEmailPassword(_email: string, _password: string): Promise<IAuthUser> {
+    async linkAnonymousToEmailPassword(): Promise<IAuthUser> {
         return unsupported("linkAnonymousToEmailPassword");
     }
 

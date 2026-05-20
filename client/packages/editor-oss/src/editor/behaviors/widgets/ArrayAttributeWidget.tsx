@@ -205,11 +205,6 @@ const ArrayComponent = ({ name, attribute, getCurrentValue, updateBehaviorField,
         }
     }, [getCurrentValue]);
 
-    const defaultValue =
-        Array.isArray(attribute.default) && attribute.default.length > 0
-            ? attribute.default[0]
-            : null;
-
     const handleAddItem = () => {
         // Save scroll position before modifying
         const { parent, scrollTop } = getScrollableParent(containerRef.current);
@@ -335,7 +330,7 @@ const ArrayComponent = ({ name, attribute, getCurrentValue, updateBehaviorField,
 
 // Optimized with React.memo to prevent unnecessary re-renders
 const ArrayElementAdapter = React.memo(
-    ({ itemId, value, attribute, widget, onChange, onDelete, index }: ArrayElementAdapterProps) => {
+    function ArrayElementAdapter({ itemId, value, attribute, widget, onChange, onDelete, index }: ArrayElementAdapterProps) {
         const containerRef = React.useRef<HTMLDivElement>(null);
         const rootRef = React.useRef<ReactDOM.Root | null>(null);
         // Use ref to always have access to current value without rebuilding widget

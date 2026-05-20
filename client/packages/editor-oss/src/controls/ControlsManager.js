@@ -144,24 +144,24 @@ class ControlsManager extends BaseControls {
 
     enable() {
         this.enabled = true;
-        this.current && this.current.enable();
+        if (this.current) this.current.enable();
     }
 
     disable() {
         this.enabled = false;
-        this.current && this.current.disable();
+        if (this.current) this.current.disable();
     }
 
     focus(target) {
-        this.current && this.current.focus(target);
+        if (this.current) this.current.focus(target);
     }
 
     update(clock, deltaTime) {
-        this.current && this.current.update(clock, deltaTime);
+        if (this.current) this.current.update(clock, deltaTime);
     }
 
     setPickPosition(position) {
-        this.current && this.current.setPickPosition(position);
+        if (this.current) this.current.setPickPosition(position);
     }
 
     onGPUPick(obj) {
@@ -188,7 +188,7 @@ class ControlsManager extends BaseControls {
 
     dispose() {
         global.app.on(`animate.${this.id}`, null);
-        this.current && this.current.dispose();
+        if (this.current) this.current.dispose();
     }
 }
 

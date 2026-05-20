@@ -35,7 +35,7 @@ export const useLUTUploader = () => {
     const createAssetWithData = useCreateAssetWithData();
     const {setAssetRevision} = useAssetResolutionContext();
 
-    const uploadLUT = async (file: File, settings: LUTUploadSettings = {}): Promise<LUTUploadResult | null> => {
+    const uploadLUT = async (file: File): Promise<LUTUploadResult | null> => {
         setIsUploading(true);
         setError(null);
 

@@ -4,7 +4,6 @@ import EngineRuntime from "@stem/editor-oss/EngineRuntime";
 import Editor from "../../../../../../editor/Editor";
 import global from "@stem/editor-oss/global";
 import {PanelCheckbox} from "../../common/PanelCheckbox";
-import {PanelSectionTitleSecondary} from "../../RightPanel.style";
 
 export interface EmailPasswordAuthSettings {
     enabled: boolean;

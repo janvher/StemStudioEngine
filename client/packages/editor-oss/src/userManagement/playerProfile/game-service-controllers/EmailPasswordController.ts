@@ -100,7 +100,7 @@ export class EmailPasswordController extends BaseGameServiceController {
             showToast({
                 type: "error",
                 title: "Sign In Failed",
-                body: (error as any)?.message || "Invalid email or password",
+                body: (error as Error)?.message || "Invalid email or password",
             });
 
             return null;
@@ -171,7 +171,7 @@ export class EmailPasswordController extends BaseGameServiceController {
             showToast({
                 type: "error",
                 title: "Registration Failed",
-                body: (error as any)?.message || "Failed to create account",
+                body: (error as Error)?.message || "Failed to create account",
             });
 
             return null;
@@ -240,7 +240,7 @@ export class EmailPasswordController extends BaseGameServiceController {
             showToast({
                 type: "error",
                 title: "Linking Failed",
-                body: (error as any)?.message || "Failed to link account",
+                body: (error as Error)?.message || "Failed to link account",
             });
 
             return null;

@@ -34,7 +34,7 @@ export class PlaymodeDebugCamera {
             quaternion: this.camera.quaternion.clone(),
         };
 
-        const cameraControl = (this.game as any)?.cameraControl as
+        const cameraControl = this.game?.cameraControl as
             | {pause: () => void; resume: () => void; isPaused?: boolean}
             | undefined;
         if (cameraControl) {
@@ -71,7 +71,7 @@ export class PlaymodeDebugCamera {
         // the pose (no character / unsupported control type) fall back to
         // restoring the original pose so the camera doesn't end up stuck inside
         // geometry the user flew into.
-        const cameraControl = (this.game as any)?.cameraControl as
+        const cameraControl = this.game?.cameraControl as
             | {
                   pause: () => void;
                   resume: () => void;

@@ -67,8 +67,8 @@ export const MissingTextureDialog = ({onSelectTextures, onContinue, onCancel}: M
                 <Header>
                     <Title>Missing Textures</Title>
                     <Subtitle>
-                        This model references textures that weren't included. You can select texture files to apply, or
-                        continue without them.
+                        This model references textures that weren&apos;t included. You can select texture files to
+                        apply, or continue without them.
                     </Subtitle>
                     <ModalCloseButton onClick={onCancel} />
                 </Header>

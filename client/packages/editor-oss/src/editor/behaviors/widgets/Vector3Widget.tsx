@@ -1,5 +1,4 @@
 import React, {useState, useEffect} from "react";
-import ReactDOM from "react-dom/client";
 
 import BaseAttributeWidget from "./BaseAttributeWidget";
 import {NumericInput} from "../../assets/v2/common//NumericInput";

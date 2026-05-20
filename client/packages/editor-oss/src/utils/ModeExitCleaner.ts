@@ -33,11 +33,11 @@ function attachModeExitListener() {
  * @param timeout
  * @param {...any} args
  */
-export function setManagedTimeout(handler: (...args: any[]) => void, timeout?: number, ...args: any[]): ReturnType<typeof setTimeout> {
+export function setManagedTimeout(handler: (...args: unknown[]) => void, timeout?: number, ...args: unknown[]): ReturnType<typeof setTimeout> {
   const id = window.setTimeout(handler, timeout, ...args);
   timeouts.add(id);
   attachModeExitListener();
-  return id as any;
+  return id as unknown as ReturnType<typeof setTimeout>;
 }
 
 /**
@@ -55,11 +55,11 @@ export function clearManagedTimeout(id: number): void {
  * @param timeout
  * @param {...any} args
  */
-export function setManagedInterval(handler: (...args: any[]) => void, timeout?: number, ...args: any[]): ReturnType<typeof setInterval> {
+export function setManagedInterval(handler: (...args: unknown[]) => void, timeout?: number, ...args: unknown[]): ReturnType<typeof setInterval> {
   const id = window.setInterval(handler, timeout, ...args);
   intervals.add(id);
   attachModeExitListener();
-  return id as any;
+  return id as unknown as ReturnType<typeof setInterval>;
 }
 
 /**

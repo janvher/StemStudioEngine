@@ -29,7 +29,7 @@ interface LayerInfoProps {
     onEditBlur: () => void;
 }
 
-const LayerInfo = React.memo(({
+const LayerInfo = React.memo(function LayerInfo({
     layer,
     isSelected,
     isEditing,
@@ -42,7 +42,7 @@ const LayerInfo = React.memo(({
     onDelete,
     onNameChange,
     onEditBlur,
-}: LayerInfoProps) => {
+}: LayerInfoProps) {
     const handleDoubleClick = useCallback(() => {
         onDoubleClick(layer.layerName, layer.uuid);
     }, [layer.layerName, layer.uuid, onDoubleClick]);
@@ -99,7 +99,7 @@ interface AnimationItemProps {
     onDragEnd: (event: any) => void;
 }
 
-const AnimationItem = React.memo(({
+const AnimationItem = React.memo(function AnimationItem({
     animation,
     layerUuid,
     isSelected,
@@ -107,7 +107,7 @@ const AnimationItem = React.memo(({
     onClick,
     onDragStart,
     onDragEnd,
-}: AnimationItemProps) => {
+}: AnimationItemProps) {
     const style = useMemo(() => ({
         left: animation.beginTime * scale + "px",
         width: (animation.endTime - animation.beginTime) * scale + "px",
@@ -148,7 +148,7 @@ interface LayerRowProps {
     onAnimationDragEnd: (event: any) => void;
 }
 
-const LayerRow = React.memo(({
+const LayerRow = React.memo(function LayerRow({
     layer,
     isSelected,
     selectedAnimation,
@@ -162,7 +162,7 @@ const LayerRow = React.memo(({
     onAnimationClick,
     onAnimationDragStart,
     onAnimationDragEnd,
-}: LayerRowProps) => {
+}: LayerRowProps) {
     const handleClick = useCallback(() => {
         onLayerClick(isSelected ? null : layer.uuid);
     }, [isSelected, layer.uuid, onLayerClick]);
@@ -237,11 +237,7 @@ const TimelineComponent = ({
 
     const duration = 120;
     const scale = 30;
-    const time = 0;
-    const speed = 16;
-
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const layersRef = useRef(null);
     const leftRef = useRef<HTMLDivElement>(null);
     const rightRef = useRef<HTMLDivElement>(null);
     const sliderRef = useRef<HTMLDivElement>(null);
@@ -251,7 +247,6 @@ const TimelineComponent = ({
 
     const renderTimeline = () => {
         const width = duration * scale;
-        const scale5 = scale / 5;
         const margin = 0;
 
         const canvas = canvasRef.current;
@@ -312,11 +307,11 @@ const TimelineComponent = ({
     };
 
     const handleAddLayer = useCallback(() => {
-        onAddLayer && onAddLayer();
+        if (onAddLayer) onAddLayer();
     }, [onAddLayer]);
 
     const handleEditLayer = useCallback(() => {
-        onEditLayer && onEditLayer(editedLayer, editedLayerName);
+        if (onEditLayer) onEditLayer(editedLayer, editedLayerName);
         setEditedLayer(null);
         setEditedLayerName("");
     }, [editedLayer, editedLayerName, onEditLayer]);
@@ -327,7 +322,7 @@ const TimelineComponent = ({
     }, []);
 
     const handleDeleteLayer = useCallback((id: any) => {
-        onDeleteLayer && onDeleteLayer(id);
+        if (onDeleteLayer) onDeleteLayer(id);
         setSelectedLayerToDelete(null);
     }, [onDeleteLayer]);
 
@@ -357,7 +352,7 @@ const TimelineComponent = ({
         const pid = event.target.getAttribute("data-pid");
         const id = event.target.getAttribute("data-id");
 
-        onClickAnimation && onClickAnimation(id, pid);
+        if (onClickAnimation) onClickAnimation(id, pid);
     }, [onClickAnimation]);
 
     const handleDoubleClick = useCallback((event: any) => {
@@ -372,7 +367,7 @@ const TimelineComponent = ({
         const beginTime = event.nativeEvent.offsetX / scale;
         const endTime = beginTime + 2;
 
-        onAddAnimation && onAddAnimation(layerID, beginTime, endTime);
+        if (onAddAnimation) onAddAnimation(layerID, beginTime, endTime);
     }, [onAddAnimation, scale]);
 
     const handleRightScroll = useCallback((event: any) => {
@@ -433,7 +428,7 @@ const TimelineComponent = ({
 
         const beginTime = (event.nativeEvent.offsetX - offsetX) / scale;
 
-        onDropAnimation && onDropAnimation(id, oldLayerID, newLayerID, beginTime);
+        if (onDropAnimation) onDropAnimation(id, oldLayerID, newLayerID, beginTime);
     }, [onDropAnimation, scale]);
 
     const handlePlay = useCallback(() => {

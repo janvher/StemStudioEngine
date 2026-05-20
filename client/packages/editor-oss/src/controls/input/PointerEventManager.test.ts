@@ -4,7 +4,7 @@ import { PointerEventManager, type PointerEventHandler } from './PointerEventMan
 
 // Polyfill PointerEvent for Vitest/JSDOM
 if (typeof global.PointerEvent === 'undefined') {
-    // @ts-ignore
+    // @ts-expect-error - assigning a polyfill class to the read-only global PointerEvent
     global.PointerEvent = class extends MouseEvent {
         pointerId: number;
         pointerType: string;
@@ -37,7 +37,7 @@ const createMockElement = (rect: DOMRect) => {
         if (!element) {
             throw new Error('createElement returned null');
         }
-    } catch (error) {
+    } catch {
         // Create a minimal mock element if document.createElement fails
         element = {
             getBoundingClientRect: () => new DOMRect(0, 0, 0, 0),
@@ -559,7 +559,7 @@ describe('PointerEventManager', () => {
             
             const uiAwareHandler: PointerEventHandler = {
                 onPointerDown: vi.fn().mockReturnValue(true),
-                filter: (event) => !!(globalThis as any).hoverUi,
+                filter: () => !!(globalThis as any).hoverUi,
             };
             
             manager.registerHandler('ui-aware-handler', uiAwareHandler, null, 1);
@@ -829,7 +829,7 @@ describe('PointerEventManager', () => {
             manager.registerHandler('camera-control', cameraHandler, null, 1);
             
             // Add external filter for UI blocking (new feature)
-            manager.addHandlerFilter('camera-control', (event) => {
+            manager.addHandlerFilter('camera-control', () => {
                 return !!(globalThis as any).hoverUi;
             });
             

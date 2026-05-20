@@ -8,7 +8,7 @@ import global from "@stem/editor-oss/global";
 class ObjectOutliner {
     private hasWarned = false;
 
-    constructor(scene: THREE.Scene, camera: THREE.Camera, renderer: THREE.WebGLRenderer) {
+    constructor(_scene: THREE.Scene, _camera: THREE.Camera, _renderer: THREE.WebGLRenderer) {
         // No-op: EffectRenderer handles outline logic now
     }
 

@@ -15,7 +15,7 @@ class VRMLoader extends BaseLoader {
         super();
     }
 
-    load(url, options) {
+    load(url) {
          
         return new Promise(resolve => {
             this.require(["GLTFLoader"]).then(() => {

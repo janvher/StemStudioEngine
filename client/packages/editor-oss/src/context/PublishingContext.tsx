@@ -25,7 +25,7 @@ const PublishingContextProvider: React.FC<PublishingContextProviderProps> = ({ch
     const [slug, setSlug] = useState<string | null>(null);
     const [gameMapping, setGameMapping] = useState<IGameMapping | null>(null);
 
-    const app = (global as any).app as EngineRuntime;
+    const app = global.app as EngineRuntime;
 
     useEffect(() => {
         if (app?.editor?.sceneID) {

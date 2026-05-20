@@ -154,7 +154,6 @@ const GameDetailsSectionComponent = ({
     setName,
     description,
     setDescription,
-    game,
     thumbnail,
     onThumbnailChange,
     suggestedSlug,
@@ -166,7 +165,6 @@ const GameDetailsSectionComponent = ({
     onDescriptionChange,
     onSaveSlug,
     onDeleteSlug,
-    onInputChange,
     contentRating,
     onContentRatingChange,
     debouncedSceneChange,
@@ -228,8 +226,8 @@ const GameDetailsSectionComponent = ({
                     showToast({type: "success", body: "Hero image generated successfully!"});
                 }
             });
-        } catch (error: any) {
-            showToast({type: "error", body: error.message || "Failed to generate hero image"});
+        } catch (error) {
+            showToast({type: "error", body: (error instanceof Error && error.message) || "Failed to generate hero image"});
         } finally {
             setIsGeneratingHero(false);
         }

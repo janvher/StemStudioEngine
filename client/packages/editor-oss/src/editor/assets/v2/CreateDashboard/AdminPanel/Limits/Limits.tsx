@@ -68,7 +68,7 @@ export const Limits = () => {
             if (res?.data) {
                 showToast({type: "success", title: res.data.Msg});
             }
-        } catch (error) {
+        } catch {
             showToast({type: "error", title: "Failed to update limits."});
         } finally {
             setLoading(false);

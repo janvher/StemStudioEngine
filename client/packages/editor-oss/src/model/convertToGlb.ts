@@ -1,5 +1,5 @@
 import I18n from "i18next";
-import { BufferAttribute, Group, Mesh, Object3D, Scene } from 'three';
+import { AnimationClip, BufferAttribute, Group, Mesh, Object3D, Scene } from 'three';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import * as WebGLTextureUtils from "three/examples/jsm/utils/WebGLTextureUtils.js";
 
@@ -73,7 +73,6 @@ const applyTextureFixes = (model: Object3D) => {
                           const img = tex.image;
                           const isHTMLImage = img instanceof HTMLImageElement;
                           const isImageBitmap = typeof ImageBitmap !== 'undefined' && img instanceof ImageBitmap;
-                          const hasData = img.data && img.data.length > 0;
 
                           let width = 0;
                           let height = 0;
@@ -181,7 +180,8 @@ export const convertToGlb = async (
         exporter.parse(exportScene, resolve, reject, {
             trs: true,
             binary: true,
-            animations: (modelClone as any)._obj?.animations || (modelClone as any).animations,
+            animations: (modelClone as {_obj?: {animations?: AnimationClip[]}; animations?: AnimationClip[]})._obj?.animations
+                || (modelClone as {animations?: AnimationClip[]}).animations,
         });
     });
 

@@ -27,7 +27,7 @@ export const EmitterShapeSection = ({particleSystem}: Props) => {
         );
     };
 
-    const [isShapeVisible, setIsShapeVisible] = useState(getShapeVisibility());
+    const [, setIsShapeVisible] = useState(getShapeVisibility());
 
     useEffect(() => {
         setIsShapeVisible(getShapeVisibility());
@@ -69,16 +69,6 @@ export const EmitterShapeSection = ({particleSystem}: Props) => {
         forceUpdate();
         app?.call("objectChanged", editor, particleSystem.emitter);
         app?.call("emitterUpdate");
-    };
-
-    const handleVisibilityChange = (visible: boolean) => {
-        particleSystem.emitter.children.forEach(child => {
-            if (child instanceof ParticleSystemPreviewObject) {
-                child.visible = visible;
-            }
-        });
-        setIsShapeVisible(visible);
-        onChangeKeyValue();
     };
 
     const renderShapeProperties = () => {

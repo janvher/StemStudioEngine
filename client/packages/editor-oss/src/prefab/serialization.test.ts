@@ -21,7 +21,7 @@ vi.mock('three', async (importOriginal) => ({
 const makeBehavior = (
     id?: string,
     prefabBehaviorUuid?: string,
-    attributesData?: Record<string, any>,
+    attributesData?: Record<string, unknown>,
 ) => ({
     id: id ?? 'behavior:example',
     enabled: true,

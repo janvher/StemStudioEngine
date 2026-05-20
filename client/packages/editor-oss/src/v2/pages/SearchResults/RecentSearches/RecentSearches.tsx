@@ -37,7 +37,7 @@ export const RecentSearches = ({queryParams, results, setResults}: Props) => {
             if (name) {
                 searchResults = saveSearchToLocalStorage(name);
             }
-            searchResults && setRecentSearches(searchResults);
+            if (searchResults) setRecentSearches(searchResults);
         }
     }, [queryParams]);
 

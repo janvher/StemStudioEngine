@@ -39,7 +39,7 @@ export const SceneName = () => {
     useEffect(() => {
         app.on("sceneNameUpdated.TopNav", () => {
             const newName = app.editor?.sceneName;
-            newName && setSceneName(newName);
+            if (newName) setSceneName(newName);
         });
 
         app.on("clear.TopNav", () => setSceneName(app.editor?.sceneName || ""));

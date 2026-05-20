@@ -15,6 +15,7 @@ import {
     TetrahedronGeometry,
     TorusGeometry,
     TorusKnotGeometry,
+    Vector3,
 } from "three";
 import {Font, FontLoader} from "three/examples/jsm/loaders/FontLoader.js";
 
@@ -390,7 +391,7 @@ export const handleAddCustomShape = (
 
 export const handleAddCustomTube = (
     engine: EngineRuntime,
-    curvePoints: any[],
+    curvePoints: Vector3[],
     curveType: CurveType,
     tubularSegments: number,
     radius: number,
@@ -433,14 +434,14 @@ export const handleAddCustomTube = (
     callback?.(customTube);
 };
 
-let cachedFont: any = null;
+let cachedFont: Font | null = null;
 
 export const handleAddText3D = async (engine: EngineRuntime, callback?: (obj: Object3D) => void, cursorBased?: boolean) => {
     try {
         // Load font if not already loaded
         if (!cachedFont) {
             const fontLoader = new FontLoader();
-            cachedFont = await new Promise((resolve, reject) => {
+            cachedFont = await new Promise<Font>((resolve, reject) => {
                 fontLoader.load(
                     "/assets/fonts/helvetiker_regular.typeface.json",
                     (font: Font) => resolve(font),

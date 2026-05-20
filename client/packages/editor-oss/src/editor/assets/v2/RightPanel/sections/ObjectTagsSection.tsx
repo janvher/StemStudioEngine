@@ -9,7 +9,7 @@ interface Props {
     isLocked?: boolean;
 }
 
-export const ObjectTagsSection = ({isLocked}: Props) => {
+export const ObjectTagsSection = ({isLocked: _isLocked}: Props) => {
     const app = global.app;
     const editor = app?.editor;
     const [tags, setTags] = useState<string[]>([]);

@@ -171,7 +171,10 @@ export abstract class AnnotationBase extends THREE.Group {
 
     private disposeRecursive(obj: THREE.Object3D): void {
         obj.traverse(n => {
-            const anyN = n as any;
+            const anyN = n as THREE.Object3D & {
+                geometry?: { dispose?: () => void };
+                material?: { map?: { dispose?: () => void }; dispose?: () => void } | Array<{ map?: { dispose?: () => void }; dispose?: () => void }>;
+            };
             if (anyN.geometry && typeof anyN.geometry.dispose === "function") anyN.geometry.dispose();
             if (anyN.material) {
                 const mats = Array.isArray(anyN.material) ? anyN.material : [anyN.material];

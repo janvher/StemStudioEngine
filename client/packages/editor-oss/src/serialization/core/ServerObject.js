@@ -2,7 +2,6 @@ import BaseSerializer from "../BaseSerializer";
 import Object3DSerializer from "./Object3DSerializer";
 import ModelLoader from "../../assets/js/loaders/ModelLoader";
 import {applyMaterialSettingsToObject} from "@web-shared/editor/assets/v2/materials/materialUtils";
-import MaterialUtils from "@web-shared/utils/MaterialUtils";
 import ShadowUtils from "@web-shared/utils/ShadowUtils";
 
 /**

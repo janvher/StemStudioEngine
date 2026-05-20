@@ -16,9 +16,10 @@ export const getTemplateIds = async (): Promise<string[]> => {
         }
 
         return response.data.Data?.sceneIds || [];
-    } catch (error: any) {
-        console.error("Error fetching template IDs:", error.message || error);
-        throw new Error(error.message || "Failed to fetch template IDs.");
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error("Error fetching template IDs:", message || error);
+        throw new Error(message || "Failed to fetch template IDs.");
     }
 };
 
@@ -35,8 +36,9 @@ export const setTemplateIds = async (sceneIds: string[]): Promise<string[]> => {
         }
 
         return response.data.Data?.sceneIds || [];
-    } catch (error: any) {
-        console.error("Error updating template IDs:", error.message || error);
-        throw new Error(error.message || "Failed to update template IDs.");
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error("Error updating template IDs:", message || error);
+        throw new Error(message || "Failed to update template IDs.");
     }
 };

@@ -184,12 +184,12 @@ const AppGlobalContextProvider: React.FC<AppGlobalContextProviderProps> = ({chil
     }, [calculateObjectSize]);
 
     const handleObjectAdded = useCallback(
-        (object: any) => {
+        (object: Object3D) => {
             if (!app || !object?.uuid || app.isPlaying) return;
 
             setObjectSizeMap(prev => {
                 const newMap = new Map(prev);
-                object.traverse((child: any) => {
+                object.traverse((child: Object3D) => {
                     const objectSize = calculateObjectSize(child);
                     newMap.set(child.uuid, objectSize);
                 });
@@ -200,14 +200,14 @@ const AppGlobalContextProvider: React.FC<AppGlobalContextProviderProps> = ({chil
     );
 
     const handleObjectChanged = useCallback(
-        (object: any) => {
+        (object: Object3D) => {
             if (!app || !object?.uuid || app.isPlaying) return;
 
             // Only traverse if this is an Object3D
             if (object.isObject3D) {
                 setObjectSizeMap(prev => {
                     const newMap = new Map(prev);
-                    object.traverse((child: any) => {
+                    object.traverse((child: Object3D) => {
                         const objectSize = calculateObjectSize(child);
                         newMap.set(child.uuid, objectSize);
                     });
@@ -218,12 +218,12 @@ const AppGlobalContextProvider: React.FC<AppGlobalContextProviderProps> = ({chil
         [calculateObjectSize],
     );
 
-    const handleObjectRemoved = useCallback((object: any) => {
+    const handleObjectRemoved = useCallback((object: Object3D) => {
         if (!app || !object?.uuid || app.isPlaying) return;
 
         setObjectSizeMap(prev => {
             const newMap = new Map(prev);
-            object.traverse((child: any) => {
+            object.traverse((child: Object3D) => {
                 newMap.delete(child.uuid);
             });
             return newMap;

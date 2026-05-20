@@ -20,7 +20,7 @@ type Props = {
 
 export const CustomComponent = ({customStyle, width, height, maxWidth, onClick, gameData, children}: Props) => {
     const handleClick = () => {
-        onClick && onClick();
+        if (onClick) onClick();
     };
 
     const getComponent = () => {

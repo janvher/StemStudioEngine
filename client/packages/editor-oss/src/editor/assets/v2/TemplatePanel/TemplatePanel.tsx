@@ -9,7 +9,7 @@ import {createSandboxStarter, handleSaveScene} from "./helpers";
 import {ImportIcon} from "./ImportIcon";
 import {TemplateList} from "./TemplateList";
 import {BottomBar, Container, FlexIconContainer, HeaderWrapper, Overlay, Title} from "./TemplatePanel.style";
-import {getSceneBatch, saveScene, updateStarterStats} from "@stem/network/api/scene";
+import {getSceneBatch, updateStarterStats} from "@stem/network/api/scene";
 import {cloneScene} from "@stem/network/api/scene/v2";
 import {useTemplateIds} from "@stem/network/api/templates/hooks";
 import EngineRuntime, {ApplicationMode} from "@stem/editor-oss/EngineRuntime";
@@ -20,8 +20,6 @@ import {showToast} from "@stem/editor-oss/showToast";
 import {generateProjectLink} from "../../../../v2/pages/links";
 import {StyledButton} from "../common/StyledButton";
 import xIcon from "../icons/x-mark.svg";
-import { handleAddBox } from '../utils/addBox';
-import { handleAddTerrain } from '../utils/createTerrain';
 
 const TemplatePanel = () => {
     const app = global.app as EngineRuntime;

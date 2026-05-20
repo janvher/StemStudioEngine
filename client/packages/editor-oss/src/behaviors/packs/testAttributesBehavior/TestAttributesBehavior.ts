@@ -1,4 +1,3 @@
-import Editor from "@stem/editor-oss/editor/Editor";
 import { BehaviorBase } from "../../Behavior";
 import GameManager from "../../game/GameManager";
 

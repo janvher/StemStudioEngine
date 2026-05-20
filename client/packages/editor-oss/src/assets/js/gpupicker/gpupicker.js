@@ -64,7 +64,9 @@ export class GPUPicker {
                     // detach listener
                     try {
                         global.app.on(`beforeRender.${listenerId}`, null);
-                    } catch (_) {}
+                    } catch {
+                        // Listener may already be detached; ignore.
+                    }
 
                     try {
                         const result = await this._doPick(x, y, shouldPickObject);
@@ -77,7 +79,7 @@ export class GPUPicker {
                 // register one-time handler
                 try {
                     global.app.on(`beforeRender.${listenerId}`, handler);
-                } catch (e) {
+                } catch {
                     // If registering fails, fall back to immediate pick
                     this._doPick(x, y, shouldPickObject).then(resolve, reject);
                 }
@@ -133,7 +135,9 @@ export class GPUPicker {
         if (this.debugCanvas?.parentNode) {
             try {
                 this.debugCanvas.parentNode.removeChild(this.debugCanvas);
-            } catch (_) {}
+            } catch {
+                // Canvas may already be detached; ignore.
+            }
         }
     }
 
@@ -204,7 +208,6 @@ export class GPUPicker {
         const shouldPickObject = this.shouldPickObjectCB;
 
         const stack = [];
-        const rootVisible = this.scene.visible !== false;
         const rootChildren = this.scene.children;
         for (let i = rootChildren.length - 1; i >= 0; i--) {
             stack.push({object: rootChildren[i], inheritedNonSelectable: false});

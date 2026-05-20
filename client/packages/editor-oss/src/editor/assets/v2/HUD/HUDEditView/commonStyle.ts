@@ -2,7 +2,6 @@ import styled from "styled-components";
 
 import {IComponentInterface} from "./types";
 import {flexCenter, regularFont} from "../../../../../assets/style";
-import {floatingContainerStyle} from "../HUDView/FloatingNav/FloatingNav.style";
 
 export const BarWrapper = styled.div<{
     height?: string;

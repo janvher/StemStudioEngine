@@ -3,7 +3,7 @@ import * as THREE from "three";
 import GameManager from "../../behaviors/game/GameManager";
 import LambdaDataFactory from "../../editor/lambdas/LambdaDataFactory";
 import global from "../../global";
-import type {LambdaComponentData} from "../../lambdas/Lambda";
+import type {LambdaComponentData, LambdaFieldConfig} from "../../lambdas/Lambda";
 import Command from "../Command";
 
 class AttachLambdaComponentCommand extends Command {
@@ -12,16 +12,16 @@ class AttachLambdaComponentCommand extends Command {
     private instanceId: string = "";
     private componentData: LambdaComponentData | null = null;
     private game: GameManager | null = null;
-    private componentSchema?: Record<string, any>;
-    private initialData?: Record<string, any>;
+    private componentSchema?: Record<string, LambdaFieldConfig>;
+    private initialData?: Record<string, unknown>;
 
     constructor(
         selected: THREE.Object3D | null,
         lambdaId: string,
         instanceId: string,
         options?: {
-            componentSchema?: Record<string, any>;
-            initialData?: Record<string, any>;
+            componentSchema?: Record<string, LambdaFieldConfig>;
+            initialData?: Record<string, unknown>;
         },
     ) {
         super();

@@ -1,4 +1,3 @@
-import * as UIKit from "@ni2khanna/uikit";
 import {Object3D} from "three";
 
 /**

@@ -1,4 +1,3 @@
-/* global Ammo */
 export const DefaultBufferSize = 3 * 1000000;
 
 export const AmmoDebugConstants = {
@@ -141,7 +140,7 @@ AmmoDebugDrawer.prototype.drawContactPoint = function(pointOnB, normalOnB, dista
 };
 
 AmmoDebugDrawer.prototype.reportErrorWarning = function(warningString) {
-  if (Ammo.hasOwnProperty("UTF8ToString")) {
+  if (Object.prototype.hasOwnProperty.call(Ammo, "UTF8ToString")) {
     console.warn(Ammo.UTF8ToString(warningString));
   } else if (!this.warnedOnce) {
     this.warnedOnce = true;
@@ -149,7 +148,7 @@ AmmoDebugDrawer.prototype.reportErrorWarning = function(warningString) {
   }
 };
 
-AmmoDebugDrawer.prototype.draw3dText = function(location, textString) {
+AmmoDebugDrawer.prototype.draw3dText = function() {
   //TODO
   console.warn("TODO: draw3dText");
 };

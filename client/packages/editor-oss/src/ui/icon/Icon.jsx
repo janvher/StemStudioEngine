@@ -36,7 +36,7 @@ class Icon extends React.Component {
         const {onClick} = this.props;
 
         const name = event.target.getAttribute("name");
-        onClick && onClick(name, event);
+        if (onClick) onClick(name, event);
     }
 }
 

@@ -1,5 +1,6 @@
 import React, { useState, createContext, ReactNode } from "react";
 import { Edge, Node } from "reactflow";
+import type { AnimationAction, AnimationMixer, Object3D } from "three";
 
 import { IAnimationGraph } from "../animation/types";
 
@@ -10,10 +11,13 @@ export interface Animation {
     [key: string]: any; // Placeholder for other properties
 }
 
+/** A loaded model Object3D, optionally wrapping the original imported object. */
+export type CombinerModel = Object3D & {_obj?: Object3D};
+
 interface State {
-    mainModel: any;
+    mainModel: CombinerModel | null;
     animations: Animation[];
-    mixer: any;
+    mixer: AnimationMixer | null;
     loading: boolean;
     animationGraph: IAnimationGraph | null;
 }
@@ -27,16 +31,16 @@ const initialState: State = {
 };
 
 interface ContextProps extends State {
-    addMainModel: (object: any) => void;
+    addMainModel: (object: Object3D | null) => void;
     addAnimationFromMainModel: (animations: Animation[]) => void;
     addAnimations: (animations: Animation[]) => void;
     changeName: (animation: Animation) => void;
-    addMixer: (mixer: any) => void;
+    addMixer: (mixer: AnimationMixer | null) => void;
     deleteAnimation: (animationId: string) => void;
     toggleLoading: () => void;
     clearState: () => void;
-    setAction: (action: any) => void;
-    action: any;
+    setAction: React.Dispatch<React.SetStateAction<AnimationAction | null>>;
+    action: AnimationAction | null;
     setAnimationGraph: (graph: IAnimationGraph | null) => void;
     uploadOptionSelected: boolean
     setUploadOptionSelected: React.Dispatch<React.SetStateAction<boolean>>
@@ -50,12 +54,12 @@ export const ModelAnimationCombinerContext = createContext<ContextProps>(initial
 
 export const ModelAnimationCombinerContextProvider = ({ children }: { children: ReactNode }) => {
     const [state, setState] = useState<State>(initialState);
-    const [action, setAction] = useState<any>(null);
+    const [action, setAction] = useState<AnimationAction | null>(null);
     const [uploadOptionSelected, setUploadOptionSelected] = useState(false);
     const [selectedNode, setSelectedNode] = useState<Node | null>(null);
     const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
 
-    const addMainModel = (object: any) => {
+    const addMainModel = (object: Object3D | null) => {
         setState(prevState => ({ ...prevState, mainModel: object }));
     };
 
@@ -77,7 +81,7 @@ export const ModelAnimationCombinerContextProvider = ({ children }: { children: 
         }));
     };
 
-    const addMixer = (mixer: any) => {
+    const addMixer = (mixer: AnimationMixer | null) => {
         setState(prevState => ({ ...prevState, mixer }));
     };
 

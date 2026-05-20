@@ -169,7 +169,7 @@ export const StemPublishPanel = () => {
                     regular
                     text="Allow users to Remix"
                     checked={false}
-                    onChange={e => {}}
+                    onChange={() => {}}
                     isLocked
                 />
                 <StyledButton

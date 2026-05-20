@@ -1,8 +1,6 @@
 import {
     ImageBitmapLoader,
     Texture,
-    TextureLoader,
-    Event,
 } from "three";
 import { KTX2Loader } from "three/examples/jsm/loaders/KTX2Loader.js";
 import { TextureNode } from 'three/webgpu';
@@ -44,7 +42,7 @@ declare module "three" {
     interface Texture {
         _usedTimes: number;
         _cacheKey?: string;
-        _cacheMap?: Map<string, any>;
+        _cacheMap?: Map<string, Promise<Texture>>;
     }
 }
 
@@ -99,7 +97,6 @@ export function patchTextureLoaders(): void {
 
     // Capture original loader methods
     const originalKTX2LoaderLoad = KTX2Loader.prototype.load;
-    const originalTextureLoaderLoad = TextureLoader.prototype.load;
     const originalImageBitmapLoaderLoad = ImageBitmapLoader.prototype.load;
 
     // Wrap Texture.dispose to decrement usage and fire 'dispose' when count reaches zero, removing from cache
@@ -129,7 +126,7 @@ export function patchTextureLoaders(): void {
         getBufferAndBlob: (url: string) => Promise<{ buffer: ArrayBuffer; blob: Blob }>,
         getLoadUrl: (blob: Blob, url?: string) => string,
     ): void {
-        const cacheMap = new Map<string, any>();
+        const cacheMap = new Map<string, Promise<Texture>>();
 
         proto.load = function(url: string, onLoad?: any, onProgress?: any, onError?: any): any {
             // CRITICAL: Use LoadingManager's URL modifier if available
@@ -141,11 +138,11 @@ export function patchTextureLoaders(): void {
                 .then(({ blob, key }) => {
                     if (!cacheMap.has(key)) {
                         const loadUrl = getLoadUrl(blob, url);
-                        let promise;
+                        let promise: Promise<Texture>;
                         if (proto === ImageBitmapLoader.prototype) {
-                            promise = new Promise((resolve, reject) => {
+                            promise = new Promise<Texture>((resolve, reject) => {
                                 originalLoadFn.call(this, loadUrl,
-                                    (bitmap: any) => {
+                                    (bitmap: ImageBitmap) => {
                                         const tex = new Texture(bitmap);
                                         tex.needsUpdate = true;
                                         tex._usedTimes = 1;
@@ -157,9 +154,9 @@ export function patchTextureLoaders(): void {
                                 );
                             });
                         } else {
-                            promise = new Promise((resolve, reject) => {
+                            promise = new Promise<Texture>((resolve, reject) => {
                                 originalLoadFn.call(this, loadUrl,
-                                    (tex: any) => {
+                                    (tex: Texture) => {
                                         tex._usedTimes = 1;
                                         resolve(tex);
                                         URL.revokeObjectURL(loadUrl);
@@ -170,7 +167,7 @@ export function patchTextureLoaders(): void {
                             });
                         }
                         // attach cache metadata
-                        promise = promise.then((tex: any) => {
+                        promise = promise.then((tex: Texture) => {
                             tex._cacheKey = key;
                             tex._cacheMap = cacheMap;
                             return tex;
@@ -178,12 +175,12 @@ export function patchTextureLoaders(): void {
                         cacheMap.set(key, promise);
                     }
                     const entry = cacheMap.get(key);
-                    entry.then((tex: any) => {
+                    entry!.then((tex: Texture) => {
                         tex._usedTimes++;
-                        onLoad && onLoad(tex);
-                    }).catch((err: any) => onError && onError(err));
+                        if (onLoad) onLoad(tex);
+                    }).catch((err: unknown) => onError && onError(err));
                 })
-                .catch((err: any) => onError && onError(err));
+                .catch((err: unknown) => onError && onError(err));
             return this;
         };
     }
@@ -229,7 +226,7 @@ export function patchTextureLoaders(): void {
      * @param context
      */
     function resolveTextureFromContext(url: string, context: TextureResolutionContext): Blob | null {
-        const { fileBlobMap, rootPath, modelBaseName } = context;
+        const { fileBlobMap, rootPath } = context;
 
         // Extract the relative path from the URL
         // URL might be: "blob:http://localhost:5173/Textures/colormap.png" or "Textures/colormap.png"

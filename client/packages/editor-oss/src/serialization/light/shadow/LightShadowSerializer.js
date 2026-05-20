@@ -2,7 +2,6 @@ import * as THREE from "three";
 
 import BaseSerializer from "@web-shared/serialization/BaseSerializer";
 import CamerasSerializer from "@web-shared/serialization/camera/CamerasSerializer";
-import WebGLRenderTargetSerializer from "@web-shared/serialization/core/WebGLRenderTargetSerializer";
 
 /**
  * LightShadowSerializer

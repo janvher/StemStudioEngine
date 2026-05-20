@@ -32,7 +32,7 @@ type Props = {
     onClick: (id: string) => void;
     onEditName?: (e: React.MouseEvent<HTMLElement, MouseEvent>, arg: {id: string; name: string}) => void;
     selectedItemsIds?: string[];
-    onDelete?: (arg: any) => void;
+    onDelete?: (arg: AssetItem) => void;
     onReplace?: (args: {id: string; name: string}) => void;
     className?: string;
     maxHeight?: string;

@@ -30,7 +30,7 @@ export class RamPanelManager {
         if (!this.running) return;
 
         // Get used JS heap size in MB
-        const usedHeapSize = (performance as any).memory?.usedJSHeapSize;
+        const usedHeapSize = (performance as Performance & { memory?: { usedJSHeapSize: number } }).memory?.usedJSHeapSize;
         if (usedHeapSize !== undefined) {
             const usedHeapSizeMB = Math.round(usedHeapSize / (1024 * 1024));
 

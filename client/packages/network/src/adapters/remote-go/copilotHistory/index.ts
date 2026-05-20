@@ -51,9 +51,10 @@ export const getCopilotHistoryList = async (
         }
 
         return response.data.Data;
-    } catch (error: any) {
-        console.error("Error listing copilot history:", error.message || error);
-        throw new Error(error.message || "Failed to list copilot history.");
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error("Error listing copilot history:", message);
+        throw new Error(message || "Failed to list copilot history.");
     }
 };
 
@@ -71,9 +72,10 @@ export const getSessionExtras = async (id: string): Promise<CopilotHistoryData> 
         }
 
         return response.data.Data;
-    } catch (error: any) {
-        console.error("Error getting copilot session extras:", error.message || error);
-        throw new Error(error.message || "Failed to get copilot session extras.");
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error("Error getting copilot session extras:", message);
+        throw new Error(message || "Failed to get copilot session extras.");
     }
 };
 
@@ -92,9 +94,10 @@ export const createCopilotSession = async (
         if (response?.data.Code !== 200) {
             throw new Error(response?.data.Msg || "Failed to create copilot session.");
         }
-    } catch (error: any) {
-        console.error("Error creating copilot session:", error.message || error);
-        throw new Error(error.message || "Failed to create copilot session.");
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error("Error creating copilot session:", message);
+        throw new Error(message || "Failed to create copilot session.");
     }
 };
 
@@ -105,7 +108,7 @@ export const addMessageExtra = async (
     interactiveResult?: InteractiveResult,
 ): Promise<void> => {
     try {
-        const data: Record<string, any> = {
+        const data: Record<string, string> = {
             SessionID: sessionID,
             SeqNum: seqNum.toString(),
         };
@@ -127,19 +130,20 @@ export const addMessageExtra = async (
         if (response?.data.Code !== 200) {
             throw new Error(response?.data.Msg || "Failed to add message extra.");
         }
-    } catch (error: any) {
-        console.error("Error adding message extra:", error.message || error);
-        throw new Error(error.message || "Failed to add message extra.");
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error("Error adding message extra:", message);
+        throw new Error(message || "Failed to add message extra.");
     }
 };
 
-export const deleteCopilotHistory = async (id?: string, sessionID?: string): Promise<any> => {
+export const deleteCopilotHistory = async (id?: string, sessionID?: string): Promise<unknown> => {
     try {
         if (!id && !sessionID) {
             throw new Error("Either ID or SessionID is required.");
         }
 
-        const data: Record<string, any> = {};
+        const data: Record<string, string> = {};
         if (id) data.ID = id;
         if (sessionID) data.SessionID = sessionID;
 
@@ -154,9 +158,10 @@ export const deleteCopilotHistory = async (id?: string, sessionID?: string): Pro
         }
 
         return response.data;
-    } catch (error: any) {
-        console.error("Error deleting copilot history:", error.message || error);
-        throw new Error(error.message || "Failed to delete copilot history.");
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error("Error deleting copilot history:", message);
+        throw new Error(message || "Failed to delete copilot history.");
     }
 };
 
@@ -171,8 +176,9 @@ export const updateCopilotHistoryCredits = async (sessionID: string, delta: numb
         if (response?.data.Code !== 200) {
             throw new Error(response?.data.Msg || "Failed to update copilot history credits.");
         }
-    } catch (error: any) {
-        console.error("Error updating copilot history credits:", error.message || error);
-        throw new Error(error.message || "Failed to update copilot history credits.");
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error("Error updating copilot history credits:", message);
+        throw new Error(message || "Failed to update copilot history credits.");
     }
 };

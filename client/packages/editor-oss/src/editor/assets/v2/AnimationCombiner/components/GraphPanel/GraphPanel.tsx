@@ -11,7 +11,7 @@ type Props = {
     model: Object3D | null;
 };
 
-export const GraphPanel = ({model}: Props) => {
+export const GraphPanel = ({model: _model}: Props) => {
     const {addAnimations, animations} = useModelAnimationCombinerContext();
     const [rootMotion, setRootMotion] = useState(false);
     const originalTrackValuesRef = useRef<Map<string, Float32Array | number[]>>(new Map());
@@ -52,7 +52,7 @@ export const GraphPanel = ({model}: Props) => {
         }
     };
 
-    const handleRootMotionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const _handleRootMotionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const checked = e.target.checked;
         setRootMotion(checked);
         if (checked) {

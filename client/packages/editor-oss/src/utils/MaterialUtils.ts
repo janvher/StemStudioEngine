@@ -2,7 +2,6 @@ import {
     Color,
     Mesh,
     Vector2,
-    Vector3,
     Material,
     Texture,
     MeshStandardMaterial,
@@ -184,8 +183,8 @@ function isMeshPhysicalMaterial(material: Material): material is MeshPhysicalMat
  * @param value - The value to check
  * @returns True if the value is a Texture
  */
-function isTexture(value: any): value is Texture {
-    return value && value.isTexture;
+function isTexture(value: unknown): value is Texture {
+    return !!value && (value as Texture).isTexture === true;
 }
 
 /**

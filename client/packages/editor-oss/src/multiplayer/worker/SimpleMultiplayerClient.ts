@@ -102,7 +102,7 @@ export default class SimpleMultiplayerClient implements IMultiplayerState {
 
     chatListeners: Map<string, ChatMessageReceivedListener> = new Map<string, ChatMessageReceivedListener>();
 
-    heartbeatIntervalId: any = undefined;
+    heartbeatIntervalId: ReturnType<typeof setInterval> | undefined = undefined;
 
     public static THRESHOLD_MOVEMENT = 0.01;
     public static THRESHOLD_SCALE = 0.01;
@@ -135,7 +135,7 @@ export default class SimpleMultiplayerClient implements IMultiplayerState {
             const workerHandler = new MultiplayerWorker();
             this.workerHandler = workerHandler;
             workerHandler.onmessage = this.onMessage;
-            workerHandler.onerror = (error: any) => {
+            workerHandler.onerror = (error: ErrorEvent) => {
                 console.error("Multiplayer worker error:", error);
                 this.workerError = true;
                 this.workerReady = false;

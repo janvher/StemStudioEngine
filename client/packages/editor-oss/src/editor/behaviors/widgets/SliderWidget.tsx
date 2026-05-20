@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import ReactDOM from "react-dom/client";
 
 import { StyledRange } from "../../../editor/assets/v2/common/StyledRange";
 import { SliderAttribute } from "../BehaviorAttributes";

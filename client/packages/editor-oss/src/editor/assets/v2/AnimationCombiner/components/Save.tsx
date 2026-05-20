@@ -17,7 +17,7 @@ export const Save = ({onSave, model}: Props) => {
     const saveModel = useSaveModel();
 
     const handleSave = async () => {
-        if (!model) return;
+        if (!model || !mainModel) return;
 
         // Sync the latest animations onto both the selected scene model
         // and the editor's preview model so the export carries them.

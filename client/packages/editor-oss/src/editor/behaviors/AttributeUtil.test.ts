@@ -5,7 +5,6 @@ import {
     GroupAttribute,
     NumberAttribute,
     BooleanAttribute,
-    StringAttribute,
     VisibilityCondition,
 } from "./BehaviorAttributes";
 import BehaviorAttributeType from "./BehaviorAttributeType";

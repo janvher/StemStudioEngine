@@ -86,7 +86,7 @@ export class CrazyGamesController extends BaseGameServiceController {
             try {
                 userData = await this.sdk.user.getUser();
                 token = await this.sdk.user.getUserToken();
-            } catch (sdkError) {
+            } catch {
                 this.log("User not logged in to CrazyGames, using guest mode");
             }
 
@@ -248,7 +248,8 @@ export class CrazyGamesController extends BaseGameServiceController {
      * @param score
      */
     async submitScore(leaderboardId: string, score: number): Promise<boolean> {
-        // CrazyGames handles scores internally via their platform
+        // CrazyGames handles scores internally via their platform; params kept for API parity
+        if (leaderboardId && score) { /* no-op */ }
         return true;
     }
 
@@ -257,7 +258,8 @@ export class CrazyGamesController extends BaseGameServiceController {
      * @param achievementId
      */
     async unlockAchievement(achievementId: string): Promise<boolean> {
-        // CrazyGames handles achievements internally via their platform
+        // CrazyGames handles achievements internally via their platform; param kept for API parity
+        if (achievementId) { /* no-op */ }
         return true;
     }
 

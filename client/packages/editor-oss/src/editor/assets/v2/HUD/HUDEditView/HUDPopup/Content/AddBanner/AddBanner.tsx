@@ -79,7 +79,7 @@ export const AddBanner = () => {
                     onChange={item => {
                         const nextFontFamily = item.value;
                         setFontFamily(nextFontFamily);
-                        popupCallback &&
+                        if (popupCallback)
                             popupCallback({
                                 UITag,
                                 extraUITags: [extraUITag, extraUITag2],
@@ -106,7 +106,7 @@ export const AddBanner = () => {
                 margin="16px 0 0"
                 isBlue
                 onClick={() => {
-                    popupCallback &&
+                    if (popupCallback)
                         popupCallback({
                             UITag,
                             extraUITags: [extraUITag, extraUITag2],
