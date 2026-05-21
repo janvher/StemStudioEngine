@@ -7,12 +7,12 @@
  * Allowed surfaces in playground mode:
  *   - Dashboard (project list at /dashboard)
  *   - Editor (scene tree, viewport, inspector)
- *   - AI copilot panel
+ *   - AI copilot panel (incl. the BYOK key modal opened from its header)
  *   - Player (/play/:projectID)
  *
  * Hidden surfaces (annotate with data-playground-hide):
- *   - Settings panel and its menu entry
- *   - BYOK key management panel
+ *   - Settings panel and its menu entry (the BYOK key panel still lives
+ *     here, but in playground it is reached via the copilot "Keys" button)
  *   - Export menu items that publish externally
  *   - Multiplayer room setup panel
  *   - Asset upload / asset library admin

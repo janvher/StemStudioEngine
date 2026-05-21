@@ -1,5 +1,5 @@
 import {useEffect, useLayoutEffect, useMemo, useRef, useState} from "react";
-import {HiOutlineCube, HiOutlineSparkles} from "react-icons/hi2";
+import {HiOutlineCube, HiOutlineKey, HiOutlineSparkles} from "react-icons/hi2";
 import {useNavigate} from "react-router-dom";
 
 import {
@@ -9,6 +9,8 @@ import {
     GenerateButton,
     Heading,
     CreateHomepageHeroWrapper,
+    KeyConfigButton,
+    KeyConfigRow,
     PromptCard,
     PromptHeader,
     PromptInputArea,
@@ -19,7 +21,10 @@ import {
 } from "./CreateHomepageHero.style";
 import {getHomepageContent, HomepageSuggestion} from "@stem/network/api/homepage";
 import {ROUTES} from "@web-shared/routes";
+import {isPlaygroundMode} from "@web-shared/playgroundMode";
 import {PRODUCT_ANALYTICS_EVENTS, trackProductEvent} from "@stem/editor-oss/utils/productAnalytics";
+import {hasCopilotKeysSync, refreshCopilotKeysMarker} from "../../../../../copilot";
+import {AiKeysModal} from "../../AiCopilot/AiKeysModal";
 import {savePickerPrompt} from "../CreateDashboardView/baseGamePickerStorage";
 
 const DEFAULT_SUGGESTIONS: HomepageSuggestion[] = [
@@ -128,6 +133,14 @@ export const CreateHomepageHero = ({onPromptSubmit, onScratchStart, isBusy = fal
     const [suggestions, setSuggestions] = useState<HomepageSuggestion[]>(DEFAULT_SUGGESTIONS);
     const promptWordCount = useMemo(() => countPromptWords(prompt), [prompt]);
 
+    // Playground mode has no Go AI server: AI game creation runs browser-direct
+    // against the visitor's own provider key. Surface key config here so the
+    // visitor can set a key before submitting a prompt. Outside the playground
+    // the dashboard Settings page already hosts the BYOK panel.
+    const isPlayground = isPlaygroundMode();
+    const [isKeysOpen, setIsKeysOpen] = useState(false);
+    const [hasKeys, setHasKeys] = useState(() => isPlaygroundMode() && hasCopilotKeysSync());
+
     useEffect(() => {
         let cancelled = false;
         void getHomepageContent()
@@ -204,6 +217,11 @@ export const CreateHomepageHero = ({onPromptSubmit, onScratchStart, isBusy = fal
         void navigate(ROUTES.LOGIN, {state: {from: ROUTES.HOME}});
     };
 
+    const handleKeysClose = () => {
+        setIsKeysOpen(false);
+        void refreshCopilotKeysMarker().then(ready => setHasKeys(ready));
+    };
+
     const handleGenerateSubmit = () => {
         const trimmed = prompt.trim();
         if (!trimmed) {
@@ -237,6 +255,19 @@ export const CreateHomepageHero = ({onPromptSubmit, onScratchStart, isBusy = fal
                     <HiOutlineSparkles />
                     <span>Describe the game you want to create</span>
                 </PromptHeader>
+                {isPlayground && (
+                    <KeyConfigRow $configured={hasKeys}>
+                        <HiOutlineKey />
+                        <span>
+                            {hasKeys
+                                ? "Your AI provider key is configured — generate away."
+                                : "AI game creation works in the playground, but you bring your own AI provider key. Add one to start generating."}
+                        </span>
+                        <KeyConfigButton type="button" onClick={() => setIsKeysOpen(true)}>
+                            {hasKeys ? "Manage keys" : "Set up keys"}
+                        </KeyConfigButton>
+                    </KeyConfigRow>
+                )}
                 <PromptInputArea>
                     <PromptTextarea
                         ref={promptInputRef}
@@ -300,6 +331,7 @@ export const CreateHomepageHero = ({onPromptSubmit, onScratchStart, isBusy = fal
                     Start from scratch
                 </ScratchButton>
             </PromptCard>
+            {isKeysOpen && <AiKeysModal onClose={handleKeysClose} />}
         </CreateHomepageHeroWrapper>
     );
 };

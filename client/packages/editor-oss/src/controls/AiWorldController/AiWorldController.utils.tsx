@@ -13,6 +13,7 @@ import Box from "@stem/editor-oss/object/geometry/Box";
 import Plane from '@stem/editor-oss/object/geometry/Plane';
 import Ajax from "@stem/editor-oss/utils/Ajax";
 import {backendUrlFromPath} from "@stem/editor-oss/utils/UrlUtils";
+import {isPlaygroundMode} from "@web-shared/playgroundMode";
 
 const activeIndicators = new Set<THREE.Group>();
 
@@ -186,14 +187,19 @@ export const urlToFile = async (
 
             while (attempt <= maxAttempts) {
                 try {
-                    const res = await fetch(backendUrlFromPath(`/api/Proxy/Download`) || "", {
-                        method: "POST",
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({url}),
-                        signal, // Add abort signal support
-                    });
+                    // Playground has no Go server: fetch the provider CDN URL
+                    // directly. Elsewhere, route through `/api/Proxy/Download`
+                    // to dodge CORS on external CDNs.
+                    const res = isPlaygroundMode()
+                        ? await fetch(url, {signal})
+                        : await fetch(backendUrlFromPath(`/api/Proxy/Download`) || "", {
+                            method: "POST",
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({url}),
+                            signal, // Add abort signal support
+                        });
 
                     if (res.ok) {
                         return res;

@@ -4,8 +4,9 @@
 // `/playground` and points it at `/dashboard?mode=playground`. When this flag
 // is set, the editor restricts the user to four surfaces: the project
 // dashboard, the editor itself, the AI copilot panel, and the player. Every
-// other surface (settings, BYOK key management, export, multiplayer setup,
-// asset uploads, admin) is hidden.
+// other surface (settings, export, multiplayer setup, asset uploads, admin)
+// is hidden. BYOK key management is reachable via the copilot panel's "Keys"
+// button so playground visitors can configure their own AI provider keys.
 //
 // Gating contract:
 //   1. The query param `?mode=playground` activates the flag once. It is

@@ -145,6 +145,47 @@ export const PromptHeader = styled.div`
     }
 `;
 
+export const KeyConfigRow = styled.div<{$configured?: boolean}>`
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid
+        ${({$configured}) => ($configured ? "rgba(145, 215, 109, 0.4)" : "rgba(215, 222, 69, 0.4)")};
+    background: ${({$configured}) =>
+        $configured ? "rgba(145, 215, 109, 0.1)" : "rgba(215, 222, 69, 0.08)"};
+    font-family: "Lexend", sans-serif;
+    font-size: 13px;
+    line-height: 1.4;
+    color: rgba(255, 255, 255, 0.82);
+
+    svg {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+        color: ${({$configured}) => ($configured ? "#91d76d" : "#d7de45")};
+    }
+`;
+
+export const KeyConfigButton = styled.button`
+    margin-left: auto;
+    padding: 6px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(215, 222, 69, 0.5);
+    background: rgba(215, 222, 69, 0.12);
+    color: #eef2a0;
+    font-family: "Lexend", sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:hover {
+        background: rgba(215, 222, 69, 0.2);
+    }
+`;
+
 export const PromptInputArea = styled.div`
     position: relative;
     width: 100%;

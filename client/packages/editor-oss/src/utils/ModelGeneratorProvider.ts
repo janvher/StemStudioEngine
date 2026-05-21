@@ -1,6 +1,8 @@
 import {toast} from "toastywave";
 
+import {isPlaygroundMode} from "@web-shared/playgroundMode";
 import {getAIBackend} from "../ai";
+import {MeshyDirectClient} from "../ai/MeshyDirectClient";
 import Ajax from "./Ajax";
 import {backendUrlFromPath} from "./UrlUtils";
 import global from "../global";
@@ -159,22 +161,32 @@ class ModelGeneratorProvider {
                 endpoint = "/api/AI/ObjectGeneration/Tripo/Generate";
         }
 
-        const res = await Ajax.post({
-            url: backendUrlFromPath(endpoint),
-            msgBodyType: "json",
-            data: JSON.stringify(payload),
-            token: this.authToken || null,
-            signal,
-        });
+        // Playground has no Go server: Meshy generation goes browser-direct.
+        let resData: {job_id?: string; task_id?: string} | undefined;
+        if (isPlaygroundMode() && currentGenerator === GENERATOR_TYPES.MESHY) {
+            resData = await MeshyDirectClient.generate(payload as Record<string, unknown>);
+        } else {
+            const res = await Ajax.post({
+                url: backendUrlFromPath(endpoint),
+                msgBodyType: "json",
+                data: JSON.stringify(payload),
+                token: this.authToken || null,
+                signal,
+            });
+            resData = res?.data;
+        }
 
-        if (res?.data) {
+        if (resData) {
             // If the backend returned a job_id, the asset is being created server-side.
             // Poll the job status endpoint until complete and return the result.
-            if (res.data.job_id) {
-                return await this.pollJobStatus(res.data.job_id, signal, onProgress);
+            if (resData.job_id) {
+                return await this.pollJobStatus(resData.job_id, signal, onProgress);
             }
 
-            const taskId = res.data.task_id;
+            const taskId = resData.task_id;
+            if (!taskId) {
+                throw Error("Model generation did not return a task id.");
+            }
             if (onTaskCreated) onTaskCreated(taskId);
 
             if (currentGenerator === GENERATOR_TYPES.MESHY) {
@@ -309,6 +321,15 @@ class ModelGeneratorProvider {
     }
 
     async getTaskStatus(taskId: string, generator: string) {
+        // Playground: poll Meshy directly (the only generator available there).
+        if (isPlaygroundMode()) {
+            if (generator === GENERATOR_TYPES.MESHY) {
+                return await MeshyDirectClient.fetchTask(taskId);
+            }
+            if (generator === "meshy_rig") {
+                return await MeshyDirectClient.fetchRigTask(taskId);
+            }
+        }
         const res = await getAIBackend().request<any>(
             `/api/AI/ObjectGeneration/Task?taskId=${encodeURIComponent(taskId)}&generator=${encodeURIComponent(generator)}`,
             {method: "GET"},
@@ -321,6 +342,9 @@ class ModelGeneratorProvider {
     }
 
     async meshyRefineModel(task_id: string) {
+        if (isPlaygroundMode()) {
+            return await MeshyDirectClient.refine(task_id);
+        }
         const res = await getAIBackend().request<any>("/api/AI/ObjectGeneration/Meshy/Refine", {
             method: "POST",
             body: {
@@ -467,6 +491,9 @@ class ModelGeneratorProvider {
     }
 
     async meshyRigModel(task_id: string) {
+        if (isPlaygroundMode()) {
+            return await MeshyDirectClient.rig(task_id);
+        }
         const res = await getAIBackend().request<any>("/api/AI/ObjectGeneration/Meshy/Rig", {
             method: "POST",
             body: {input_task_id: task_id},

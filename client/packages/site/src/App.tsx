@@ -8,9 +8,10 @@ import {NotFound} from "./routes/NotFound";
 import {Playground} from "./routes/Playground";
 
 export function App() {
-    // The playground route renders its own `playground-bar`, so the marketing
-    // nav would just duplicate it. Hide the nav there — the playground bar and
-    // the footer both still carry the GitHub link.
+    // The playground route renders its own `playground-bar` and fills the
+    // viewport with the editor iframe. The marketing nav and footer would just
+    // be redundant chrome around it (and the footer would push the iframe up),
+    // so hide both there — the playground bar carries the GitHub link.
     const {pathname} = useLocation();
     const isPlayground = pathname === "/playground" || pathname.startsWith("/playground/");
 
@@ -26,7 +27,7 @@ export function App() {
                     <Route path="*" element={<NotFound />} />
                 </Routes>
             </main>
-            <Footer />
+            {!isPlayground && <Footer />}
         </div>
     );
 }

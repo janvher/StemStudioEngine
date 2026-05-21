@@ -40,6 +40,7 @@ import {
     SubmitButton,
     SuggestedObjectChip,
 } from "./AiCopilot.styles";
+import {AiKeysModal} from "./AiKeysModal";
 import {ChatHistory} from "./chatHistory/ChatHistory";
 import {buildCopilotEntryGreeting, buildCopilotEntryPromptContext} from "./copilotWorkspaceEntry";
 import {
@@ -70,6 +71,7 @@ import {CopilotConfirmationCard} from "./workflow/CopilotConfirmationCard";
 import {CopilotVersionTimeline} from "./workflow/CopilotVersionTimeline";
 import {getCopilotProvider, type ICopilotProvider} from "../../../../copilot";
 import {IS_OSS} from "@stem/editor-oss/mode/buildMode";
+import {isPlaygroundMode} from "@web-shared/playgroundMode";
 import {runWithCopilotPreviewSceneSaveAllowed} from "@stem/editor-oss/agent/copilotPreviewPersistence";
 import {ConnectionState, InteractiveResult, InteractiveSelectionEvent} from "@stem/editor-oss/agent/types/ACPTypes";
 import {serializeObjectSummaryForPrompt} from "@stem/editor-oss/agent/utils/serialization";
@@ -312,6 +314,7 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
     const [permissionRequest, setPermissionRequest] = useState<any>(null);
     const [isLoadingSession, setIsLoadingSession] = useState(false);
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+    const [isKeysOpen, setIsKeysOpen] = useState(false);
     const [promptHistoryIndex, setPromptHistoryIndex] = useState<number>(-1);
     const [currentPromptDraft, setCurrentPromptDraft] = useState<string>("");
     const [sceneID, setSceneID] = useState<string | null>(null);
@@ -2158,6 +2161,14 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
                                         History
                                     </ResetBt>
                                 )}
+                                {isPlaygroundMode() && (
+                                    <ResetBt
+                                        onClick={() => setIsKeysOpen(true)}
+                                        style={{marginLeft: "4px"}}
+                                    >
+                                        Keys
+                                    </ResetBt>
+                                )}
                                 <CreditsBar />
                             </>
                         )}
@@ -2169,6 +2180,8 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
                         onClick={handleClose}
                     />
                 </HeaderContainer>
+
+                {isKeysOpen && <AiKeysModal onClose={() => setIsKeysOpen(false)} />}
 
                 {mode === "terminal" ? (
                     <TerminalView onExit={() => setMode("chat")} isAdmin={isAdmin} />

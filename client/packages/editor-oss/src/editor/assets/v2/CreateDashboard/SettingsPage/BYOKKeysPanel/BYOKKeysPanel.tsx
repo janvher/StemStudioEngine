@@ -2,6 +2,7 @@ import {useCallback, useEffect, useMemo, useState} from "react";
 
 import type {AICapabilities, AIProvider} from "../../../../../../ai";
 import {getAIBackend, getBYOKKeyStore} from "../../../../../../ai";
+import {refreshCopilotKeysMarker} from "../../../../../../copilot";
 
 import {
     ActionsRow,
@@ -139,6 +140,8 @@ export const BYOKKeysPanel = () => {
             setPassphraseAction("none");
             setPassphraseInput("");
             await refresh();
+            // Reset wipes all stored keys — clear the playground marker too.
+            void refreshCopilotKeysMarker();
         } finally {
             setPassphraseBusy(false);
         }
@@ -155,6 +158,8 @@ export const BYOKKeysPanel = () => {
                 if (!ok) throw new Error("Server rejected the key");
                 setDrafts(prev => ({...prev, [provider]: ""}));
                 await refresh();
+                // Keep the playground copilot's sync key-presence marker fresh.
+                void refreshCopilotKeysMarker();
             } catch (err) {
                 setError(err instanceof Error ? err.message : "Failed to save key");
             } finally {
@@ -171,6 +176,7 @@ export const BYOKKeysPanel = () => {
             try {
                 await backend.clearProviderKey(provider);
                 await refresh();
+                void refreshCopilotKeysMarker();
             } catch (err) {
                 setError(err instanceof Error ? err.message : "Failed to clear key");
             } finally {
