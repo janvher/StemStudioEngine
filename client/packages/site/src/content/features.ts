@@ -43,6 +43,12 @@ export const FEATURES: Feature[] = [
         href: "/docs/architecture",
     },
     {
+        icon: "▥",
+        title: "Server-side storage & version control",
+        body: "Storage is an interface, not a backend. Implement ProjectStore and AssetSource to run StemStudio against your own server — with full scene and asset revision history and published-release pinning.",
+        href: "/docs/server-side-storage",
+    },
+    {
         icon: "❖",
         title: "Visually guide the AI",
         body: "Point, select, and frame objects in the viewport, then ask the copilot to author custom behaviors against exactly what you see — scene context comes for free.",

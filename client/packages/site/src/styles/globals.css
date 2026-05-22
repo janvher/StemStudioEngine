@@ -496,7 +496,9 @@ button {
 /* ===== Playground ===== */
 
 .playground-page {
-    height: calc(100vh - 60px);
+    /* The marketing nav and footer are hidden on /playground (see App.tsx),
+     * so the page owns the full viewport: the bar plus the editor iframe. */
+    height: 100vh;
     display: flex;
     flex-direction: column;
 }

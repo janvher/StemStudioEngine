@@ -42,6 +42,35 @@ export interface ProjectBody {
     bundledAssets?: Record<string, string>;
 }
 
+/**
+ * A binary asset (model, image, audio) stored alongside a project.
+ *
+ * OSS has no asset service: model/image/audio payloads are synthesized as
+ * inline `data:` URLs that only live in memory. To make a saved project
+ * reload-safe, those payloads are persisted next to the project body — in
+ * IndexedDB for browser-storage projects, or in a `<projectId>/`
+ * subdirectory for File System Access projects.
+ *
+ * Behavior / script assets are NOT stored here: they are small and already
+ * embedded inline in the scene JSON (`scene.userData.behaviorConfigs`).
+ */
+export interface StoredAsset {
+    /** Synthetic OSS asset id (e.g. `oss-asset-…`). */
+    assetId: string;
+    /** Head revision id for the asset (e.g. `oss-rev-…`). */
+    revisionId: string;
+    /** Asset type (`model`, `image`, `audio`, …). */
+    type: string;
+    /** Data format (e.g. `glb`, `png`, `ogg`). */
+    format: string;
+    /** Human-readable asset name. */
+    name: string;
+    /** MIME type of the payload, when known. */
+    contentType?: string;
+    /** Base64-encoded payload bytes (no `data:` prefix). */
+    data: string;
+}
+
 export interface ListProjectsOptions {
     /** 1-based page index. Default 1. */
     page?: number;

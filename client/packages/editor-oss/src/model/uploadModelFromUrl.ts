@@ -15,6 +15,7 @@ import global from "../global";
 import Converter from "../utils/Converter";
 import {ModelUtils} from "../utils/ModelUtils";
 import {backendUrlFromPath} from "../utils/UrlUtils";
+import {isPlaygroundMode} from "@web-shared/playgroundMode";
 
 export type UploadModelFromUrlParams = {
     /** URL of the model to upload (e.g., from Meshy/Tripo CDN) */
@@ -56,19 +57,33 @@ export const uploadModelFromUrl = async (params: UploadModelFromUrlParams): Prom
     const uploadSettings = {...DEFAULT_UPLOAD_SETTINGS, ...settings};
     const abortSignal = signal || new AbortController().signal;
 
-    // 1. Fetch URL via proxy (to avoid CORS issues with external CDNs like Meshy/Tripo)
-    const proxyUrl = backendUrlFromPath("/api/Proxy/Download");
-    const response = await fetch(proxyUrl!, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({url}),
-    });
-    if (!response.ok) {
-        throw new Error(`Failed to fetch model: ${response.statusText}`);
+    // 1. Fetch the model bytes.
+    //
+    // Normally we go through the Go server's `/api/Proxy/Download` to dodge
+    // CORS on external CDNs. The playground has no Go server, so we fetch the
+    // provider CDN URL directly — this relies on that CDN sending permissive
+    // CORS headers (Meshy's asset CDN is the expected source there).
+    let blob: Blob;
+    if (isPlaygroundMode()) {
+        const direct = await fetch(url, {signal: abortSignal});
+        if (!direct.ok) {
+            throw new Error(`Failed to fetch model: ${direct.statusText}`);
+        }
+        blob = await direct.blob();
+    } else {
+        const proxyUrl = backendUrlFromPath("/api/Proxy/Download");
+        const response = await fetch(proxyUrl!, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({url}),
+        });
+        if (!response.ok) {
+            throw new Error(`Failed to fetch model: ${response.statusText}`);
+        }
+        blob = await response.blob();
     }
-    const blob = await response.blob();
     const file = new File([blob], `${name}.glb`, {type: "model/gltf-binary"});
 
     // 2. Load model

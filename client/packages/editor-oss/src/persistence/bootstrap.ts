@@ -62,6 +62,28 @@ export async function rehydrateProjectStore(): Promise<"indexeddb" | "filesystem
 }
 
 /**
+ * Memoized `rehydrateProjectStore()`.
+ *
+ * Rehydration must happen exactly once, and *before* the first scene load —
+ * but the trigger can't be left to a single React shell. The standalone
+ * Player route, in particular, mounts without running the dashboard's
+ * bootstrap effect, so it would otherwise read the lazy IndexedDB fallback
+ * and report a File System Access project as "not found".
+ *
+ * Any consumer that needs the real backend (the app shells on boot, and
+ * `loadSceneFromProjectStore` before every scene fetch) awaits this. The
+ * first caller kicks off rehydration; the rest share the same promise.
+ */
+let rehydrationPromise: Promise<"indexeddb" | "filesystem" | "fallback-indexeddb"> | null = null;
+
+export function ensureProjectStoreRehydrated(): Promise<"indexeddb" | "filesystem" | "fallback-indexeddb"> {
+    if (!rehydrationPromise) {
+        rehydrationPromise = rehydrateProjectStore();
+    }
+    return rehydrationPromise;
+}
+
+/**
  * Called from a user-gesture click handler (e.g. a "Reconnect folder"
  * banner). Re-runs the FS Access permission prompt, and on success swaps
  * the active ProjectStore back to FileSystemProjectStore so the dashboard

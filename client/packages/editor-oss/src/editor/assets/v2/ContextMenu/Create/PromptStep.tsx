@@ -4,6 +4,7 @@ import {useAuthorizationContext} from "@stem/editor-oss/context";
 import {MODEL_VERSION, TEXTURE_QUALITY} from "../../../../../controls/AiWorldController/AiWorldController.types";
 import CheckBox from "../../../../../ui/form/v2/CheckBox";
 import {GENERATOR_TYPES} from "@stem/editor-oss/utils/ModelGeneratorProvider";
+import {isPlaygroundMode} from "@web-shared/playgroundMode";
 import {BasicCombobox} from "../../common/BasicCombobox/BasicCombobox";
 import {CreditsBar} from "../../CreditsBar/CreditsBar";
 import trashIcon from "../../icons/trash.svg";
@@ -85,10 +86,14 @@ export const PromptStep = ({
         [GENERATOR_TYPES.TRIPO]: "tripo",
         [GENERATOR_TYPES.ERTH]: "Erth (experimental)",
     };
-    const generatorOptions = Object.values(GENERATOR_TYPES).map(value => ({
-        key: value,
-        value: generatorLabels[value],
-    }));
+    // The playground has no Go server; only Meshy can run browser-direct, so
+    // Tripo and Erth are hidden there.
+    const generatorOptions = Object.values(GENERATOR_TYPES)
+        .filter(value => !isPlaygroundMode() || value === GENERATOR_TYPES.MESHY)
+        .map(value => ({
+            key: value,
+            value: generatorLabels[value],
+        }));
 
     if (!isOpen) return null;
 

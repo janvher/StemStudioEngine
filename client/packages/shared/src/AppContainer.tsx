@@ -22,7 +22,7 @@ import {SceneRevisionsModalRenderer} from "./editor/assets/v2/SceneRevisionsModa
 import {queryClient} from "./queryClient";
 import {LoadingAnimation} from "./ui/progress/LoadingAnimation";
 import {IS_OSS} from "./buildMode";
-import {rehydrateProjectStore} from "./persistence";
+import {ensureProjectStoreRehydrated} from "./persistence";
 import {AppUpdateManager} from "./update/AppUpdateManager";
 import {OfflineIndicator} from "./update/OfflineIndicator";
 import CSPMetaTag, {customCSPPolicies} from "./utils/CSPMetaTag";
@@ -50,7 +50,7 @@ export const AppContainer = () => {
     // store instead of calling the integrated /api/scene/* endpoint.
     useEffect(() => {
         if (!IS_OSS) return;
-        void rehydrateProjectStore();
+        void ensureProjectStoreRehydrated();
     }, []);
 
     return (

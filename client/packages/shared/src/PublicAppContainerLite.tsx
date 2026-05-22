@@ -15,7 +15,7 @@ import AppGlobalContextProvider from "./context/AppGlobalContext";
 import AuthorizationContextProvider from "./context/AuthorizationContext";
 import HomepageContextProvider from "./context/HomepageContext";
 import {OSSBootstrapModal} from "./editor/assets/v2/OSSBootstrapModal/OSSBootstrapModal";
-import {isOSSBootstrapped, rehydrateProjectStore} from "./persistence";
+import {ensureProjectStoreRehydrated, isOSSBootstrapped} from "./persistence";
 import {applyPlaygroundModeAttribute} from "./playgroundMode";
 import "./playgroundMode.css";
 import {queryClient} from "./queryClient";
@@ -28,9 +28,11 @@ const OSSPersistenceBootstrapper = () => {
     useEffect(() => {
         // Only rehydrate once the user has gone through the first-time modal.
         // Before that, the modal itself will register the chosen store on
-        // confirm; rehydrating here too would race with that flow.
+        // confirm; rehydrating here too would race with that flow. Scene
+        // loads on un-bootstrapped routes fall back to a lazy rehydration
+        // via `ensureProjectStoreRehydrated()` in the scene loader.
         if (!isOSSBootstrapped()) return;
-        void rehydrateProjectStore();
+        void ensureProjectStoreRehydrated();
     }, []);
     return null;
 };

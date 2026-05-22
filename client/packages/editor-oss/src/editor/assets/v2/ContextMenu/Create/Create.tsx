@@ -20,6 +20,8 @@ import global from "@stem/editor-oss/global";
 import { showToast } from "@stem/editor-oss/showToast";
 import { StemCompositionBuilder } from "@stem/editor-oss/utils/StemCompositionBuilder";
 import { GENERATOR_TYPES } from "@stem/editor-oss/utils/ModelGeneratorProvider";
+import { uploadModelFromUrl } from "@stem/editor-oss/model/uploadModelFromUrl";
+import { isPlaygroundMode } from "@web-shared/playgroundMode";
 import { LoadingWrapper, Menu } from "../ContextMenu.styles";
 import loadingIcon from "../icons/loading.png";
 
@@ -70,7 +72,10 @@ export const Create = ({
     const [generationSteps, setGenerationSteps] = useState<GenerationStep[]>([]);
     const [loading, setLoading] = useState(false);
     const [generator, setGenerator] = useState<GENERATOR_TYPES>(
-        (process.env.REACT_APP_DEFAULT_AI_GENERATOR as GENERATOR_TYPES) || GENERATOR_TYPES.MESHY,
+        // Playground runs Meshy browser-direct and has no server for Tripo/Erth.
+        isPlaygroundMode()
+            ? GENERATOR_TYPES.MESHY
+            : (process.env.REACT_APP_DEFAULT_AI_GENERATOR as GENERATOR_TYPES) || GENERATOR_TYPES.MESHY,
     );
     const [autoRig, setAutoRig] = useState(false);
     const [refine, setRefine] = useState(true);
@@ -198,8 +203,10 @@ export const Create = ({
             imageToken = uploadRes.image_token;
         }
 
-        // For Meshy/Tripo: submit a background job and return immediately
-        if (generator === GENERATOR_TYPES.MESHY || generator === GENERATOR_TYPES.TRIPO) {
+        // For Meshy/Tripo: submit a background job and return immediately.
+        // The playground has no Go server to run jobs, so Meshy falls through
+        // to the polling flow below and is imported browser-direct.
+        if (!isPlaygroundMode() && (generator === GENERATOR_TYPES.MESHY || generator === GENERATOR_TYPES.TRIPO)) {
             const {jobId} = await aiWorldController.modelGeneratorProvider!.submitGenerationJob({
                 generator,
                 sceneId: sceneID || app.editor?.sceneID || "",
@@ -265,6 +272,18 @@ export const Create = ({
                 thumbnail: res.intermediateImage || res.rendered_image,
                 name: name || "Erth Generated",
             };
+        }
+
+        // Playground Meshy: the polling flow above produced a GLB URL. There
+        // is no Go server, so import it browser-direct (uploadModelFromUrl
+        // fetches the CDN URL itself in playground mode) and hand back a
+        // ready-to-place object.
+        if (isPlaygroundMode() && res.model) {
+            const uploaded = await uploadModelFromUrl({
+                url: res.model,
+                name: name || prompt || "Generated Model",
+            });
+            return {object: uploaded.object, name: name || "Generated Model"};
         }
 
         throw new Error(`Unexpected generator response: no composition returned`);
@@ -364,16 +383,16 @@ export const Create = ({
                     return;
                 }
 
-                // Handle Erth composition - always add to scene (even if notForScene for library)
+                // Add the generated object to the scene. Both the Erth
+                // composition and the playground browser-direct Meshy import
+                // hand back a ready Object3D.
                 let model: THREE.Object3D | undefined = undefined;
                 const isErthComposition = objData && "isErthComposition" in objData && objData.isErthComposition;
 
-                if (isErthComposition) {
+                if (objData && "object" in objData && objData.object) {
                     model = objData.object;
-                    console.log("[Create] Adding Erth composition to scene:", model.name, "with", model.children.length, "children");
                     removeObjectToReplace();
                     aiWorldController.addObjectToScene(model, false, width, height, intersectPoint);
-                    console.log("[Create] Erth composition added to scene. Model position:", model.position);
                     setModelData({ width, height });
                 }
 

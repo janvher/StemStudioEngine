@@ -57,4 +57,51 @@ describe("advancedModeStorage", () => {
         expect(resolved).toEqual({value: false, source: "aiPromptMode"});
         expect(readProjectAdvancedModePreference("ai-scene")).toBe(false);
     });
+
+    it("ignores AiPromptMode for OSS projects outside the playground", () => {
+        const resolved = resolveAdvancedModePreferenceForProject({
+            sceneID: "oss-ai-scene",
+            aiPromptMode: true,
+            isOSS: true,
+        });
+
+        expect(resolved).toEqual({value: true, source: "default"});
+        expect(readProjectAdvancedModePreference("oss-ai-scene")).toBe(true);
+    });
+
+    it("honours AiPromptMode for OSS projects inside the playground", () => {
+        const resolved = resolveAdvancedModePreferenceForProject({
+            sceneID: "playground-ai-scene",
+            aiPromptMode: true,
+            isOSS: true,
+            isPlayground: true,
+        });
+
+        expect(resolved).toEqual({value: false, source: "aiPromptMode"});
+        expect(readProjectAdvancedModePreference("playground-ai-scene")).toBe(false);
+    });
+
+    it("opens the AI layout in the playground when a copilot key is present", () => {
+        const resolved = resolveAdvancedModePreferenceForProject({
+            sceneID: "playground-keyed-scene",
+            aiPromptMode: true,
+            isOSS: true,
+            isPlayground: true,
+            hasCopilotKeys: true,
+        });
+
+        expect(resolved).toEqual({value: false, source: "aiPromptMode"});
+    });
+
+    it("falls back to advanced mode in the playground when no copilot key exists", () => {
+        const resolved = resolveAdvancedModePreferenceForProject({
+            sceneID: "playground-keyless-scene",
+            aiPromptMode: true,
+            isOSS: true,
+            isPlayground: true,
+            hasCopilotKeys: false,
+        });
+
+        expect(resolved).toEqual({value: true, source: "default"});
+    });
 });

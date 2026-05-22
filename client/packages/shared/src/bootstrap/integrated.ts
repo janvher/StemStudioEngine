@@ -63,4 +63,10 @@ if (!IS_OSS) {
     // Lazy copilot bridge — the proprietary StudioACPClient is only built
     // when the editor first asks for it, so this call is cheap.
     initIntegratedCopilotProvider(() => global.app ?? undefined);
+} else {
+    // OSS playground: there is no hosted agent. Register the browser-direct
+    // copilot, which streams straight from the visitor's BYOK provider key.
+    // `registerPlaygroundCopilot()` is a no-op outside the playground iframe.
+    const {registerPlaygroundCopilot} = await import("@stem/editor-oss/copilot");
+    registerPlaygroundCopilot();
 }

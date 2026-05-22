@@ -226,7 +226,14 @@ export const SceneListItem = React.memo(
                 redirectToLogin(navigate, ROUTES.DASHBOARD, "game_card_edit");
                 return;
             }
-            prepareEditCurrentGameCopilotEntry(item);
+            // OSS opens projects straight into the advanced editor (the
+            // Copilot is available as a panel there). The cloud-only
+            // "edit via Copilot workspace" entry would otherwise force the
+            // simplified workspace layout — wrong for a local project the
+            // user explicitly chose to edit.
+            if (!IS_OSS) {
+                prepareEditCurrentGameCopilotEntry(item);
+            }
             openEditorRoute(generateProjectLink(item.ID));
         };
 

@@ -1,5 +1,7 @@
 import { Object3D } from 'three';
 
+import { lookupOssAsset } from '@stem/network/api/asset';
+
 import { AssetLoader } from '../asset-management/AssetLoader';
 import { AssetResolutionContext, resolveAssetId, resolveAssetRevisionId } from '../asset-management/AssetResolutionContext';
 import ModelLoader from '../assets/js/loaders/ModelLoader';
@@ -11,6 +13,21 @@ import { hasGaussianSplatPlyMetadata } from './gaussianSplats';
 import { LOD_LEVEL_DESKTOP, LOD_LEVEL_MOBILE, setModelId, setModelRevisionId } from './util';
 
 const replaceExtension = (name: string, ext: string) => name.replace(/\.[^/.]+$/, "") + ext;
+
+/**
+ * Resolve a model's revision id from the scene's asset-resolution context,
+ * falling back to the OSS asset registry. In OSS the dependency map does not
+ * always round-trip through a save/reload, but the registry — re-seeded from
+ * the ProjectStore on scene load — always knows the head revision for a
+ * synthesized asset. Returns undefined when neither source has it.
+ */
+const resolveModelRevisionId = (
+    modelId: string,
+    resolvedModelId: string,
+    context: AssetResolutionContext,
+): string | undefined =>
+    resolveAssetRevisionId(modelId, context)
+    ?? lookupOssAsset(resolvedModelId)?.revisionId;
 
 export const createLods = async (
     sourceBuffer: ArrayBuffer,
@@ -81,7 +98,7 @@ export const loadModel = async (
     useDefault: boolean = false,
 ): Promise<Object3D> => {
     const resolvedModelId = resolveAssetId(modelId, context);
-    const revisionId = useDefault ? resolvedModelId : resolveAssetRevisionId(modelId, context);
+    const revisionId = useDefault ? resolvedModelId : resolveModelRevisionId(modelId, resolvedModelId, context);
     if (!revisionId) {
         throw new Error(`Failed to resolve revision ID for model ID ${modelId}`);
     }
@@ -127,7 +144,7 @@ export const loadModelWithLoader = async (
     options: LoadModelWithLoaderOptions = {},
 ): Promise<Object3D> => {
     const resolvedModelId = resolveAssetId(modelId, context);
-    const revisionId = resolveAssetRevisionId(modelId, context);
+    const revisionId = resolveModelRevisionId(modelId, resolvedModelId, context);
     if (!revisionId) {
         throw new Error(`Failed to resolve revision ID for model ID ${modelId}`);
     }

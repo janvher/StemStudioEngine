@@ -13,6 +13,8 @@ import {getGameUrl} from "../v2/pages/links";
 import {estimateSceneObjectBytes} from "../utils/estimateSceneObjectBytes";
 import {ActivePage, RIGHT_PANEL_VERSIONS} from "./appStateTypes";
 import {ROUTES} from "@web-shared/routes";
+import {isPlaygroundMode} from "@web-shared/playgroundMode";
+import {hasCopilotKeysSync} from "../copilot";
 import {
     readInitialAdvancedModePreference,
     resolveAdvancedModePreferenceForProject,
@@ -129,6 +131,8 @@ const AppGlobalContextProvider: React.FC<AppGlobalContextProviderProps> = ({chil
             sceneID: editorSceneID,
             aiPromptMode: editorAiPromptMode,
             isOSS: IS_OSS,
+            isPlayground: isPlaygroundMode(),
+            hasCopilotKeys: hasCopilotKeysSync(),
         });
         advancedModeSceneIDRef.current = editorSceneID;
         skipNextAdvancedModePersistRef.current = editorSceneID;
