@@ -316,20 +316,29 @@ export const SceneListItem = React.memo(
                                     </CardMetaStats>
                                 </CardMetaBlock>
                             </CardThumbBottomOverlay>
-                            <CardInfoIconButton
-                                title={item.Description || item.Name}
-                                aria-label={`More options for ${item.Name}`}
-                                onClick={e => {
-                                    e.stopPropagation();
-                                    openDetail();
-                                }}
-                            >
-                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                    <circle cx="6" cy="12" r="1.6" />
-                                    <circle cx="12" cy="12" r="1.6" />
-                                    <circle cx="18" cy="12" r="1.6" />
-                                </svg>
-                            </CardInfoIconButton>
+                            {/* The "More options" button opens the /game/:id
+                                detail page (GameOverview). That page is
+                                integrated-only: it relies on the hosted
+                                publish workflow and shows "This game is not
+                                published" for local OSS scenes. OSS already
+                                routes card clicks straight into the editor, so
+                                hide the button entirely here. */}
+                            {!IS_OSS && (
+                                <CardInfoIconButton
+                                    title={item.Description || item.Name}
+                                    aria-label={`More options for ${item.Name}`}
+                                    onClick={e => {
+                                        e.stopPropagation();
+                                        openDetail();
+                                    }}
+                                >
+                                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                        <circle cx="6" cy="12" r="1.6" />
+                                        <circle cx="12" cy="12" r="1.6" />
+                                        <circle cx="18" cy="12" r="1.6" />
+                                    </svg>
+                                </CardInfoIconButton>
+                            )}
                         </>
                     )}
                 </CompactMedia>

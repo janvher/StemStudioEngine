@@ -296,3 +296,4 @@ webstorm/build
 webstorm/.intellijPlatform
 .dual-graph/
 .dual-graph-context/
+scripts/playwright/*-output/

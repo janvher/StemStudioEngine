@@ -180,7 +180,8 @@ Pick the narrowest meaningful check; broaden if risk justifies it.
 ```bash
 bun run typecheck
 bun run lint
-bun test
+bun run test          # Vitest (jsdom). NOT `bun test` — that runs Bun's
+                      # native runner, which lacks the jsdom env and fails.
 bun run vite-build
 bun run build-server   # builds the Go AI proxy
 

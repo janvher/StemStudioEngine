@@ -222,7 +222,14 @@ export const TopMenu = ({inGameUI}: Props) => {
         setCanSave(
             !isTemplate
             && !isReadOnly
-            && (app.editor?.projectUserId === dbUser?.id || isAdmin || isCollaborator || hasStemEditGrant),
+            // OSS treats every project as owned by the local user — there is
+            // no remote ownership, so keep Save available (matches the
+            // initial canSave useState above).
+            && (IS_OSS
+                || app.editor?.projectUserId === dbUser?.id
+                || isAdmin
+                || isCollaborator
+                || hasStemEditGrant),
         );
         setIsCloneable(!!app.editor?.isCloneable || isTemplate);
     };
@@ -328,7 +335,13 @@ export const TopMenu = ({inGameUI}: Props) => {
         const isTemplate = isTemplateScene(app.editor?.sceneID);
         setCanSave(
             !isTemplate &&
-                (app.editor?.projectUserId === dbUser?.id || isAdmin || isCollaborator || hasStemEditGrant),
+                // OSS has no remote ownership — every local project is
+                // editable, so Save stays available (see line ~67).
+                (IS_OSS ||
+                    app.editor?.projectUserId === dbUser?.id ||
+                    isAdmin ||
+                    isCollaborator ||
+                    hasStemEditGrant),
         );
     }, [isAdmin, isCollaborator, hasStemEditGrant, app.editor, dbUser, refresher]);
 
