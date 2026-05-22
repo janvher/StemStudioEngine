@@ -11,7 +11,7 @@ import type {AutoResolveResult} from "@stem/editor-oss/agent/script-tool/ImportB
 import {handleImport, processImportedFile} from "@stem/editor-oss/agent/script-tool/importHandler";
 import {ScriptCommandParser, ParsedCommand} from "@stem/editor-oss/agent/script-tool/ScriptCommandParser";
 import {ScriptExecutor} from "@stem/editor-oss/agent/script-tool/ScriptExecutor";
-import {consumeStemscriptImport} from "@stem/editor-oss/agent/script-tool/stemscriptImportStaging";
+import {consumeStemscriptImport, peekStemscriptImport} from "@stem/editor-oss/agent/script-tool/stemscriptImportStaging";
 import {saveScene} from "@stem/network/api/scene";
 import {refreshEditorAssets} from "../../../../../editor/asset-management/hooks/assets";
 import type EngineRuntime from "@stem/editor-oss/EngineRuntime";
@@ -228,6 +228,8 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
         importRequests: ReturnType<typeof ScriptExecutor.extractImports>,
         files: Map<number, File>,
         companionFiles: Map<number, File[]>,
+        /** Map of behavior `filepath` → logical id, from conversion-manifest.json. */
+        behaviorIdByFilepath?: Map<string, string>,
     ) => {
         const hasEditorContext = Boolean(getEngineRuntime()?.editor?.assetSource);
         const ASSET_FIRST = new Set(["model", "audio", "sound", "image", "video"]);
@@ -243,12 +245,39 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
                 const label = req.name || file.name;
                 addEntry(`import ${req.type} ${label}`, `Processing: ${file.name}...`, "info");
                 const companions = companionFiles?.get(req.index);
-                const result = await processImportedFile(file, req.type, req.name, companions);
+                const behaviorIdOverride = req.type === "behavior" && req.filepath
+                    ? behaviorIdByFilepath?.get(req.filepath)
+                    : undefined;
+                const result = await processImportedFile(file, req.type, req.name, companions, behaviorIdOverride);
                 results.set(req.index, result);
             }
         }
         return results;
     }, [addEntry]);
+
+    // Parse a stemscript-import folder's `conversion-manifest.json` into a
+    // `filepath → logical behavior id` map. Generated game folders attach
+    // behaviors by a logical id (e.g. `g2048.game`) that differs from the
+    // bundled YAML's internal `config.id`; the manifest is the link.
+    const buildBehaviorIdMap = useCallback(async (folderFiles?: File[]): Promise<Map<string, string>> => {
+        const map = new Map<string, string>();
+        const manifestFile = folderFiles?.find(f => {
+            const rel = (f as File & {webkitRelativePath?: string}).webkitRelativePath || f.name;
+            return rel.toLowerCase().endsWith("conversion-manifest.json");
+        });
+        if (!manifestFile) return map;
+        try {
+            const manifest = JSON.parse(await manifestFile.text()) as {
+                behaviors?: Array<{id?: string; file?: string}>;
+            };
+            for (const b of manifest.behaviors ?? []) {
+                if (b.id && b.file) map.set(b.file, b.id);
+            }
+        } catch {
+            // Malformed manifest — proceed without behavior id overrides.
+        }
+        return map;
+    }, []);
 
     // The full runScript flow; exposed below on `window.__stemRunScript` in
     // OSS dev so a Playwright test can drive the `exec` pipeline without
@@ -353,7 +382,10 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
             }
 
             if (resolvedFiles.size > 0) {
-                const results = await processResolvedImports(importRequests, resolvedFiles, resolvedCompanions);
+                const behaviorIdByFilepath = await buildBehaviorIdMap(folderFiles);
+                const results = await processResolvedImports(
+                    importRequests, resolvedFiles, resolvedCompanions, behaviorIdByFilepath,
+                );
                 importResultsRef.current = results;
                 importCounterRef.current = 0;
             } else if (!importResultsRef.current) {
@@ -429,7 +461,7 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
             importResultsRef.current = null;
             importCounterRef.current = 0;
         }
-    }, [executeRegistryCommand, addEntry, executeScriptBuiltin, processResolvedImports]);
+    }, [executeRegistryCommand, addEntry, executeScriptBuiltin, processResolvedImports, buildBehaviorIdMap]);
 
     const executeInput = useCallback(async (input: string): Promise<TerminalHistoryEntry[]> => {
         const trimmed = input.trim();
@@ -568,8 +600,10 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
             // hang waiting on a step that's stuck inside an OSS-gated path
             // we haven't covered yet. Real users hit the same flow through
             // the UI dialogs and can dismiss; tests should fail loudly with
-            // the timeout breadcrumb.
-            const HARD_TIMEOUT_MS = 60_000;
+            // the timeout breadcrumb. Generous enough that a full game
+            // import (dozens of models, real GLB parsing) completes inside
+            // it rather than tripping a spurious timeout.
+            const HARD_TIMEOUT_MS = 240_000;
             try {
                 await Promise.race([
                     runScript(content, folderFiles),
@@ -615,20 +649,85 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
     // OSS dashboard "Import stemscript folder" handoff. When the user
     // picks a folder on the dashboard we stage the script + base64 file
     // payloads in sessionStorage and navigate to a fresh project route.
-    // The Create page auto-opens the Copilot panel on detection, which
-    // mounts this hook — at which point we consume the staged data and
-    // drive the same `runScript` flow as the inline `exec` command. The
-    // staging entry is removed on consume, so a reload doesn't replay it.
+    // The Create page auto-creates the project and the editor mounts this
+    // hook — at which point we consume the staged data and drive the same
+    // `runScript` flow as the inline `exec` command. The staging entry is
+    // removed on consume, so a reload doesn't replay it.
+    //
+    // Timing is load-bearing here. This hook mounts (the AiCopilot panel
+    // is always in the editor tree) while the editor is still booting:
+    // the auto-created project scene has not been finalized yet. Running
+    // exec at that point is doubly broken — the import resolver skips
+    // every `import` because `editor.assetSource` isn't bound, and any
+    // objects exec does add get discarded when the scene-setup pass
+    // replaces `editor.scene`. So we wait for the `sceneLoaded` event,
+    // which fires once the persisted project scene is fully in place, and
+    // only `consume` (which clears the staged payload) once we run.
     useEffect(() => {
         if (!IS_OSS) return;
         const w = window as unknown as {__stemRunScript?: (...args: any[]) => Promise<void>};
         if (typeof w.__stemRunScript !== "function") return;
-        const staged = consumeStemscriptImport();
-        if (!staged) return;
-        // Fire-and-forget — runScript reports errors via inline terminal
-        // entries (addEntry), which is the surface the user is staring at
-        // while the import runs.
-        void w.__stemRunScript(staged.content, staged.files);
+
+        let done = false;
+        let appPollTimer = 0;
+        let settleTimer = 0;
+        let boundApp: EngineRuntime | null = null;
+
+        const detach = () => {
+            if (appPollTimer) window.clearTimeout(appPollTimer);
+            if (settleTimer) window.clearTimeout(settleTimer);
+            boundApp?.on("sceneLoaded.StemscriptImport", null);
+        };
+
+        const run = () => {
+            if (done) return;
+            const editor = getEngineRuntime()?.editor;
+            // sceneLoaded fired, but guard the invariants exec depends on:
+            // a persisted scene id (proves the project was created) and a
+            // bound asset source (proves imports resolve to it).
+            if (!editor?.sceneID || !editor?.assetSource) return;
+            done = true;
+            detach();
+            void consumeStemscriptImport().then(staged => {
+                if (!staged) return;
+                // Fire-and-forget — runScript reports errors via inline
+                // terminal entries (addEntry), which is the surface the user
+                // is staring at while the import runs.
+                void w.__stemRunScript!(staged.content, staged.files);
+            });
+        };
+
+        // `sceneLoaded` can fire more than once across the autoCreate →
+        // load handoff; debounce so exec runs after the final scene
+        // settles rather than against an intermediate one.
+        const onSceneLoaded = () => {
+            if (done) return;
+            if (settleTimer) window.clearTimeout(settleTimer);
+            settleTimer = window.setTimeout(run, 500);
+        };
+
+        const attach = () => {
+            if (done) return;
+            const app = getEngineRuntime();
+            if (!app) {
+                appPollTimer = window.setTimeout(attach, 150);
+                return;
+            }
+            boundApp = app;
+            app.on("sceneLoaded.StemscriptImport", onSceneLoaded);
+        };
+
+        // Only wire the sceneLoaded listener when a payload is actually
+        // staged. The staging store is IndexedDB, so the check is async.
+        void peekStemscriptImport().then(staged => {
+            if (done || !staged) return;
+            attach();
+        });
+
+        return () => {
+            done = true;
+            detach();
+        };
     }, [runScript]);
 
     return {

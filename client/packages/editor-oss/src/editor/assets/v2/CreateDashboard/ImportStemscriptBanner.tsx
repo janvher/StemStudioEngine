@@ -216,9 +216,9 @@ export const ImportStemscriptBanner = () => {
                     })),
                 ),
             };
-            const ok = stageStemscriptImport(staged);
+            const ok = await stageStemscriptImport(staged);
             if (!ok) {
-                setHint("Could not stage import — sessionStorage may be full.");
+                setHint("Could not stage import — local storage is unavailable.");
                 return;
             }
             openEditorRoute(generateProjectLink(), {autoCreate: true});

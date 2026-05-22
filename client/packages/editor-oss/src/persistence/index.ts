@@ -5,6 +5,7 @@ export type {
     ProjectBody,
     ProjectMeta,
     ProjectStoreKind,
+    StoredAsset,
 } from "./types";
 export {IndexedDBProjectStore} from "./IndexedDBProjectStore";
 export {FileSystemProjectStore, isFileSystemAccessSupported} from "./FileSystemProjectStore";
@@ -24,6 +25,7 @@ export {
 export type {OSSPersistenceMode} from "./projectStoreFactory";
 export {
     rehydrateProjectStore,
+    ensureProjectStoreRehydrated,
     reconnectFilesystemFolder,
     isOSSBootstrapped,
     markOSSBootstrapped,

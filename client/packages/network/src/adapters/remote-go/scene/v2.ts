@@ -1,5 +1,5 @@
 import global from "@web-shared/global";
-import {Asset, createAssetUpload, dataToBase64, getDataByteLength, gzipData, INLINE_DATA_MAX_BYTES, isConflictError, uploadAssetData} from "../asset";
+import {Asset, createAssetUpload, dataToBase64, getDataByteLength, gzipData, INLINE_DATA_MAX_BYTES, isConflictError, registerOssAsset, uploadAssetData} from "../asset";
 import {getJobsApiClient, getScenesApiClient} from "../client";
 import {DomainAssetType, HandlerCreateAssetTokenResponse, HandlerCreateRevisionRequest, HandlerCreateSceneRequest, DomainSceneDto, HandlerPublishSceneRequest, HandlerUpdateSceneRequest, JobsJobResponseStatusEnum} from "../client/api";
 import Ajax from "@web-shared/utils/Ajax";
@@ -70,8 +70,39 @@ async function loadSceneFromProjectStore(sceneId: string): Promise<DomainSceneDt
     // Imported lazily to keep this network adapter free of editor-oss
     // direct dependencies; the persistence factory only resolves when the
     // OSS bootstrap has registered a backend.
-    const {getProjectStore} = await import("@stem/editor-oss/persistence");
-    const body = await getProjectStore().load(sceneId);
+    const {getProjectStore, ensureProjectStoreRehydrated} = await import("@stem/editor-oss/persistence");
+    // Make sure the chosen backend (File System Access vs IndexedDB) is
+    // resolved before reading. The Player route doesn't run the dashboard's
+    // bootstrap effect, so without this it would read the lazy IndexedDB
+    // fallback and report a filesystem project as "not found".
+    await ensureProjectStoreRehydrated();
+    const store = getProjectStore();
+    const body = await store.load(sceneId);
+
+    // Re-seed the in-memory OSS asset registry from the project's persisted
+    // binary assets so model/image/audio references in the scene JSON
+    // resolve. The registry is module-level and empty after a page reload;
+    // this restores it before the scene is deserialized.
+    try {
+        const assets = await store.loadAssets(sceneId);
+        for (const a of assets) {
+            const mime = a.contentType
+                || (a.format === "json" ? "application/json" : "application/octet-stream");
+            registerOssAsset({
+                assetId: a.assetId,
+                revisionId: a.revisionId,
+                type: a.type as DomainAssetType,
+                format: a.format,
+                name: a.name,
+                contentType: a.contentType,
+                dataUrl: `data:${mime};base64,${a.data}`,
+                projectId: sceneId,
+            });
+        }
+    } catch (err) {
+        console.warn("[scene/v2] failed to restore project assets", err);
+    }
+
     const sceneJsonBase64 = (() => {
         try {
             // btoa(unescape(encodeURIComponent(...))) handles non-ASCII content.
@@ -168,7 +199,7 @@ export const createSceneAsset = async ({
         // ProjectStore is self-contained; asset records are synthetic so
         // the rest of the editor's bookkeeping (assetAdded events, scene
         // userData asset refs) still has a stable id to reference.
-        const synthetic = synthOSSAsset({type, format, name, description, data});
+        const synthetic = synthOSSAsset({type, format, name, description, data, sceneId, contentType});
         global.app?.call("assetAdded", null, {assetId: synthetic.id});
         return synthetic;
     }
@@ -196,7 +227,7 @@ export const createSceneAsset = async ({
     return response.data;
 };
 
-function synthOSSAsset(params: {type: DomainAssetType; format: string; name: string; description?: string; data?: string}): Asset {
+function synthOSSAsset(params: {type: DomainAssetType; format: string; name: string; description?: string; data?: string; sceneId?: string; contentType?: string}): Asset {
     const id = `oss-asset-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const revisionId = `oss-rev-${id}`;
     const now = new Date().toISOString();
@@ -207,6 +238,16 @@ function synthOSSAsset(params: {type: DomainAssetType; format: string; name: str
         const mime = params.format === "json" ? "application/json" : "application/octet-stream";
         dataUrl = `data:${mime};base64,${params.data}`;
     }
+    registerOssAsset({
+        assetId: id,
+        revisionId,
+        type: params.type,
+        format: params.format,
+        name: params.name,
+        contentType: params.contentType,
+        dataUrl,
+        projectId: params.sceneId,
+    });
     return {
         id,
         type: params.type,

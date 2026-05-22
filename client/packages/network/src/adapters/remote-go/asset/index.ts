@@ -33,6 +33,70 @@ export type AssetRelease = DomainAssetReleaseDto;
 
 export type AssetRevision = DomainAssetRevisionDto;
 
+/**
+ * In-memory OSS asset registry.
+ *
+ * OSS has no integrated asset service: every `create*` call synthesizes an
+ * asset record whose payload is an inline `data:` URL. The synthesized URL
+ * *is* the asset's storage — but a caller that only kept the asset id (e.g.
+ * the script-import pipeline, which does `createModelWithData()` then
+ * `loadModel(asset.id)`) has no way to recover that URL, and the OSS
+ * `getAsset`/`getAssetRevision` branches used to return `dataUrl: undefined`.
+ * That made `AssetLoader.getModelDataUrl` throw "No data URL found", so
+ * imported models never reached the scene.
+ *
+ * Keeping the synthesized records here — keyed by both asset id and revision
+ * id — lets the OSS read paths return the real payload. Entries live for the
+ * session; the data is also serialized inline into the scene JSON on save, so
+ * a reloaded project is self-contained without this registry.
+ */
+export type OssAssetRecord = {
+    assetId: string;
+    revisionId: string;
+    type: DomainAssetType;
+    format: string;
+    name: string;
+    contentType?: string;
+    dataUrl?: string;
+    /**
+     * Scene/project id this asset was created for, when known. Set for
+     * scene-scoped assets (models, images, audio imported into a scene) so
+     * the persistence layer can save/restore a project's assets. Absent for
+     * non-scene assets (e.g. behavior bundles, which persist inline in the
+     * scene JSON instead).
+     */
+    projectId?: string;
+};
+
+const ossAssetRegistry = new Map<string, OssAssetRecord>();
+
+/** Record a synthesized OSS asset so the read paths can recover its payload. */
+export const registerOssAsset = (record: OssAssetRecord): void => {
+    ossAssetRegistry.set(record.assetId, record);
+    ossAssetRegistry.set(record.revisionId, record);
+};
+
+/** Look up a synthesized OSS asset by either its asset id or revision id. */
+export const lookupOssAsset = (idOrRevisionId: string): OssAssetRecord | undefined =>
+    ossAssetRegistry.get(idOrRevisionId);
+
+/**
+ * Every synthesized OSS asset created for a given project, de-duplicated.
+ * Used by the persistence layer to write a project's binary assets to the
+ * ProjectStore so they survive a reload.
+ */
+export const getOssAssetsForProject = (projectId: string): OssAssetRecord[] => {
+    const seen = new Set<string>();
+    const out: OssAssetRecord[] = [];
+    for (const record of ossAssetRegistry.values()) {
+        if (record.projectId !== projectId) continue;
+        if (seen.has(record.assetId)) continue;
+        seen.add(record.assetId);
+        out.push(record);
+    }
+    return out;
+};
+
 export type CreateAssetOptions = {
     description?: string;
     revisionDescription?: string;
@@ -362,6 +426,7 @@ export const createAsset = async ({
             const mime = format === "json" ? "application/json" : (contentType || "application/octet-stream");
             dataUrl = `data:${mime};base64,${data}`;
         }
+        registerOssAsset({assetId: id, revisionId, type, format, name, contentType, dataUrl});
         return {
             id,
             type,
@@ -498,6 +563,16 @@ export const createAssetRevision = async ({
             const mime = format === "json" ? "application/json" : (contentType || "application/octet-stream");
             dataUrl = `data:${mime};base64,${data}`;
         }
+        const existing = lookupOssAsset(assetId);
+        registerOssAsset({
+            assetId,
+            revisionId: id,
+            type: existing?.type ?? ("model" as DomainAssetType),
+            format: format ?? existing?.format ?? "",
+            name: existing?.name ?? assetId,
+            contentType: contentType ?? existing?.contentType,
+            dataUrl,
+        });
         return {
             id,
             assetId,
@@ -558,14 +633,30 @@ export const getAsset = async (assetId: string, options: GetAssetOptions = {}): 
     if (IS_OSS) {
         // OSS doesn't persist assets via the integrated asset service; the
         // scene JSON is self-contained and loaded directly from
-        // ProjectStore. Return a minimal synthetic asset so callers that
-        // ask for metadata get something usable.
+        // ProjectStore. If the asset was synthesized this session, return its
+        // real metadata + inline payload; otherwise fall back to a minimal
+        // synthetic record so metadata-only callers still get something usable.
+        const record = lookupOssAsset(assetId);
+        const now = new Date().toISOString();
+        if (record) {
+            return {
+                id: record.assetId,
+                type: record.type,
+                format: record.format,
+                createTime: now,
+                updateTime: now,
+                userId: "local",
+                headRevisionId: record.revisionId,
+                name: record.name,
+                revision: {id: record.revisionId, dataUrl: record.dataUrl, derivatives: [], expiresAt: undefined},
+            } as never;
+        }
         return {
             id: assetId,
             type: "scene",
             format: "json",
-            createTime: new Date().toISOString(),
-            updateTime: new Date().toISOString(),
+            createTime: now,
+            updateTime: now,
             userId: "local",
             headRevisionId: `oss-rev-${assetId}`,
             name: "local",
@@ -691,6 +782,9 @@ export const getAssetReleases = async (
     assetId: string,
     options: GetAssetReleasesOptions = {},
 ): Promise<AssetRelease[]> => {
+    // OSS has no integrated asset service — there are no releases to list.
+    if (IS_OSS) return [];
+
     const response = await getAssetsApiClient().getAssetReleases(assetId, options?.limit);
 
     if (response?.status !== 200) {
@@ -708,12 +802,15 @@ export const getAssetRevision = async (
 ): Promise<AssetRevision> => {
     if (IS_OSS) {
         // OSS-synthesized revisions carry their payload inline as a data: URL.
-        // The shape mirrors what the integrated CDN-backed response returns,
-        // minus signed-URL fields the local store doesn't have.
+        // Recover it from the session registry so model/image loaders that
+        // round-trip through `getAssetRevision` (rather than keeping the
+        // record returned at create time) still resolve the data. The shape
+        // mirrors the integrated CDN-backed response minus signed-URL fields.
+        const record = lookupOssAsset(revisionId) ?? lookupOssAsset(assetId);
         return {
             id: revisionId,
             assetId,
-            dataUrl: undefined,
+            dataUrl: record?.dataUrl,
             derivatives: [],
             expiresAt: undefined,
         } as unknown as AssetRevision;
@@ -754,9 +851,23 @@ export const getAssetRevisionData = async <T extends keyof AssetResponseType = "
     options: GetAssetRevisionDataOptions = {},
 ): Promise<AssetResponseType[T]> => {
     if (IS_OSS) {
-        // OSS doesn't route assets through the integrated CDN. Callers that
-        // need the underlying bytes should read directly from the scene
-        // JSON in ProjectStore. Return an empty value of the right shape.
+        // OSS doesn't route assets through the integrated CDN — the payload
+        // lives inline as a `data:` URL on the synthesized registry record.
+        // Decode it in the requested shape so callers like
+        // getBehaviorsListForScene (which needs the behavior `{config,code}`
+        // JSON) get real data rather than an empty stub.
+        const record = lookupOssAsset(revisionId) ?? lookupOssAsset(assetId);
+        if (record?.dataUrl) {
+            try {
+                const res = await fetch(record.dataUrl);
+                if (responseType === "blob") return (await res.blob()) as never;
+                if (responseType === "arraybuffer") return (await res.arrayBuffer()) as never;
+                if (responseType === "text") return (await res.text()) as never;
+                return (await res.json()) as never;
+            } catch {
+                // Fall through to the empty-shape default below.
+            }
+        }
         if (responseType === "blob") return new Blob([]) as never;
         if (responseType === "arraybuffer") return new ArrayBuffer(0) as never;
         if (responseType === "text") return "" as never;
@@ -786,6 +897,10 @@ export const getAssetRevisionData = async <T extends keyof AssetResponseType = "
 };
 
 export const getAssetRevisions = async (assetId: string, options: GetAssetRevisionsOptions = {}) => {
+    // OSS has no integrated asset service. Synthesized assets carry a single
+    // inline revision; there is no revision history to fetch.
+    if (IS_OSS) return {revisions: []} as never;
+
     const includes = [];
 
     if (options.includeDataUrl) {
@@ -843,7 +958,28 @@ export const getMyAssets = async (options: GetMyAssetsOptions = {}) => {
 };
 
 export const getSceneAssets = async (sceneId: string, options: GetSceneAssetsOptions = {}) => {
-    if (IS_OSS) return {assets: []} as Awaited<ReturnType<ReturnType<typeof getAssetsApiClient>["getSceneAssets"]>>["data"];
+    if (IS_OSS) {
+        // OSS has no asset service — surface the project's synthesized
+        // assets from the in-memory registry (re-seeded from the
+        // ProjectStore on scene load) so the editor's Library / Tools
+        // panels list the project's models, behaviors, audio, etc.
+        const now = new Date().toISOString();
+        const wantTypes = options?.types;
+        const assets = getOssAssetsForProject(sceneId)
+            .filter(r => !wantTypes?.length || wantTypes.includes(r.type))
+            .map(r => ({
+                id: r.assetId,
+                type: r.type,
+                format: r.format,
+                name: r.name,
+                createTime: now,
+                updateTime: now,
+                userId: "local",
+                headRevisionId: r.revisionId,
+                revision: {id: r.revisionId, dataUrl: r.dataUrl, derivatives: [], expiresAt: undefined},
+            }));
+        return {assets} as unknown as Awaited<ReturnType<ReturnType<typeof getAssetsApiClient>["getSceneAssets"]>>["data"];
+    }
     const includes = [];
     if (options.includeDerivatives) {
         includes.push("derivatives");

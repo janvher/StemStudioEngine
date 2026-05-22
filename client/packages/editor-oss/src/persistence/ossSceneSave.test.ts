@@ -72,6 +72,8 @@ const stubStore = (kind: "indexeddb" | "filesystem" | "remote", save?: ProjectSt
     delete: vi.fn(async () => undefined),
     exportToBlob: vi.fn(async () => new Blob([])),
     importFromBlob: vi.fn(async (): Promise<ProjectMeta> => ({id: "", name: "", updatedAt: "", createdAt: ""})),
+    saveAssets: vi.fn(async () => undefined),
+    loadAssets: vi.fn(async () => []),
 });
 
 beforeEach(() => {

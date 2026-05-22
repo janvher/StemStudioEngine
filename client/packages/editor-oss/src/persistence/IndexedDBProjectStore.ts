@@ -4,11 +4,13 @@ import type {
     ListProjectsResult,
     ProjectBody,
     ProjectMeta,
+    StoredAsset,
 } from "./types";
 
 const DB_NAME = "stemstudio-projects";
 const STORE_NAME = "projects";
-const DB_VERSION = 1;
+const ASSET_STORE_NAME = "assets";
+const DB_VERSION = 2;
 
 let dbPromise: Promise<IDBDatabase> | undefined;
 
@@ -25,6 +27,13 @@ const openDb = (): Promise<IDBDatabase> => {
                 if (!db.objectStoreNames.contains(STORE_NAME)) {
                     const store = db.createObjectStore(STORE_NAME, {keyPath: "meta.id"});
                     store.createIndex("byUpdatedAt", "meta.updatedAt");
+                }
+                // v2: per-project binary asset payloads (models, images,
+                // audio). Keyed by `${projectId}::${assetId}`, indexed by
+                // projectId so all of a project's assets load in one query.
+                if (!db.objectStoreNames.contains(ASSET_STORE_NAME)) {
+                    const assetStore = db.createObjectStore(ASSET_STORE_NAME, {keyPath: "key"});
+                    assetStore.createIndex("byProjectId", "projectId");
                 }
             };
             req.onsuccess = () => resolve(req.result);
@@ -45,6 +54,24 @@ const txGet = <T>(mode: IDBTransactionMode, fn: (store: IDBObjectStore) => IDBRe
                 req.onerror = () => reject(req.error ?? new Error("IndexedDB error"));
             }),
     );
+
+/** Run a transaction against the asset store, resolving when it completes. */
+const assetTx = (
+    mode: IDBTransactionMode,
+    fn: (store: IDBObjectStore) => void,
+): Promise<void> =>
+    openDb().then(
+        db =>
+            new Promise<void>((resolve, reject) => {
+                const tx = db.transaction(ASSET_STORE_NAME, mode);
+                fn(tx.objectStore(ASSET_STORE_NAME));
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error ?? new Error("IndexedDB asset error"));
+                tx.onabort = () => reject(tx.error ?? new Error("IndexedDB asset transaction aborted"));
+            }),
+    );
+
+type StoredAssetRow = {key: string; projectId: string; asset: StoredAsset};
 
 const nowIso = (): string => new Date().toISOString();
 
@@ -105,6 +132,7 @@ export class IndexedDBProjectStore implements ProjectStore {
 
     async delete(id: string): Promise<void> {
         await txGet("readwrite", store => store.delete(id));
+        await this.clearAssets(id);
     }
 
     async exportToBlob(id: string): Promise<Blob> {
@@ -128,5 +156,49 @@ export class IndexedDBProjectStore implements ProjectStore {
             ...parsed,
             meta: {...incoming, id: newId(), createdAt: nowIso(), updatedAt: nowIso()},
         });
+    }
+
+    private async clearAssets(projectId: string): Promise<void> {
+        const keys = await new Promise<IDBValidKey[]>((resolve, reject) =>
+            openDb().then(db => {
+                const tx = db.transaction(ASSET_STORE_NAME, "readonly");
+                const req = tx.objectStore(ASSET_STORE_NAME).index("byProjectId").getAllKeys(projectId);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error ?? new Error("IndexedDB asset error"));
+            }),
+        );
+        if (keys.length === 0) return;
+        await assetTx("readwrite", store => {
+            for (const key of keys) store.delete(key);
+        });
+    }
+
+    async saveAssets(projectId: string, assets: StoredAsset[]): Promise<void> {
+        // Replace the project's asset set so a re-save drops assets no
+        // longer referenced rather than leaking them forever.
+        await this.clearAssets(projectId);
+        if (assets.length === 0) return;
+        await assetTx("readwrite", store => {
+            for (const asset of assets) {
+                const row: StoredAssetRow = {
+                    key: `${projectId}::${asset.assetId}`,
+                    projectId,
+                    asset,
+                };
+                store.put(row);
+            }
+        });
+    }
+
+    async loadAssets(projectId: string): Promise<StoredAsset[]> {
+        const rows = await new Promise<StoredAssetRow[]>((resolve, reject) =>
+            openDb().then(db => {
+                const tx = db.transaction(ASSET_STORE_NAME, "readonly");
+                const req = tx.objectStore(ASSET_STORE_NAME).index("byProjectId").getAll(projectId);
+                req.onsuccess = () => resolve(req.result as StoredAssetRow[]);
+                req.onerror = () => reject(req.error ?? new Error("IndexedDB asset error"));
+            }),
+        );
+        return rows.map(r => r.asset);
     }
 }

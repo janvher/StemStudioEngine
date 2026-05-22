@@ -1261,7 +1261,12 @@ function buildPaginationQuery(params?: FetchScenesParams): string {
 export async function fetchMyScenes(params?: FetchScenesParams): Promise<PaginatedScenesResponse> {
     if (IS_OSS) {
         try {
-            const {getProjectStore} = await import("@stem/editor-oss/persistence");
+            const {getProjectStore, ensureProjectStoreRehydrated} = await import("@stem/editor-oss/persistence");
+            // Wait for the persistence backend to resolve. After a browser
+            // "back" reloads the dashboard, this query can otherwise race
+            // rehydration and read the empty IndexedDB fallback instead of
+            // the user's File System Access folder — so no games show.
+            await ensureProjectStoreRehydrated();
             const result = await getProjectStore().list({
                 limit: params?.limit ?? 100,
                 cursor: params?.page && params.page > 1 ? String(params.page) : undefined,

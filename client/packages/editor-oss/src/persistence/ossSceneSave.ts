@@ -10,6 +10,8 @@
  * cloud persistence with the local ProjectStore.
  */
 
+import {getOssAssetsForProject} from "@stem/network/api/asset";
+
 import {
     getActiveCopilotPreviewPersistence,
     isCopilotPreviewSceneSaveBlocked,
@@ -20,7 +22,38 @@ import global from "../global";
 import {showToast} from "../showToast";
 
 import {getProjectStore} from "./projectStoreFactory";
-import type {ProjectBody, ProjectMeta} from "./types";
+import type {ProjectBody, ProjectMeta, StoredAsset} from "./types";
+
+/**
+ * Persist the binary OSS assets (models, images, audio) a project depends
+ * on into the active ProjectStore. OSS synthesizes these as in-memory
+ * `data:` URLs with no asset service behind them; without this the scene
+ * JSON's model references would dangle after a reload. Best-effort: a
+ * failure here is logged but doesn't fail the scene save.
+ */
+async function persistProjectAssets(projectId: string): Promise<void> {
+    try {
+        const assets: StoredAsset[] = getOssAssetsForProject(projectId)
+            .filter(record => record.dataUrl)
+            .map(record => {
+                const dataUrl = record.dataUrl!;
+                const comma = dataUrl.indexOf(",");
+                return {
+                    assetId: record.assetId,
+                    revisionId: record.revisionId,
+                    type: record.type,
+                    format: record.format,
+                    name: record.name,
+                    contentType: record.contentType,
+                    // Strip the `data:<mime>;base64,` prefix — store raw base64.
+                    data: comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl,
+                };
+            });
+        await getProjectStore().saveAssets(projectId, assets);
+    } catch (err) {
+        console.warn("[ossSaveScene] failed to persist project assets", err);
+    }
+}
 
 /**
  * Build a minimal stable project id when the editor doesn't have one yet
@@ -114,6 +147,10 @@ export async function ossSaveScene(_createThumbnail: boolean, shouldShowToast: b
     if (!editor.sceneID) {
         editor.sceneID = saved.id;
     }
+
+    // Persist binary assets (models/images/audio) alongside the project so
+    // the scene's asset references resolve after a reload.
+    await persistProjectAssets(saved.id);
 
     if (shouldShowToast) {
         showToast({type: "success", title: "Saved"});

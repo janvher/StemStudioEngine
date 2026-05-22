@@ -4,6 +4,7 @@ import type {
     ListProjectsResult,
     ProjectBody,
     ProjectMeta,
+    StoredAsset,
 } from "./types";
 
 /**
@@ -102,5 +103,15 @@ export class RemoteProjectStore implements ProjectStore {
         const parsed = JSON.parse(text) as ProjectBody;
         if (!parsed?.sceneJson) throw new Error("Imported file is not a valid .stemscript project");
         return this.save(parsed);
+    }
+
+    // Integrated mode persists assets through the cloud asset service, so
+    // the project store has nothing to store. These satisfy the interface.
+    async saveAssets(_projectId: string, _assets: StoredAsset[]): Promise<void> {
+        // no-op: cloud asset service owns asset persistence
+    }
+
+    async loadAssets(_projectId: string): Promise<StoredAsset[]> {
+        return [];
     }
 }

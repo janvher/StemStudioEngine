@@ -22,6 +22,7 @@ export const DOC_SECTIONS: DocSection[] = [
         entries: [
             {slug: "architecture", title: "Architecture", source: "repo-docs", file: "architecture.md"},
             {slug: "exporting-a-game", title: "Exporting a game", source: "repo-docs", file: "exporting-a-game.md"},
+            {slug: "server-side-storage", title: "Server-side storage & version control", source: "repo-docs", file: "server-side-storage.md"},
         ],
     },
     {

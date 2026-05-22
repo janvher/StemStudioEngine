@@ -25,17 +25,14 @@ describe("copilotTasks API", () => {
         vi.clearAllMocks();
     });
 
-    it("lists tasks with scene and session filters", async () => {
-        vi.mocked(Ajax.get).mockResolvedValue({
-            data: {Code: 200, Data: {items: [{ID: "task-1", Title: "Task"}]}},
-        } as AxiosResponse);
-
+    it("returns an empty list without a network call in OSS (no task service)", async () => {
+        // The suite runs under BUILD_MODE=oss, so listCopilotTasks short-
+        // circuits: OSS ships only the AI proxy and has no Copilot task
+        // service to query.
         const tasks = await listCopilotTasks({sceneID: "scene-1", sessionID: "session-1", status: "todo", limit: 5});
 
-        expect(tasks).toHaveLength(1);
-        expect(Ajax.get).toHaveBeenCalledWith({
-            url: "http://api.test/api/CopilotTasks/List?SceneID=scene-1&SessionID=session-1&Status=todo&limit=5",
-        });
+        expect(tasks).toEqual([]);
+        expect(Ajax.get).not.toHaveBeenCalled();
     });
 
     it("creates tasks as url encoded form payloads", async () => {

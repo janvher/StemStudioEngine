@@ -247,6 +247,13 @@ export const getBehaviorsListForScene = async (sceneId: string, scene: Scene): P
                     return Promise.resolve(null);
                 }
                 const {config, code} = await getAssetRevisionData(asset.id, revisionId, "json");
+                if (config === undefined || config === null) {
+                    // No payload resolved (e.g. an OSS asset whose revision
+                    // data couldn't be decoded). Skip rather than feeding
+                    // `JSON.parse(undefined)` into expandConfig.
+                    console.warn(`No config payload for behavior ${asset.id}`);
+                    return Promise.resolve(null);
+                }
                 return {
                     ID: asset.id,
                     RevisionID: revisionId,

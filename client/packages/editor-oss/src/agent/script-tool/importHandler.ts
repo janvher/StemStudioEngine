@@ -270,6 +270,15 @@ export async function processImportedFile(
     type: string,
     name?: string,
     companionFiles?: File[],
+    /**
+     * For `behavior` imports: the logical id the surrounding stemscript will
+     * use to reference this behavior (from `conversion-manifest.json`).
+     * StemStudio-exported behavior YAMLs carry an internal hash `config.id`,
+     * but the generated stemscript's `behavior attach behaviorId=…` uses the
+     * manifest's logical id. Without this override the two never match and
+     * the behavior is imported but never attached to any object.
+     */
+    behaviorIdOverride?: string,
 ): Promise<{success: boolean; message: string}> {
     // Dynamic imports to keep module resolution lightweight for tests
     const [{default: global}, {setAssetRevision, resolveAssetRevisionId, getAssetResolutionContext}, {AssetType, ModelFormat, createAssetRevisionWithData, isNoChangesError, getAsset}, {createAsset}] = await Promise.all([
@@ -293,6 +302,13 @@ export async function processImportedFile(
                 const {importBehaviorFile} = await import("../../editor/assets/v2/AssetsLibrary/exportImportUtils");
                 const {createBehavior, createBehaviorRevision} = await import("../../editor/behaviors/util");
                 const {config, code} = await importBehaviorFile(file);
+                // Re-key the behavior to the id the stemscript references it
+                // by (see `behaviorIdOverride` doc above). The override
+                // becomes `originalConfigId`, so the behavior registers and
+                // aliases under the id `behavior attach` will look up.
+                if (behaviorIdOverride && config.id !== behaviorIdOverride) {
+                    config.id = behaviorIdOverride;
+                }
                 const originalConfigId = config.id;
 
                 // Idempotent: create new revision if behavior already exists.

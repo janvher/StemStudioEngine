@@ -4,6 +4,7 @@ import type {
     ListProjectsResult,
     ProjectBody,
     ProjectMeta,
+    StoredAsset,
 } from "./types";
 
 /**
@@ -23,7 +24,7 @@ type FsFileHandle = {
     name: string;
     getFile(): Promise<File>;
     createWritable(options?: {keepExistingData?: boolean}): Promise<{
-        write(data: Blob | string): Promise<void>;
+        write(data: Blob | string | BufferSource): Promise<void>;
         close(): Promise<void>;
     }>;
 };
@@ -31,11 +32,34 @@ type FsDirectoryHandle = {
     kind: "directory";
     name: string;
     getFileHandle(name: string, options?: {create?: boolean}): Promise<FsFileHandle>;
+    getDirectoryHandle(name: string, options?: {create?: boolean}): Promise<FsDirectoryHandle>;
     removeEntry(name: string, options?: {recursive?: boolean}): Promise<void>;
     entries(): AsyncIterableIterator<[string, FsFileHandle | FsDirectoryHandle]>;
 };
 
 const SUFFIX = ".stemscript.json";
+
+/** Filename for an asset's binary payload inside the project's subdirectory. */
+const ASSET_MANIFEST = "assets.json";
+
+const bytesToBase64 = (bytes: Uint8Array): string => {
+    let binary = "";
+    const chunk = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunk) {
+        binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+    }
+    return btoa(binary);
+};
+
+const base64ToBytes = (base64: string): Uint8Array<ArrayBuffer> => {
+    const binary = atob(base64);
+    const buffer = new ArrayBuffer(binary.length);
+    const bytes = new Uint8Array(buffer);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return bytes;
+};
+
+type AssetManifestEntry = Omit<StoredAsset, "data"> & {file: string};
 
 export const isFileSystemAccessSupported = (): boolean =>
     typeof window !== "undefined" &&
@@ -162,6 +186,83 @@ export class FileSystemProjectStore implements ProjectStore {
         for (const name of await this.matchingNamesForId(id)) {
             await this.dir.removeEntry(name);
         }
+        // Drop the project's asset subdirectory too.
+        try {
+            await this.dir.removeEntry(id, {recursive: true});
+        } catch {
+            // No asset subdirectory — nothing to clean up.
+        }
+    }
+
+    async saveAssets(projectId: string, assets: StoredAsset[]): Promise<void> {
+        // Replace the whole subdirectory so a re-save drops assets no longer
+        // referenced. The project lives as `<name>.<id>.stemscript.json` in
+        // the picked folder; its binary assets live in a sibling `<id>/`.
+        try {
+            await this.dir.removeEntry(projectId, {recursive: true});
+        } catch {
+            // First save for this project — no subdirectory yet.
+        }
+        if (assets.length === 0) {
+            return;
+        }
+
+        const projectDir = await this.dir.getDirectoryHandle(projectId, {create: true});
+        const manifest: AssetManifestEntry[] = [];
+        for (const asset of assets) {
+            const file = `${asset.assetId}.${asset.format || "bin"}`;
+            const handle = await projectDir.getFileHandle(file, {create: true});
+            const writable = await handle.createWritable();
+            try {
+                await writable.write(base64ToBytes(asset.data));
+            } finally {
+                await writable.close();
+            }
+            const {data: _omit, ...meta} = asset;
+            manifest.push({...meta, file});
+        }
+
+        const manifestHandle = await projectDir.getFileHandle(ASSET_MANIFEST, {create: true});
+        const manifestWritable = await manifestHandle.createWritable();
+        try {
+            await manifestWritable.write(JSON.stringify(manifest, null, 2));
+        } finally {
+            await manifestWritable.close();
+        }
+    }
+
+    async loadAssets(projectId: string): Promise<StoredAsset[]> {
+        let projectDir: FsDirectoryHandle;
+        try {
+            projectDir = await this.dir.getDirectoryHandle(projectId);
+        } catch {
+            // No asset subdirectory (project saved before assets existed,
+            // or has no binary assets).
+            return [];
+        }
+
+        let manifest: AssetManifestEntry[];
+        try {
+            const manifestFile = await (await projectDir.getFileHandle(ASSET_MANIFEST)).getFile();
+            manifest = JSON.parse(await manifestFile.text()) as AssetManifestEntry[];
+        } catch {
+            return [];
+        }
+        if (!Array.isArray(manifest)) return [];
+
+        const assets: StoredAsset[] = [];
+        for (const entry of manifest) {
+            try {
+                const file = await (await projectDir.getFileHandle(entry.file)).getFile();
+                const bytes = new Uint8Array(await file.arrayBuffer());
+                const {file: _file, ...meta} = entry;
+                assets.push({...meta, data: bytesToBase64(bytes)});
+            } catch {
+                // Skip a missing/unreadable asset file rather than failing
+                // the whole project load.
+            }
+        }
+        return assets;
     }
 
     async exportToBlob(id: string): Promise<Blob> {

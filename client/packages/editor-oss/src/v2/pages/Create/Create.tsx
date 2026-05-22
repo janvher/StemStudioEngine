@@ -355,18 +355,17 @@ export const Create = () => {
     }, [app, projectID, showMask, setAdvancedMode]);
 
     // OSS dashboard "Import stemscript folder" handoff. The dashboard
-    // stages the script + asset bytes in sessionStorage and navigates
-    // here. We auto-open the Copilot panel so the inline terminal hook
-    // mounts — that hook consumes the staged payload and runs the same
-    // `exec` pipeline the user would invoke manually.
+    // stages the script + asset bytes in IndexedDB and navigates here. We
+    // auto-open the Copilot panel so the inline terminal hook mounts —
+    // that hook consumes the staged payload and runs the same `exec`
+    // pipeline the user would invoke manually.
     const openedImportCopilotRef = useRef(false);
     useEffect(() => {
         if (!IS_OSS) return;
         if (!app || !projectID || showMask) return;
         if (openedImportCopilotRef.current) return;
-        if (!peekStemscriptImport()) return;
-        openedImportCopilotRef.current = true;
 
+        let cancelled = false;
         const openCopilotWhenReady = (attempt = 0) => {
             const editorComponent = app.editor?.component;
             if (editorComponent?.openAiCopilot) {
@@ -377,7 +376,16 @@ export const Create = () => {
                 window.setTimeout(() => openCopilotWhenReady(attempt + 1), 150);
             }
         };
-        window.setTimeout(() => openCopilotWhenReady(), 150);
+
+        void peekStemscriptImport().then(staged => {
+            if (cancelled || !staged || openedImportCopilotRef.current) return;
+            openedImportCopilotRef.current = true;
+            window.setTimeout(() => openCopilotWhenReady(), 150);
+        });
+
+        return () => {
+            cancelled = true;
+        };
     }, [app, projectID, showMask]);
 
     // Expose the current advanced/workspace mode on <body> so e2e tests can

@@ -4,6 +4,7 @@ import type {
     ProjectBody,
     ProjectMeta,
     ProjectStoreKind,
+    StoredAsset,
 } from "./types";
 
 /**
@@ -44,4 +45,19 @@ export interface ProjectStore {
      * JSON body) and creates a new project. Returns the new project's meta.
      */
     importFromBlob(blob: Blob): Promise<ProjectMeta>;
+
+    /**
+     * Persist the binary assets (models, images, audio) a project depends
+     * on. Called after `save()`; replaces the project's stored asset set.
+     * In OSS these payloads have no asset service to live in, so the
+     * project store is their only durable home.
+     */
+    saveAssets(projectId: string, assets: StoredAsset[]): Promise<void>;
+
+    /**
+     * Load every binary asset previously persisted for a project. Used on
+     * scene load to re-seed the in-memory OSS asset registry so model /
+     * image / audio references resolve.
+     */
+    loadAssets(projectId: string): Promise<StoredAsset[]>;
 }

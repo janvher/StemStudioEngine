@@ -1,6 +1,7 @@
 import {InteractiveResult} from "@web-shared/agent/types/ACPTypes";
 import Ajax from "@web-shared/utils/Ajax";
 import {backendUrlFromPath} from "@web-shared/utils/UrlUtils";
+import {IS_OSS} from "../../../buildMode";
 
 export type MessageExtra = {
     SeqNum: number;
@@ -36,6 +37,12 @@ export const getCopilotHistoryList = async (
     page: number = 1,
     limit: number = 20,
 ): Promise<CopilotHistoryListResponse> => {
+    // OSS ships only the AI proxy — there is no Copilot history service.
+    // Return an empty page instead of 404-ing on every editor load.
+    if (IS_OSS) {
+        return {items: [], page, limit, totalCount: 0, totalPages: 0, hasMore: false};
+    }
+
     try {
         const params = new URLSearchParams();
         params.append("SceneID", sceneID);
