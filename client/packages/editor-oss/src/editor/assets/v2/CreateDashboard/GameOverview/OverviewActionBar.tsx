@@ -12,6 +12,7 @@ import {useSetTemplateIds, useTemplateIds} from "@stem/network/api/templates/hoo
 import {addLikedGame} from "@stem/network/api/updateUser";
 import {ROUTES} from "@web-shared/routes";
 import {useAppGlobalContext, useAuthorizationContext, useHomepageContext} from "@stem/editor-oss/context";
+import {IS_OSS} from "@stem/editor-oss/mode/buildMode";
 import global from "@stem/editor-oss/global";
 import {showToast} from "@stem/editor-oss/showToast";
 import Ajax from "@stem/editor-oss/utils/Ajax";
@@ -492,7 +493,10 @@ export const OverviewActionBar = ({scene, canEdit, isOwner, onSceneUpdate}: Over
                     </span>
                 ) : "Remix"}
             </ActionButton>
-            {isOwnerOrAdmin && !scene.IsArchived && (
+            {/* Publishing and public/private visibility require the hosted
+                scene gallery — OSS/playground has no such backend, so the
+                publish + visibility controls are hidden here. */}
+            {!IS_OSS && isOwnerOrAdmin && !scene.IsArchived && (
                 <ActionButton
                     $variant="secondary"
                     customIcon={isPublished ? publishedStatusIcon : unpublishedStatusIcon}
@@ -506,7 +510,7 @@ export const OverviewActionBar = ({scene, canEdit, isOwner, onSceneUpdate}: Over
                     )}
                 </ActionButton>
             )}
-            {isOwnerOrAdmin && isPublished && (
+            {!IS_OSS && isOwnerOrAdmin && isPublished && (
                 <ActionButton
                     $variant="secondary"
                     customIcon={isPublic ? eyeOpenIcon : eyeClosedIcon}

@@ -83,10 +83,13 @@ async function dismissTutorialModal() {
 }
 
 try {
-    // === 1. Home load + bootstrap modal ===
-    await page.goto(baseUrl, {waitUntil: "domcontentloaded", timeout: 30000});
+    // === 1. Editor load (fresh project) + bootstrap modal ===
+    // The public marketing site now owns `/`, so the editor's "start from
+    // scratch" hero is no longer reachable there. Navigate straight to the
+    // create-project route, which auto-creates a fresh project.
+    await page.goto(baseUrl + "/create/project", {waitUntil: "domcontentloaded", timeout: 30000});
     await page.waitForLoadState("networkidle", {timeout: 15000}).catch(() => {});
-    logStep("home loaded", "ok", {url: page.url()});
+    logStep("create-project route loaded", "ok", {url: page.url()});
     await page.screenshot({path: resolve(outDir, "01-home.png")}).catch(() => {});
 
     const modal = page.locator('[aria-labelledby="oss-bootstrap-title"]').first();
@@ -98,11 +101,7 @@ try {
         logStep("bootstrap modal dismissed");
     }
 
-    // === 2. Start from scratch → editor ===
-    const scratchBtn = page.locator('[data-testid="home-scratch-button"]').first();
-    assert("scratch-button-visible", await scratchBtn.count() > 0, "no scratch button");
-    await scratchBtn.click({timeout: 5000}).catch(() => {});
-
+    // === 2. Editor mounts on the auto-created project ===
     await page.waitForLoadState("networkidle", {timeout: 30000}).catch(() => {});
     await page.waitForTimeout(10000);
     await page.screenshot({path: resolve(outDir, "02-editor-mounted.png")}).catch(() => {});
