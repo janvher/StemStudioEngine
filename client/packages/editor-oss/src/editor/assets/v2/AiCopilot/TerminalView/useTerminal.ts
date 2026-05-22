@@ -268,8 +268,18 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
         if (!manifestFile) return map;
         try {
             const manifest = JSON.parse(await manifestFile.text()) as {
+                files?: Record<string, {type?: string; id?: string}>;
                 behaviors?: Array<{id?: string; file?: string}>;
             };
+            // The filepath → logical id link lives in `manifest.files`, keyed
+            // by the same relative path the stemscript's `import behavior
+            // filepath="…"` uses (e.g. "behaviors/chessGame/behavior.yaml").
+            // `manifest.behaviors[]` only carries id/name/attachedTo — no
+            // file field — so it cannot be the source of this map.
+            for (const [filepath, meta] of Object.entries(manifest.files ?? {})) {
+                if (meta?.type === "behavior" && meta.id) map.set(filepath, meta.id);
+            }
+            // Back-compat: honour an explicit `file` field on behaviors[] too.
             for (const b of manifest.behaviors ?? []) {
                 if (b.id && b.file) map.set(b.file, b.id);
             }

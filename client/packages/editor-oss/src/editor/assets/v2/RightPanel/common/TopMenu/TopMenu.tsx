@@ -486,27 +486,34 @@ export const TopMenu = ({inGameUI}: Props) => {
                         Clone
                     </InGameButton>
                 )}
-                <Section
-                    $gap="8px"
-                    $direction="row"
-                    $width="auto"
-                    $align="center"
-                >
-                    <CreditsBar />
-                    <button
-                        onClick={isLoading ? undefined : handleOpenMenu}
-                        className="reset-css"
-                        ref={userMenuButtonRef}
+                {/* OSS has no account system or AI credits — the avatar /
+                    UserMenu ("Account Settings") and the credits balance are
+                    meaningless here. The DashboardHeader hides the same entry
+                    behind `!IS_OSS`; keep the editor TopMenu consistent.
+                    BYOK key management stays reachable via the Copilot panel. */}
+                {!IS_OSS && (
+                    <Section
+                        $gap="8px"
+                        $direction="row"
+                        $width="auto"
+                        $align="center"
                     >
-                        <Avatar
-                            name={dbUser?.username || undefined}
-                            image={dbUser?.avatar || undefined}
-                            size={32}
-                        />
-                    </button>
-                </Section>
+                        <CreditsBar />
+                        <button
+                            onClick={isLoading ? undefined : handleOpenMenu}
+                            className="reset-css"
+                            ref={userMenuButtonRef}
+                        >
+                            <Avatar
+                                name={dbUser?.username || undefined}
+                                image={dbUser?.avatar || undefined}
+                                size={32}
+                            />
+                        </button>
+                    </Section>
+                )}
                 {publishPanel}
-                {isMenuOpen && (
+                {!IS_OSS && isMenuOpen && (
                     <UserMenu
                         close={handleCloseMenu}
                         userMenuButtonRef={userMenuButtonRef}
@@ -519,7 +526,7 @@ export const TopMenu = ({inGameUI}: Props) => {
     return (
         <>
             {publishPanel}
-            {isMenuOpen && (
+            {!IS_OSS && isMenuOpen && (
                 <UserMenu
                     close={handleCloseMenu}
                     userMenuButtonRef={userMenuButtonRef}
@@ -570,25 +577,32 @@ export const TopMenu = ({inGameUI}: Props) => {
                         </StyledButton>
                     ) : null}
                 </Section>
-                <Section
-                    $gap="8px"
-                    $direction="row"
-                    $width="auto"
-                    $align="center"
-                >
-                    <CreditsBar />
-                    <button
-                        onClick={isLoading ? undefined : handleOpenMenu}
-                        className="reset-css"
-                        ref={userMenuButtonRef}
+                {/* OSS has no account system or AI credits — the avatar /
+                    UserMenu ("Account Settings") and the credits balance are
+                    meaningless here. The DashboardHeader hides the same entry
+                    behind `!IS_OSS`; keep the editor TopMenu consistent.
+                    BYOK key management stays reachable via the Copilot panel. */}
+                {!IS_OSS && (
+                    <Section
+                        $gap="8px"
+                        $direction="row"
+                        $width="auto"
+                        $align="center"
                     >
-                        <Avatar
-                            name={dbUser?.username || undefined}
-                            image={dbUser?.avatar || undefined}
-                            size={32}
-                        />
-                    </button>
-                </Section>
+                        <CreditsBar />
+                        <button
+                            onClick={isLoading ? undefined : handleOpenMenu}
+                            className="reset-css"
+                            ref={userMenuButtonRef}
+                        >
+                            <Avatar
+                                name={dbUser?.username || undefined}
+                                image={dbUser?.avatar || undefined}
+                                size={32}
+                            />
+                        </button>
+                    </Section>
+                )}
             </BorderedWrapper>
         </>
     );

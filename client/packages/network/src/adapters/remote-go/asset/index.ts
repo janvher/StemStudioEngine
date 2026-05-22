@@ -964,6 +964,9 @@ export const getSceneAssets = async (sceneId: string, options: GetSceneAssetsOpt
         // ProjectStore on scene load) so the editor's Library / Tools
         // panels list the project's models, behaviors, audio, etc.
         const now = new Date().toISOString();
+        // OSS data URLs are inline and never expire — stamp a far-future
+        // expiry so AssetLoader.seedFromAssets treats the payload as valid.
+        const farFuture = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
         const wantTypes = options?.types;
         const assets = getOssAssetsForProject(sceneId)
             .filter(r => !wantTypes?.length || wantTypes.includes(r.type))
@@ -976,6 +979,13 @@ export const getSceneAssets = async (sceneId: string, options: GetSceneAssetsOpt
                 updateTime: now,
                 userId: "local",
                 headRevisionId: r.revisionId,
+                // Top-level fields consumed by AssetLoader.seedFromAssets
+                // (CachedAsset shape). Without `revisionId` the seeder skips
+                // the asset ("no revisionId") and model loading falls back
+                // to slow per-asset fetches.
+                revisionId: r.revisionId,
+                dataUrl: r.dataUrl,
+                dataUrlExpiresAt: r.dataUrl ? farFuture : undefined,
                 revision: {id: r.revisionId, dataUrl: r.dataUrl, derivatives: [], expiresAt: undefined},
             }));
         return {assets} as unknown as Awaited<ReturnType<ReturnType<typeof getAssetsApiClient>["getSceneAssets"]>>["data"];

@@ -6,6 +6,7 @@ import {
     getAssetResolutionContext,
     removeAssetRevision,
     resolveAssetRevisionId,
+    setAssetRevision,
 } from "../../asset-management/AssetResolutionContext";
 import {BehaviorThrottleConfig} from "../../behaviors/Behavior";
 import {BehaviorThrottlePriority} from "../../behaviors/performance/interfaces/IThrottleStrategy";
@@ -802,11 +803,24 @@ export class BehaviorHandlers {
 
             if (match) {
                 const context = getAssetResolutionContext(scene);
-                const revisionId = context ? resolveAssetRevisionId(match.id, context) : undefined;
+                const revisionId =
+                    (context ? resolveAssetRevisionId(match.id, context) : undefined) || match.headRevisionId;
                 resolved[key] = {
                     assetId: match.id,
-                    revisionId: revisionId || match.headRevisionId,
+                    revisionId,
                 };
+                // Pin the resolved asset as a scene dependency. The behavior
+                // attribute now holds a real asset id, but `resolveAssetRef`
+                // re-derives the revision from the scene's
+                // `assetIdToRevisionId` map on every load. If this asset is
+                // only referenced by the behavior (not added to the scene as
+                // its own object), nothing else registers the dependency —
+                // so after save/reload the ref fails to resolve and the
+                // behavior loads without the model. Registering it here
+                // ensures `saveScene` persists it in `Dependencies`.
+                if (scene && revisionId) {
+                    setAssetRevision(scene, match.id, revisionId);
+                }
             }
         }
 
