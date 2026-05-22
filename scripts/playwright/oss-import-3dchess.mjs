@@ -119,8 +119,12 @@ try {
         });
     logStep("read 3d-chess folder", "ok", {files: files.length, script: basename(scriptFile.name)});
 
-    // === Boot OSS dashboard and dismiss bootstrap ===
-    await page.goto(baseUrl, {waitUntil: "domcontentloaded", timeout: 30000});
+    // === Boot the editor on a fresh project + dismiss bootstrap ===
+    // The public marketing site now owns `/`, so the editor's "start from
+    // scratch" hero is no longer reachable there. Navigate straight to the
+    // create-project route — it auto-creates a fresh project and mounts the
+    // EngineRuntime, which is all this smoke needs.
+    await page.goto(baseUrl + "/create/project", {waitUntil: "domcontentloaded", timeout: 30000});
     await page.waitForLoadState("networkidle", {timeout: 15000}).catch(() => {});
     const modal = page.locator('[aria-labelledby="oss-bootstrap-title"]').first();
     if (await modal.count() && await modal.isVisible().catch(() => false)) {
@@ -129,9 +133,6 @@ try {
         await page.waitForSelector('[aria-labelledby="oss-bootstrap-title"]', {state: "detached", timeout: 5000}).catch(() => {});
         await page.waitForTimeout(800);
     }
-
-    // === Start from scratch → editor mounts so we have an EngineRuntime ===
-    await page.locator('[data-testid="home-scratch-button"]').first().click({timeout: 5000}).catch(() => {});
     await page.waitForLoadState("networkidle", {timeout: 30000}).catch(() => {});
     await page.waitForTimeout(8000);
     await page.screenshot({path: resolve(outDir, "01-editor.png")}).catch(() => {});

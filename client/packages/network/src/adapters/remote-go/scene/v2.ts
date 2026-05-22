@@ -113,6 +113,34 @@ async function loadSceneFromProjectStore(sceneId: string): Promise<DomainSceneDt
     })();
     const dataUrl = `data:application/json;base64,${sceneJsonBase64}`;
     const now = body.meta.updatedAt || new Date().toISOString();
+
+    // OSS persists the asset resolution context *inside* the scene JSON
+    // (`scene.userData.assetResolutionContext`), not in separate metadata
+    // fields like the cloud backend. The loader (`scene/util.ts loadScene`)
+    // treats any truthy `dependencies` metadata as authoritative and
+    // discards the scene's own `userData.assetResolutionContext`. Handing it
+    // empty objects therefore wipes the real dependency map on every reload,
+    // so model/behavior asset refs fail to resolve (untextured models).
+    // Extract the persisted context here and surface it as metadata so the
+    // loader rebuilds the correct map.
+    let ossDependencies: Record<string, string> = {};
+    let ossLogicalIdToAssetId: Record<string, string> = {};
+    try {
+        const parsed = JSON.parse(body.sceneJson) as Record<string, unknown>;
+        for (const part of Object.values(parsed)) {
+            const ctx = (part as {userData?: {assetResolutionContext?: {
+                assetIdToRevisionId?: Record<string, string>;
+                logicalIdToAssetId?: Record<string, string>;
+            }}})?.userData?.assetResolutionContext;
+            if (ctx) {
+                ossDependencies = ctx.assetIdToRevisionId ?? ossDependencies;
+                ossLogicalIdToAssetId = ctx.logicalIdToAssetId ?? ossLogicalIdToAssetId;
+                break;
+            }
+        }
+    } catch (err) {
+        console.warn("[scene/v2] failed to extract asset resolution context from scene JSON", err);
+    }
     return {
         id: sceneId,
         name: body.meta.name ?? "Untitled",
@@ -126,10 +154,10 @@ async function loadSceneFromProjectStore(sceneId: string): Promise<DomainSceneDt
                 derivatives: [],
                 expiresAt: undefined,
                 metadata: {
-                    dependencies: {},
+                    dependencies: ossDependencies,
                     isMultiplayer: false,
                     lockedItems: "",
-                    logicalIdToAssetId: {},
+                    logicalIdToAssetId: ossLogicalIdToAssetId,
                     maxCollaboratorsInRoom: 0,
                     maxMultiplayerClientsPerRoom: 0,
                     multiplayerAutoJoin: false,
