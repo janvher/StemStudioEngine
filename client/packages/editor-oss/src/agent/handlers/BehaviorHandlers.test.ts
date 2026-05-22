@@ -30,6 +30,7 @@ vi.mock("@stem/network/api/scene", () => ({
 vi.mock("../../asset-management/AssetResolutionContext", () => ({
     getAssetResolutionContext: (...args: any[]) => hoisted.mockGetAssetResolutionContext(...args),
     removeAssetRevision: vi.fn(),
+    setAssetRevision: vi.fn(),
     resolveAssetRevisionId: (...args: any[]) => hoisted.mockResolveAssetRevisionId(...args),
 }));
 
