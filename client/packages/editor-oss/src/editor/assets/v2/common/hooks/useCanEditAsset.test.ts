@@ -68,15 +68,22 @@ describe("useCanEditAsset", () => {
             expect(result.current.canEdit).toBe(true);
         });
 
-        it("scene owner viewing someone else's asset → false (forking required)", () => {
+        // In OSS there is no cross-user ownership — assets created via the
+        // network adapter are stamped `userId: "local"`, scenes are stamped
+        // with the AuthorizationContext dummy id. The integrated build
+        // gated `canEdit` on those matching and on the viewer being a
+        // contributor; OSS short-circuits both — owning the scene is
+        // sufficient, since "the scene" is the local file/IDB row the user
+        // just opened.
+        it("OSS: scene owner viewing an asset stamped with a different userId → true", () => {
             const {result} = renderHook(() => useCanEditAsset({assetOwnerId: "other-user"}));
-            expect(result.current.canEdit).toBe(false);
+            expect(result.current.canEdit).toBe(true);
         });
 
-        it("non-contributor → false even on their own asset", () => {
+        it("OSS: any logged-in user can edit assets in a scene they have open → true", () => {
             setAuth({userId: "random-user"});
             const {result} = renderHook(() => useCanEditAsset({assetOwnerId: "random-user"}));
-            expect(result.current.canEdit).toBe(false);
+            expect(result.current.canEdit).toBe(true);
         });
 
         it("template scene → false even for the scene owner", () => {
