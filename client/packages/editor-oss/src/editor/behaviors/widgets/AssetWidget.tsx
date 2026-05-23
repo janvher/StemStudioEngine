@@ -135,7 +135,10 @@ export const VideoUploadButton: React.FC<UploadButtonProps> = ({onUploaded}) => 
                     accept: ".mp4,.webm,.mov",
                     onFileSelected: async (file: File) => {
                         const assetRef = await uploadVideo(file);
-                        onUploaded(assetRef);
+                        // `uploadVideo` returns null when the upload was
+                        // refused (e.g. playground mode shows a toast and
+                        // bails). Skip the callback so AssetRefs stay valid.
+                        if (assetRef) onUploaded(assetRef);
                     },
                 });
             }}

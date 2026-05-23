@@ -1,5 +1,6 @@
 import React from "react";
 
+import {isPlaygroundMode} from "@web-shared/playgroundMode";
 import {ContentItem} from "../../../common/ContentItem";
 import {NumericInputRow} from "../../../common/NumericInputRow";
 import {PanelCheckbox} from "../../../common/PanelCheckbox";
@@ -36,19 +37,25 @@ const PlayerProfileSectionComponent = ({
     setIsMultiplayer,
     setMultiplayerAutoJoin,
 }: PlayerProfileProps) => {
+    // Playground builds don't ship the Colyseus multiplayer sidecar, so
+    // enabling these checkboxes wouldn't actually connect anywhere.
+    const showMultiplayer = !isPlaygroundMode();
+
     return (
         <ContentItem $rowGap="12px">
             <PanelSectionTitle>Player Settings</PanelSectionTitle>
-            <PanelCheckbox
-                v2
-                text="Multiplayer"
-                checked={isMultiplayer}
-                isGray
-                regular
-                onChange={() => onBooleanChange("isMultiplayer", setIsMultiplayer)}
-                tooltipText="Enables networked multiplayer gameplay for this project. Turn this on only if players should share the same live session or room state."
-            />
-            {isMultiplayer && 
+            {showMultiplayer && (
+                <PanelCheckbox
+                    v2
+                    text="Multiplayer"
+                    checked={isMultiplayer}
+                    isGray
+                    regular
+                    onChange={() => onBooleanChange("isMultiplayer", setIsMultiplayer)}
+                    tooltipText="Enables networked multiplayer gameplay for this project. Turn this on only if players should share the same live session or room state."
+                />
+            )}
+            {showMultiplayer && isMultiplayer && (
                 <>
                     <PanelCheckbox
                         v2
@@ -70,7 +77,7 @@ const PlayerProfileSectionComponent = ({
                         labelTooltip="Maximum number of players allowed in one multiplayer room. Small co-op games often use 2-8, while larger values need careful testing for networking, gameplay readability, and performance."
                     />
                 </>
-            }
+            )}
             <PanelCheckbox
                 v2
                 text="Use Player Avatar as Character"

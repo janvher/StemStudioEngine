@@ -2,6 +2,7 @@ import {useState, useRef} from "react";
 
 import {useAssetResolutionContext} from "@stem/editor-oss/context/AssetResolutionContext";
 import {showToast} from "@stem/editor-oss/showToast";
+import {isPlaygroundMode} from "@web-shared/playgroundMode";
 import {
     useCreateAssetRevisionWithData,
 } from "../../../../../../../asset-management/hooks/assets";
@@ -24,6 +25,18 @@ export const useVideoUploader = () => {
     assetResolutionContextRef.current = assetResolutionContext;
 
     const uploadVideo = async (file: File, settings: VideoUploadSettings = {}) => {
+        // Playground builds don't ship a video transcode/storage pipeline —
+        // the upload would silently fail at the network adapter. Surface a
+        // clear toast instead of letting the user wait for a generic error.
+        if (isPlaygroundMode()) {
+            showToast({
+                type: "info",
+                title: "Video uploads are not supported in the playground.",
+                body: "Try the full StemStudio build to upload and use video assets.",
+            });
+            return null;
+        }
+
         setIsUploading(true);
         setError(null);
 

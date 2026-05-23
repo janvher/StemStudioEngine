@@ -38,6 +38,7 @@ import {HUDRendererMode} from "@stem/editor-oss/types/GameSettingsTypes";
 import Ajax from "@stem/editor-oss/utils/Ajax";
 import {DEFAULT_ORIENTATION_POLICY} from "@stem/editor-oss/utils/orientationPolicy";
 import {backendUrlFromPath} from "@stem/editor-oss/utils/UrlUtils";
+import {isPlaygroundMode} from "@web-shared/playgroundMode";
 import {DEFAULT_CAD_TOOLS_SETTINGS, setCADToolsSettings} from "../../../../../cad/settings";
 import {Tooltip} from "../../../common";
 import {Item} from "../../../common/BasicCombobox/BasicCombobox";
@@ -955,20 +956,29 @@ const GameSettingsComponent = ({openUIPanel}: {openUIPanel: () => void}) => {
             />
 
             {/* ── 6. Collaboration ── */}
-            <Separator margin="-4px 0 12px" />
-            <GameModeSection
-                isCollaborative={isCollaborative}
-                maxCollaboratorsInRoom={maxCollaboratorsInRoom}
-                voiceChatEnabled={voiceChatEnabled}
-                onBooleanChange={handleBooleanChange}
-                onCollaborativeChange={handleCollaborativeCheckboxChange}
-                onMaxCollaboratorsChange={handleMaxCollaboratorsInRoomChange}
-                onOpenCollaborators={() => app?.editor?.component?.showCollaboratorsModal()}
-                setVoiceChatEnabled={setVoiceChatEnabled}
-            />
+            {/* Playground builds have no Colyseus collaborative session
+                wired up, so flipping these toggles silently does nothing. */}
+            {!isPlaygroundMode() && (
+                <>
+                    <Separator margin="-4px 0 12px" />
+                    <GameModeSection
+                        isCollaborative={isCollaborative}
+                        maxCollaboratorsInRoom={maxCollaboratorsInRoom}
+                        voiceChatEnabled={voiceChatEnabled}
+                        onBooleanChange={handleBooleanChange}
+                        onCollaborativeChange={handleCollaborativeCheckboxChange}
+                        onMaxCollaboratorsChange={handleMaxCollaboratorsInRoomChange}
+                        onOpenCollaborators={() => app?.editor?.component?.showCollaboratorsModal()}
+                        setVoiceChatEnabled={setVoiceChatEnabled}
+                    />
+                </>
+            )}
 
             {/* ── 7. Platform Integrations ── */}
-            {playerSupport.enabled && (
+            {/* Discord / Steam / CrazyGames / Mobile services all require
+                publisher credentials and a hosted backend that the playground
+                build doesn't ship — hide the entire block in playground. */}
+            {playerSupport.enabled && !isPlaygroundMode() && (
                 <>
                     <Separator margin="-4px 0 12px" />
                     <ContentItem $rowGap="12px">
