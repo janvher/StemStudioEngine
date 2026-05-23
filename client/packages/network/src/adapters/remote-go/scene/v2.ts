@@ -77,7 +77,23 @@ async function loadSceneFromProjectStore(sceneId: string): Promise<DomainSceneDt
     // fallback and report a filesystem project as "not found".
     await ensureProjectStoreRehydrated();
     const store = getProjectStore();
-    const body = await store.load(sceneId);
+    let body;
+    try {
+        body = await store.load(sceneId);
+    } catch (err) {
+        // The store throws plain `Error("Project X not found...")`. The
+        // editor's `isSceneInaccessibleError` detects missing scenes by
+        // `status === 404`, so surface a stable shape here. Without this the
+        // Create page treats the failure as a generic load error and
+        // reattempts, leaving the user stuck on a half-loaded scene instead
+        // of being routed back to the dashboard.
+        const wrapped = new Error(
+            err instanceof Error ? err.message : `Project ${sceneId} not found`,
+        ) as Error & {status?: number; cause?: unknown};
+        wrapped.status = 404;
+        wrapped.cause = err;
+        throw wrapped;
+    }
 
     // Re-seed the in-memory OSS asset registry from the project's persisted
     // binary assets so model/image/audio references in the scene JSON

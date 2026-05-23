@@ -1,0 +1,18 @@
+{
+    "name": "StemStudio",
+    "short_name": "StemStudio",
+    "description": "Open-source, browser-based 3D editor, engine, and AI copilot.",
+    "start_url": "/",
+    "scope": "/",
+    "display": "standalone",
+    "background_color": "#0b0d12",
+    "theme_color": "#0b0d12",
+    "icons": [
+        {
+            "src": "/favicon.svg",
+            "type": "image/svg+xml",
+            "sizes": "any",
+            "purpose": "any maskable"
+        }
+    ]
+}

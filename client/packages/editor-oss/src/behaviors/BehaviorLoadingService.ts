@@ -316,21 +316,32 @@ export class BehaviorLoadingService {
             behaviors = [];
         }
 
-        const filteredBehaviors = (behaviors ?? []).filter(behavior => !isLegacyBehaviorId(behavior.ID));
+        // In OSS, behavior assets are minted with `oss-asset-<ts>-<rand>` ids
+        // (network/asset/index.ts), which fail the integrated build's 24-hex
+        // legacy-id heuristic. The downstream `GameManager.addBehaviorToObject`
+        // also treats them as legacy and looks them up by bare id, so register
+        // them under the bare id here too. Dropping them through the legacy
+        // filter (the integrated path) leaves the runtime with no class for
+        // every custom behavior in an OSS-imported game.
+        const isOssAssetId = (id: string) => id.startsWith("oss-asset-");
+        const filteredBehaviors = (behaviors ?? []).filter(behavior =>
+            !isLegacyBehaviorId(behavior.ID) || isOssAssetId(behavior.ID),
+        );
+        const keyFor = (ID: string, RevisionID?: string): string =>
+            isOssAssetId(ID) ? ID : assetRefKey({assetId: ID, revisionId: RevisionID!});
 
         const configs = filteredBehaviors.map(
             ({ID, RevisionID, Config}) =>
                 ({
                     ...Config,
-                    id: assetRefKey({assetId: ID, revisionId: RevisionID!}),
+                    id: keyFor(ID, RevisionID),
                 }) as BehaviorClassConfig,
         );
 
         const scripts = filteredBehaviors.reduce(
             (acc, {ID, RevisionID, Code}) => {
                 if (Code) {
-                    const key = assetRefKey({assetId: ID, revisionId: RevisionID!});
-                    acc[key] = Code;
+                    acc[keyFor(ID, RevisionID)] = Code;
                 }
                 return acc;
             },

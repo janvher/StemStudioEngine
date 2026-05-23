@@ -139,6 +139,29 @@ export function registerRoot(component: UIKitComponent): void {
     if (activeRoots.size === 1 && !pointerEventsInstance && gameRef) {
         initializePointerEvents();
     }
+
+    // Force a synchronous first update so `Fullscreen` populates its
+    // `sizeX/sizeY/pixelSize` signals from the parent camera + renderer.
+    // Without this, any child added during the behavior's `init()` lays
+    // out against `sizeX = 0` (the constructor default), so percentage
+    // widths resolve to 0 and yoga measures text with width=0 — every
+    // word ends up on its own line. The next behavior tick would update
+    // dimensions, but yoga's text-measure cache and the timing of the
+    // editor → play transition combine to leave that initial broken
+    // layout pinned on the first play after a fresh import. A redundant
+    // update on a stable root is harmless; the regular `update()` call
+    // in the per-frame `UIKitPointerEvents.update` continues to handle
+    // subsequent dimension changes.
+    try {
+        component.update(0);
+    } catch (err) {
+        // Fullscreen.update throws if the component isn't parented to a
+        // camera yet. Helpers attach BEFORE calling registerRoot, so this
+        // shouldn't happen in practice — but if a caller registers a
+        // detached root, just skip the synchronous warm-up and let the
+        // first per-frame update populate dimensions later.
+        console.debug("[UIKitPointerEvents] registerRoot warm-up update skipped", err);
+    }
 }
 
 /**

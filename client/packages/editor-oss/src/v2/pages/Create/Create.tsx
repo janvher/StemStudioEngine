@@ -64,6 +64,7 @@ export const Create = () => {
     const headRevisionId = locationState?.headRevisionId ?? searchParams.get("headRevisionId") ?? undefined;
     const loadedProjectIDRef = useRef<string | null>(null);
     const loadingProjectIDRef = useRef<string | null>(null);
+    const failedProjectIDRef = useRef<string | null>(null);
     const dbUserRef = useRef<IEditorUser | null>(null);
     const openedDashboardCopilotRef = useRef(false);
     const startedCreateFlowRef = useRef(false);
@@ -208,7 +209,11 @@ export const Create = () => {
         console.debug(
             `[Create] load effect: projectID=${projectID}, editor.sceneID=${editor?.sceneID}, loadedRef=${loadedProjectIDRef.current}, loadingRef=${loadingProjectIDRef.current}, revisionIdToLoad=${revisionIdToLoad}, editor.sceneRevisionId=${editor?.sceneRevisionId}`,
         );
-        if (loadedProjectIDRef.current === projectID || loadingProjectIDRef.current === projectID) return;
+        if (
+            loadedProjectIDRef.current === projectID
+            || loadingProjectIDRef.current === projectID
+            || failedProjectIDRef.current === projectID
+        ) return;
 
         // Scene was just created locally (game/sandbox template) — already in memory with correct sceneID.
         // Skip the redundant server fetch. Clone flow is unaffected since cloneScene doesn't set editor.sceneID.
@@ -234,7 +239,13 @@ export const Create = () => {
                 setIsEditingOldRevision(!!revisionIdToLoad && revisionIdToLoad !== headRevisionId);
             } catch (e) {
                 console.error("Error while loading the project:", e);
-                if (isSceneInaccessibleError(e)) {
+                failedProjectIDRef.current = projectID;
+                // In OSS mode the only durable storage is the local
+                // ProjectStore — any failure here (missing project, corrupt
+                // JSON) is unrecoverable from the editor screen. Send the
+                // user back to the dashboard rather than leaving them on a
+                // half-loaded scene with a retry loop.
+                if (IS_OSS || isSceneInaccessibleError(e)) {
                     showToast({type: "error", title: i18n.t("Stem Studio project scene could not be loaded.")});
                     void navigate(ROUTES.DASHBOARD, {replace: true});
                     return;

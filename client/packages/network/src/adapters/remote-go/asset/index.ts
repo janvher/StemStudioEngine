@@ -426,7 +426,16 @@ export const createAsset = async ({
             const mime = format === "json" ? "application/json" : (contentType || "application/octet-stream");
             dataUrl = `data:${mime};base64,${data}`;
         }
-        registerOssAsset({assetId: id, revisionId, type, format, name, contentType, dataUrl});
+        // Tag the record with the current scene id so
+        // `getOssAssetsForProject(sceneId)` picks it up immediately.
+        // Without this, behaviors created during a stemscript import are
+        // invisible to `getBehaviorsListForScene` until the user reloads —
+        // the page-reload path goes through `loadSceneFromProjectStore`
+        // which re-registers every asset with `projectId`, so play works
+        // after refresh but not before. Mirrors `createSceneAsset`'s
+        // existing OSS branch.
+        const projectId = global.app?.editor?.sceneID ?? undefined;
+        registerOssAsset({assetId: id, revisionId, type, format, name, contentType, dataUrl, projectId});
         return {
             id,
             type,
