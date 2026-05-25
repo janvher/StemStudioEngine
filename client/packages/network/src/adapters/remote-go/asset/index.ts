@@ -60,6 +60,15 @@ export type OssAssetRecord = {
     contentType?: string;
     dataUrl?: string;
     /**
+     * Inline thumbnail derivative as a `data:` URL. The integrated build
+     * stores thumbnails as a separate derivative record with its own
+     * upload + revision, but OSS has no derivative service — we attach
+     * the thumbnail bytes directly to the parent asset record so the
+     * read paths (`getAsset`, `getSceneAssets`) can surface it as
+     * `thumbnailUrl` and the AssetsList <img src> renders inline.
+     */
+    thumbnailDataUrl?: string;
+    /**
      * Scene/project id this asset was created for, when known. Set for
      * scene-scoped assets (models, images, audio imported into a scene) so
      * the persistence layer can save/restore a project's assets. Absent for
@@ -75,6 +84,25 @@ const ossAssetRegistry = new Map<string, OssAssetRecord>();
 export const registerOssAsset = (record: OssAssetRecord): void => {
     ossAssetRegistry.set(record.assetId, record);
     ossAssetRegistry.set(record.revisionId, record);
+};
+
+/**
+ * Attach a thumbnail data URL to an existing OSS asset record without
+ * clobbering its other fields. Used by the OSS branch of
+ * `createAssetDerivativeWithData` when the integrated path would have
+ * created a Thumbnail derivative. No-op (with a warning) when the parent
+ * asset isn't in the registry — that would indicate the caller wrote a
+ * derivative for an asset created outside the OSS synth path.
+ */
+export const setOssAssetThumbnail = (assetId: string, thumbnailDataUrl: string): void => {
+    const existing = ossAssetRegistry.get(assetId);
+    if (!existing) {
+        console.warn(`[ossAssetRegistry] setOssAssetThumbnail: no record for ${assetId}`);
+        return;
+    }
+    existing.thumbnailDataUrl = thumbnailDataUrl;
+    // Both the assetId-keyed and revisionId-keyed entries point at the
+    // same object reference, so mutating one is enough.
 };
 
 /** Look up a synthesized OSS asset by either its asset id or revision id. */
@@ -658,6 +686,7 @@ export const getAsset = async (assetId: string, options: GetAssetOptions = {}): 
                 userId: OSS_LOCAL_USER_ID,
                 headRevisionId: record.revisionId,
                 name: record.name,
+                thumbnailUrl: record.thumbnailDataUrl,
                 revision: {id: record.revisionId, dataUrl: record.dataUrl, derivatives: [], expiresAt: undefined},
             } as never;
         }
@@ -996,6 +1025,10 @@ export const getSceneAssets = async (sceneId: string, options: GetSceneAssetsOpt
                 revisionId: r.revisionId,
                 dataUrl: r.dataUrl,
                 dataUrlExpiresAt: r.dataUrl ? farFuture : undefined,
+                // The AssetsList tile <img> reads `item.thumbnailUrl`
+                // directly — without this, OSS-uploaded models and
+                // images render the "no image" placeholder.
+                thumbnailUrl: r.thumbnailDataUrl,
                 revision: {id: r.revisionId, dataUrl: r.dataUrl, derivatives: [], expiresAt: undefined},
             }));
         return {assets} as unknown as Awaited<ReturnType<ReturnType<typeof getAssetsApiClient>["getSceneAssets"]>>["data"];
@@ -1171,11 +1204,25 @@ export const createAssetDerivativeWithData = async ({
     contentEncoding,
 }: CreateAssetDerivativeWithDataParams) => {
     if (IS_OSS) {
-        // OSS has no upload endpoint and no derivative service. Derivatives
-        // (LODs, thumbnails) are best-effort: producing them locally would
-        // need a write-back path we don't have, so we return a synthetic
-        // record that downstream consumers can ignore.
+        // OSS has no upload endpoint and no derivative service. LOD
+        // derivatives are best-effort no-ops (the renderer falls back to
+        // the source mesh). Thumbnail derivatives, on the other hand,
+        // drive the asset-library tile <img> via `asset.thumbnailUrl` —
+        // dropping them on the floor is what causes models and images
+        // to show the "no image" placeholder after upload. Stash the
+        // thumbnail bytes inline on the parent asset record so the read
+        // paths can surface them.
         const now = new Date().toISOString();
+        if (type === DomainDerivativeType.DerivativeTypeThumbnail && data) {
+            try {
+                const mime = contentType
+                    || (format ? `image/${format}` : "image/png");
+                const base64 = await dataToBase64(data as string | ArrayBuffer | Blob);
+                setOssAssetThumbnail(assetId, `data:${mime};base64,${base64}`);
+            } catch (err) {
+                console.warn("[createAssetDerivativeWithData] OSS thumbnail encode failed", err);
+            }
+        }
         return {
             id: `oss-deriv-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
             assetId,

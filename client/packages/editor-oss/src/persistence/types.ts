@@ -69,6 +69,14 @@ export interface StoredAsset {
     contentType?: string;
     /** Base64-encoded payload bytes (no `data:` prefix). */
     data: string;
+    /**
+     * Base64-encoded thumbnail bytes (no `data:` prefix). Populated for
+     * assets that have a generated preview tile (uploaded models, images,
+     * stems). Absent when no thumbnail was attached.
+     */
+    thumbnailData?: string;
+    /** MIME type of the thumbnail payload (e.g. `image/png`). */
+    thumbnailContentType?: string;
 }
 
 export interface ListProjectsOptions {

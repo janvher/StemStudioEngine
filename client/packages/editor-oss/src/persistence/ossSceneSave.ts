@@ -33,11 +33,20 @@ import type {ProjectBody, ProjectMeta, StoredAsset} from "./types";
  */
 async function persistProjectAssets(projectId: string): Promise<void> {
     try {
+        const splitDataUrl = (url: string): {contentType?: string; base64: string} => {
+            // `data:<mime>;base64,<payload>` → {mime, payload}
+            const comma = url.indexOf(",");
+            if (comma < 0) return {base64: url};
+            const header = url.slice(5, comma); // skip "data:"
+            const semi = header.indexOf(";");
+            const mime = semi >= 0 ? header.slice(0, semi) : header;
+            return {contentType: mime || undefined, base64: url.slice(comma + 1)};
+        };
         const assets: StoredAsset[] = getOssAssetsForProject(projectId)
             .filter(record => record.dataUrl)
             .map(record => {
-                const dataUrl = record.dataUrl!;
-                const comma = dataUrl.indexOf(",");
+                const main = splitDataUrl(record.dataUrl!);
+                const thumb = record.thumbnailDataUrl ? splitDataUrl(record.thumbnailDataUrl) : undefined;
                 return {
                     assetId: record.assetId,
                     revisionId: record.revisionId,
@@ -45,8 +54,8 @@ async function persistProjectAssets(projectId: string): Promise<void> {
                     format: record.format,
                     name: record.name,
                     contentType: record.contentType,
-                    // Strip the `data:<mime>;base64,` prefix — store raw base64.
-                    data: comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl,
+                    data: main.base64,
+                    ...(thumb ? {thumbnailData: thumb.base64, thumbnailContentType: thumb.contentType} : {}),
                 };
             });
         await getProjectStore().saveAssets(projectId, assets);

@@ -105,6 +105,10 @@ async function loadSceneFromProjectStore(sceneId: string): Promise<DomainSceneDt
         for (const a of assets) {
             const mime = a.contentType
                 || (a.format === "json" ? "application/json" : "application/octet-stream");
+            const thumbMime = a.thumbnailContentType || "image/png";
+            const thumbnailDataUrl = a.thumbnailData
+                ? `data:${thumbMime};base64,${a.thumbnailData}`
+                : undefined;
             registerOssAsset({
                 assetId: a.assetId,
                 revisionId: a.revisionId,
@@ -113,6 +117,7 @@ async function loadSceneFromProjectStore(sceneId: string): Promise<DomainSceneDt
                 name: a.name,
                 contentType: a.contentType,
                 dataUrl: `data:${mime};base64,${a.data}`,
+                thumbnailDataUrl,
                 projectId: sceneId,
             });
         }
