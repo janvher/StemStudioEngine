@@ -16,6 +16,7 @@ import {isSignUpRoutePath, ROUTES} from "@web-shared/routes";
 import {getAuthProvider, type IAuthUser} from "../auth";
 import {getRemoteDocStore} from "../data";
 import {IS_OSS} from "../mode/buildMode";
+import {OSS_LOCAL_USER_ID} from "@web-shared/ossUser";
 import global from "../global";
 
 /** Type alias kept for source compatibility with the previous firebase types. */
@@ -29,7 +30,7 @@ type UserInfo = IAuthUser;
  * identity when `BUILD_MODE=oss`.
  */
 const OSS_DUMMY_TOKEN = "stemstudio-token";
-const OSS_DUMMY_USER_ID = "stemstudio-local-user";
+const OSS_DUMMY_USER_ID = OSS_LOCAL_USER_ID;
 import {useWindowPathname} from "../hooks/useWindowPathname";
 import i18n from "../i18n/config";
 import {showToast} from "../showToast";

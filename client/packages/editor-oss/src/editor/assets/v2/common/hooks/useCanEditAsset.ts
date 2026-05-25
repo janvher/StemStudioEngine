@@ -96,17 +96,14 @@ export const useCanEditAsset = ({assetOwnerId}: UseCanEditAssetParams) => {
     const canEdit = useMemo(() => {
         if (isTemplate) return false;
         if (isReadOnly) return false;
-        // OSS: there's no cross-user ownership — everything is local and the
-        // current "user" is a synthetic single-account stamp. The cloud
-        // ownership check compares `assetOwnerId` (e.g. "local", written by
-        // the network adapter when synthesizing OSS assets) against
-        // `sceneOwnerId` (the dummy AuthorizationContext user id, e.g.
-        // "stemstudio-local-user"). Those never match, so the cascade
-        // through TreeItem's `isPrefabInEditMode = isPrefab && isPrefabLocked
-        // && canEdit` strips every Stem action from the right-click menu
-        // ("Edit Stem", "Open in Stem Editor", "Save Stem", "Export Stem").
-        // In OSS, owning the scene is sufficient — there's no other user to
-        // gate against.
+        // OSS: there's no cross-user ownership — everything is local and
+        // the current "user" is a synthetic single-account stamp
+        // (`OSS_LOCAL_USER_ID`) shared by AuthorizationContext and every
+        // synth adapter. Owning the scene is sufficient; short-circuit
+        // ahead of the cross-user check so a missing/stale `assetOwnerId`
+        // (e.g. on a freshly-converted Stem before `getAsset` resolves)
+        // doesn't strip the Stem actions ("Edit Stem", "Open in Stem
+        // Editor", "Save Stem", "Export Stem") from the right-click menu.
         if (IS_OSS) return !!sceneOwnerId;
         const assetBelongsToSceneOwner = !!assetOwnerId && !!sceneOwnerId && assetOwnerId === sceneOwnerId;
         return isContributor && assetBelongsToSceneOwner;

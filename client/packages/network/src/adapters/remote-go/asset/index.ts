@@ -3,6 +3,7 @@ import {chunk} from "lodash";
 import * as pako from "pako";
 
 import global from "@web-shared/global";
+import {OSS_LOCAL_USER_ID} from "@web-shared/ossUser";
 import {withRetry} from "@web-shared/utils/retry";
 import {IS_OSS} from "../../../buildMode";
 import {AccessContext, ApiClientOptions, getAssetsApiClient} from "../client";
@@ -444,7 +445,7 @@ export const createAsset = async ({
             description: options.revisionDescription,
             createTime: now,
             updateTime: now,
-            userId: "local",
+            userId: OSS_LOCAL_USER_ID,
             headRevisionId: revisionId,
             revision: {id: revisionId, dataUrl, derivatives: [], expiresAt: undefined},
         } as unknown as Asset;
@@ -654,7 +655,7 @@ export const getAsset = async (assetId: string, options: GetAssetOptions = {}): 
                 format: record.format,
                 createTime: now,
                 updateTime: now,
-                userId: "local",
+                userId: OSS_LOCAL_USER_ID,
                 headRevisionId: record.revisionId,
                 name: record.name,
                 revision: {id: record.revisionId, dataUrl: record.dataUrl, derivatives: [], expiresAt: undefined},
@@ -666,7 +667,7 @@ export const getAsset = async (assetId: string, options: GetAssetOptions = {}): 
             format: "json",
             createTime: now,
             updateTime: now,
-            userId: "local",
+            userId: OSS_LOCAL_USER_ID,
             headRevisionId: `oss-rev-${assetId}`,
             name: "local",
             revision: {id: `oss-rev-${assetId}`, dataUrl: undefined, derivatives: [], expiresAt: undefined},
@@ -986,7 +987,7 @@ export const getSceneAssets = async (sceneId: string, options: GetSceneAssetsOpt
                 name: r.name,
                 createTime: now,
                 updateTime: now,
-                userId: "local",
+                userId: OSS_LOCAL_USER_ID,
                 headRevisionId: r.revisionId,
                 // Top-level fields consumed by AssetLoader.seedFromAssets
                 // (CachedAsset shape). Without `revisionId` the seeder skips

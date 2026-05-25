@@ -1,4 +1,5 @@
 import global from "@web-shared/global";
+import {OSS_LOCAL_USER_ID} from "@web-shared/ossUser";
 import {Asset, createAssetUpload, dataToBase64, getDataByteLength, gzipData, INLINE_DATA_MAX_BYTES, isConflictError, registerOssAsset, uploadAssetData} from "../asset";
 import {getJobsApiClient, getScenesApiClient} from "../client";
 import {DomainAssetType, HandlerCreateAssetTokenResponse, HandlerCreateRevisionRequest, HandlerCreateSceneRequest, DomainSceneDto, HandlerPublishSceneRequest, HandlerUpdateSceneRequest, JobsJobResponseStatusEnum} from "../client/api";
@@ -204,7 +205,7 @@ async function loadSceneFromProjectStore(sceneId: string): Promise<DomainSceneDt
         tags: "",
         thumbnail: body.meta.thumbnailUrl ?? "",
         updateTime: now,
-        userId: "local",
+        userId: OSS_LOCAL_USER_ID,
     };
 }
 
@@ -300,7 +301,7 @@ function synthOSSAsset(params: {type: DomainAssetType; format: string; name: str
         description: params.description,
         createTime: now,
         updateTime: now,
-        userId: "local",
+        userId: OSS_LOCAL_USER_ID,
         headRevisionId: revisionId,
         revision: {id: revisionId, dataUrl, derivatives: [], expiresAt: undefined},
     } as unknown as Asset;

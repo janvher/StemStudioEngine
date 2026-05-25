@@ -16,6 +16,7 @@ import {FileData} from "@web-shared/editor/assets/v2/types/file";
 import type Editor from "@web-shared/editor/Editor";
 import {saveStemEditor} from "@web-shared/editor/stem-editor/saveStemEditor";
 import global from "@web-shared/global";
+import {OSS_LOCAL_USER_ID} from "@web-shared/ossUser";
 import Converter from "@web-shared/serialization/Converter";
 import {showToast} from "@web-shared/showToast";
 import type {HUDRendererMode, RenderingSettings} from "@web-shared/types/GameSettingsTypes";
@@ -1279,7 +1280,7 @@ export async function fetchMyScenes(params?: FetchScenesParams): Promise<Paginat
                     UpdateTime: p.updatedAt ?? p.createdAt ?? new Date().toISOString(),
                     CreateTime: p.createdAt ?? new Date().toISOString(),
                     Thumbnail: p.thumbnailUrl ?? "",
-                    UserID: "local",
+                    UserID: OSS_LOCAL_USER_ID,
                 } as never)),
                 TotalCount: projects.length,
                 Page: params?.page ?? 1,
