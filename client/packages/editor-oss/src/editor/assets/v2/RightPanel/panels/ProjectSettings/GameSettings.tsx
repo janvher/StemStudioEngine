@@ -39,6 +39,7 @@ import Ajax from "@stem/editor-oss/utils/Ajax";
 import {DEFAULT_ORIENTATION_POLICY} from "@stem/editor-oss/utils/orientationPolicy";
 import {backendUrlFromPath} from "@stem/editor-oss/utils/UrlUtils";
 import {isPlaygroundMode} from "@web-shared/playgroundMode";
+import {IS_OSS} from "@stem/editor-oss/mode/buildMode";
 import {DEFAULT_CAD_TOOLS_SETTINGS, setCADToolsSettings} from "../../../../../cad/settings";
 import {Tooltip} from "../../../common";
 import {Item} from "../../../common/BasicCombobox/BasicCombobox";
@@ -938,27 +939,35 @@ const GameSettingsComponent = ({openUIPanel}: {openUIPanel: () => void}) => {
             </ContentItem>
 
             {/* ── 5. Player & Multiplayer ── */}
-            <Separator margin="-4px 0 12px" />
-            <PlayerProfileSection
-                playerSupport={playerSupport}
-                allowAnonymousFirebase={allowAnonymousFirebase}
-                useAvatar={useAvatar}
-                isMultiplayer={isMultiplayer}
-                multiplayerAutoJoin={multiplayerAutoJoin}
-                maxMultiplayerClientsPerRoom={maxMultiplayerClientsPerRoom}
-                onPlayerSupportChange={handlePlayerSupportChange}
-                onBooleanChange={handleBooleanChange}
-                onMaxClientsChange={handleMaxMultiplayerClientsPerRoomChange}
-                setAllowAnonymousFirebase={setAllowAnonymousFirebase}
-                setUseAvatar={setUseAvatar}
-                setIsMultiplayer={setIsMultiplayer}
-                setMultiplayerAutoJoin={setMultiplayerAutoJoin}
-            />
+            {/* Mirror PlayerProfileSection's own visibility logic so the
+                preceding separator doesn't strand a phantom section when
+                every child checkbox is hidden (OSS playground). */}
+            {(!isPlaygroundMode() || !IS_OSS) && (
+                <>
+                    <Separator margin="-4px 0 12px" />
+                    <PlayerProfileSection
+                        playerSupport={playerSupport}
+                        allowAnonymousFirebase={allowAnonymousFirebase}
+                        useAvatar={useAvatar}
+                        isMultiplayer={isMultiplayer}
+                        multiplayerAutoJoin={multiplayerAutoJoin}
+                        maxMultiplayerClientsPerRoom={maxMultiplayerClientsPerRoom}
+                        onPlayerSupportChange={handlePlayerSupportChange}
+                        onBooleanChange={handleBooleanChange}
+                        onMaxClientsChange={handleMaxMultiplayerClientsPerRoomChange}
+                        setAllowAnonymousFirebase={setAllowAnonymousFirebase}
+                        setUseAvatar={setUseAvatar}
+                        setIsMultiplayer={setIsMultiplayer}
+                        setMultiplayerAutoJoin={setMultiplayerAutoJoin}
+                    />
+                </>
+            )}
 
             {/* ── 6. Collaboration ── */}
-            {/* Playground builds have no Colyseus collaborative session
-                wired up, so flipping these toggles silently does nothing. */}
-            {!isPlaygroundMode() && (
+            {/* OSS builds (incl. the playground iframe) ship no
+                collaborative-editing backend — flipping these toggles
+                silently does nothing. */}
+            {!IS_OSS && (
                 <>
                     <Separator margin="-4px 0 12px" />
                     <GameModeSection
@@ -976,9 +985,9 @@ const GameSettingsComponent = ({openUIPanel}: {openUIPanel: () => void}) => {
 
             {/* ── 7. Platform Integrations ── */}
             {/* Discord / Steam / CrazyGames / Mobile services all require
-                publisher credentials and a hosted backend that the playground
-                build doesn't ship — hide the entire block in playground. */}
-            {playerSupport.enabled && !isPlaygroundMode() && (
+                publisher credentials and a hosted backend that OSS doesn't
+                ship — hide the entire block in OSS (incl. playground). */}
+            {playerSupport.enabled && !IS_OSS && (
                 <>
                     <Separator margin="-4px 0 12px" />
                     <ContentItem $rowGap="12px">

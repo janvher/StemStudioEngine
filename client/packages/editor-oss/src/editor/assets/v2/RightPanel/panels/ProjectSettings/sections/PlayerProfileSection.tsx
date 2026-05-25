@@ -1,6 +1,7 @@
 import React from "react";
 
 import {isPlaygroundMode} from "@web-shared/playgroundMode";
+import {IS_OSS} from "@stem/editor-oss/mode/buildMode";
 import {ContentItem} from "../../../common/ContentItem";
 import {NumericInputRow} from "../../../common/NumericInputRow";
 import {PanelCheckbox} from "../../../common/PanelCheckbox";
@@ -38,8 +39,21 @@ const PlayerProfileSectionComponent = ({
     setMultiplayerAutoJoin,
 }: PlayerProfileProps) => {
     // Playground builds don't ship the Colyseus multiplayer sidecar, so
-    // enabling these checkboxes wouldn't actually connect anywhere.
+    // enabling these checkboxes wouldn't actually connect anywhere. The
+    // standalone OSS dev script still boots the sidecar — keep the toggle
+    // visible there.
     const showMultiplayer = !isPlaygroundMode();
+    // The "Use Avatar / Enable user accounts / Allow Guests" checkboxes
+    // all depend on Firebase auth, which is stubbed out in OSS, so they
+    // can't do anything useful in any OSS build (playground or
+    // self-hosted) until a fork wires up its own account backend.
+    const showAccountToggles = !IS_OSS;
+    // If nothing inside the section will render (OSS playground hides
+    // both groups), drop the whole "Player Settings" heading too — an
+    // empty section just adds visual noise.
+    if (!showMultiplayer && !showAccountToggles) {
+        return null;
+    }
 
     return (
         <ContentItem $rowGap="12px">
@@ -78,25 +92,29 @@ const PlayerProfileSectionComponent = ({
                     />
                 </>
             )}
-            <PanelCheckbox
-                v2
-                text="Use Player Avatar as Character"
-                checked={useAvatar}
-                isGray
-                regular
-                onChange={() => onBooleanChange("useAvatar", setUseAvatar)}
-                tooltipText="Uses each player's profile avatar as their in-game character when supported. Best for social, creator, or identity-driven experiences."
-            />
-            <PanelCheckbox
-                v2
-                text="Enable user accounts"
-                checked={!!playerSupport.enabled}
-                isGray
-                regular
-                onChange={() => onPlayerSupportChange(!playerSupport.enabled)}
-                tooltipText="Enables account-based player identity and progression. Turn this on when your experience needs saved identity, progression, or authenticated player features."
-            />
-            {playerSupport.enabled && 
+            {showAccountToggles && (
+                <PanelCheckbox
+                    v2
+                    text="Use Player Avatar as Character"
+                    checked={useAvatar}
+                    isGray
+                    regular
+                    onChange={() => onBooleanChange("useAvatar", setUseAvatar)}
+                    tooltipText="Uses each player's profile avatar as their in-game character when supported. Best for social, creator, or identity-driven experiences."
+                />
+            )}
+            {showAccountToggles && (
+                <PanelCheckbox
+                    v2
+                    text="Enable user accounts"
+                    checked={!!playerSupport.enabled}
+                    isGray
+                    regular
+                    onChange={() => onPlayerSupportChange(!playerSupport.enabled)}
+                    tooltipText="Enables account-based player identity and progression. Turn this on when your experience needs saved identity, progression, or authenticated player features."
+                />
+            )}
+            {showAccountToggles && playerSupport.enabled && (
                 <PanelCheckbox
                     v2
                     text="Allow Guest Players"
@@ -106,7 +124,7 @@ const PlayerProfileSectionComponent = ({
                     onChange={() => onBooleanChange("allowAnonymousFirebase", setAllowAnonymousFirebase)}
                     tooltipText="Allows players to enter without creating an account. Good for lower-friction onboarding, but guest users usually have weaker persistence and identity guarantees."
                 />
-            }
+            )}
         </ContentItem>
     );
 };

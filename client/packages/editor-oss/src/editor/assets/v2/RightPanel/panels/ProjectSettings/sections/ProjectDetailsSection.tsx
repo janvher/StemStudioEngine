@@ -5,7 +5,7 @@ import styled from "styled-components";
 import {createSceneScreenShot} from "@stem/network/api/scene";
 import {useAppGlobalContext, useAuthorizationContext} from "@stem/editor-oss/context";
 import global from "@stem/editor-oss/global";
-import {isPlaygroundMode} from "@web-shared/playgroundMode";
+import {IS_OSS} from "@stem/editor-oss/mode/buildMode";
 import {getThumbnail} from "@stem/editor-oss/services";
 import {showToast} from "@stem/editor-oss/showToast";
 import {getAIBackend} from "@stem/editor-oss/ai";
@@ -262,11 +262,12 @@ const GameDetailsSectionComponent = ({
                     />
                 </ExpandButton>
             </ContentItem>
-            {/* Playground builds have no server-backed revision store, so
-                opening the modal would show an empty list and a dead Restore
-                button. Hide the affordance entirely until the OSS-friendly
-                local history feature lands. */}
-            {!isPlaygroundMode() && (
+            {/* OSS builds (incl. the playground iframe) ship no
+                server-backed revision store, so opening the modal would
+                show an empty list and a dead Restore button. Hide the
+                affordance entirely until an OSS-friendly local history
+                feature lands. */}
+            {!IS_OSS && (
                 <StyledButton
                     isSecondaryDialogBtn
                     customIcon={clockIcon}
