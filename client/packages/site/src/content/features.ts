@@ -7,6 +7,12 @@ export interface Feature {
 
 export const FEATURES: Feature[] = [
     {
+        icon: "⚡",
+        title: "WebGPU-first renderer",
+        body: "The engine boots on WebGPU when the browser supports it and falls back to WebGL automatically — same scene, same behaviors, no flag to flip.",
+        href: "/docs/architecture",
+    },
+    {
         icon: "◇",
         title: "Behavior system",
         body: "Attach reusable, lifecycle-managed behaviors to any object. The engine handles update, dispose, event wiring, and config persistence.",
@@ -82,6 +88,18 @@ export const FEATURES: Feature[] = [
         icon: "⇲",
         title: "Imports & file system",
         body: "Bring in stemscript folders, models, and assets straight from disk via the File System Access API — the dashboard stages a folder and materializes a full project.",
+        href: "/docs/architecture",
+    },
+    {
+        icon: "▱",
+        title: "CAD tools",
+        body: "Sketch, measure, and annotate inside the viewport — primitive editing, dimensioning, and a dedicated CAD action bar live alongside the game tools.",
+        href: "/docs/architecture",
+    },
+    {
+        icon: "⎙",
+        title: "3D printing export",
+        body: "Export the active scene to STL straight from the app — drop the file into any slicer and print what you built.",
         href: "/docs/architecture",
     },
 ];
