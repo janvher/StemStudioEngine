@@ -8,6 +8,12 @@
 
 StemStudio gives you a complete authoring environment — scene editor, behavior scripting in JavaScript, physics, multiplayer, an AI copilot — that runs entirely on your machine. Projects live in your browser (IndexedDB) or in a folder you pick (File System Access API). No accounts, no cloud, no lock-in.
 
+## Sponsor this project
+
+If StemStudio is useful to you or your organization, please consider sponsoring its continued development. Sponsorships fund maintenance, new features, documentation, and community support.
+
+[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-ff69b4.svg)](https://github.com/sponsors/Stem-Studio)
+
 ---
 
 ## Features
@@ -100,11 +106,21 @@ To export a single project as a Player-only static site, use the in-editor **Fil
 
 WebGL2 is required. WebGPU support is experimental and opt-in.
 
+## Team
+
+|  [<img src="https://github.com/papiguy.png" width="100"><br><sub><b>papiguy</b></sub>](https://github.com/papiguy)   | [<img src="https://github.com/mvromanov.png" width="100"><br><sub><b>mvromanov</b></sub>](https://github.com/mvromanov) | [<img src="https://github.com/fayd404.png" width="100"><br><sub><b>fayd404</b></sub>](https://github.com/fayd404) | [<img src="https://github.com/ikerr.png" width="100"><br><sub><b>ikerr</b></sub>](https://github.com/ikerr) |
+|:--------------------------------------------------------------------------------------------------------------------:| :---: | :---: | :---: |
+|                                                  CTO & Venture Lead                                                  | Head of Engineering | Head of Product | Platform & Physics |
+| [<img src="https://github.com/querielo.png" width="100"><br><sub><b>querielo</b></sub>](https://github.com/querielo) | [<img src="https://github.com/AndreiRudenko.png" width="100"><br><sub><b>AndreiRudenko</b></sub>](https://github.com/AndreiRudenko) | | |
+|                                                   Three.js Wizard                                                    | Games | | |
+
 ## Contributing
 
 We welcome contributions. Please read [CONTRIBUTING.md](./CONTRIBUTING.md) before opening a PR.
 
 Bug reports, feature requests, and discussions: [GitHub Issues](https://github.com/your-org/stemstudio/issues).
+
+You can sponsor us via [GitHub Sponsors](https://github.com/sponsors/Stem-Studio). Every contribution, large or small, is appreciated.
 
 ## License
 
