@@ -58,6 +58,7 @@ export type OssAssetRecord = {
     format: string;
     name: string;
     contentType?: string;
+    metadata?: Record<string, unknown>;
     dataUrl?: string;
     /**
      * Inline thumbnail derivative as a `data:` URL. The integrated build
@@ -464,7 +465,7 @@ export const createAsset = async ({
         // after refresh but not before. Mirrors `createSceneAsset`'s
         // existing OSS branch.
         const projectId = global.app?.editor?.sceneID ?? undefined;
-        registerOssAsset({assetId: id, revisionId, type, format, name, contentType, dataUrl, projectId});
+        registerOssAsset({assetId: id, revisionId, type, format, name, contentType, metadata: options.metadata, dataUrl, projectId});
         return {
             id,
             type,
@@ -609,6 +610,7 @@ export const createAssetRevision = async ({
             format: format ?? existing?.format ?? "",
             name: existing?.name ?? assetId,
             contentType: contentType ?? existing?.contentType,
+            metadata: options.metadata,
             dataUrl,
         });
         return {
@@ -681,6 +683,7 @@ export const getAsset = async (assetId: string, options: GetAssetOptions = {}): 
                 id: record.assetId,
                 type: record.type,
                 format: record.format,
+                contentType: record.contentType,
                 createTime: now,
                 updateTime: now,
                 userId: OSS_LOCAL_USER_ID,
@@ -850,6 +853,9 @@ export const getAssetRevision = async (
             id: revisionId,
             assetId,
             dataUrl: record?.dataUrl,
+            format: record?.format,
+            contentType: record?.contentType,
+            metadata: record?.metadata,
             derivatives: [],
             expiresAt: undefined,
         } as unknown as AssetRevision;

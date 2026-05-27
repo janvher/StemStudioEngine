@@ -54,6 +54,7 @@ async function persistProjectAssets(projectId: string): Promise<void> {
                     format: record.format,
                     name: record.name,
                     contentType: record.contentType,
+                    metadata: record.metadata,
                     data: main.base64,
                     ...(thumb ? {thumbnailData: thumb.base64, thumbnailContentType: thumb.contentType} : {}),
                 };

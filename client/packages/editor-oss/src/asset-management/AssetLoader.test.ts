@@ -267,9 +267,9 @@ describe("AssetLoader URL caching", () => {
             expect(stored["d:a1:r1:d1"].url).toBe(freshUrl);
         });
 
-        it("returns revision metadata when falling back to original model data", async () => {
-            const asset = makeAsset({ id: "a1", revisionId: "r1", derivatives: [], format: "ply" });
-            const revisionUrl = "https://cdn/model.ply?sig=rev";
+        it("returns revision metadata and payload type when falling back to original model data", async () => {
+            const asset = makeAsset({ id: "a1", revisionId: "r1", derivatives: [], format: "glb" });
+            const revisionUrl = "https://cdn/model-package.zip?sig=rev";
             mockGetAsset.mockResolvedValue(asset);
             mockGetAssetDerivatives.mockResolvedValue([]);
             mockGetAssetRevision.mockResolvedValue({
@@ -277,13 +277,13 @@ describe("AssetLoader URL caching", () => {
                 assetId: "a1",
                 dataUrl: revisionUrl,
                 expiresAt: futureDate(60),
-                format: "ply",
-                contentType: "application/octet-stream",
+                format: "gltf",
+                contentType: "application/zip",
                 createTime: new Date().toISOString(),
                 parentIds: [],
                 userId: "u1",
                 metadata: {
-                    gaussianSplatPly: true,
+                    zipMainFile: "model.gltf",
                 },
             });
 
@@ -291,8 +291,9 @@ describe("AssetLoader URL caching", () => {
             const result = await loader.getModelDataUrl({ assetId: "a1", revisionId: "r1" });
 
             expect(result.url).toBe(revisionUrl);
-            expect(result.format).toBe("ply");
-            expect(result.metadata).toEqual({ gaussianSplatPly: true });
+            expect(result.format).toBe("gltf");
+            expect(result.contentType).toBe("application/zip");
+            expect(result.metadata).toEqual({ zipMainFile: "model.gltf" });
         });
     });
 

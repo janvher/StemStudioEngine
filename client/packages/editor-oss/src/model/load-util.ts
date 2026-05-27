@@ -1,16 +1,24 @@
+import JSZip from 'jszip';
 import { Object3D } from 'three';
 
-import { lookupOssAsset } from '@stem/network/api/asset';
+import { lookupOssAsset, SUPPORTED_MODEL_FORMATS_REGEX } from '@stem/network/api/asset';
 
 import { AssetLoader } from '../asset-management/AssetLoader';
 import { AssetResolutionContext, resolveAssetId, resolveAssetRevisionId } from '../asset-management/AssetResolutionContext';
+import { findAtlasFiles, loadAtlas } from '../atlas/AtlasDetector';
 import ModelLoader from '../assets/js/loaders/ModelLoader';
 import { UploadSettings } from '../editor/assets/v2/LeftPanel/MainTabs/AssetsTab/ModelUpload/types';
 import global from '../global';
+import {
+    detectTexturesAndModels,
+    getBaseName,
+    getTextureOverridesForModel,
+} from '../texture/TextureMapping';
+import type { TextureOverrides } from '../texture/TextureMapping';
 import { DetectDevice } from '../utils/DetectDevice';
 import { getModelStats, optimizeGlbFile } from '../utils/ModelUtils';
-import { hasGaussianSplatPlyMetadata } from './gaussianSplats';
-import { LOD_LEVEL_DESKTOP, LOD_LEVEL_MOBILE, setModelId, setModelRevisionId } from './util';
+import { hasGaussianSplatPlyMetadata, isGaussianSplatPlyBlob } from './gaussianSplats';
+import { isSupportedModelFormat, LOD_LEVEL_DESKTOP, LOD_LEVEL_MOBILE, setModelId, setModelRevisionId } from './util';
 
 const replaceExtension = (name: string, ext: string) => name.replace(/\.[^/.]+$/, "") + ext;
 
@@ -122,6 +130,193 @@ type LoadModelWithLoaderOptions = {
     preferLod?: number;
 };
 
+type RuntimeModelLoaderOptions = NonNullable<Parameters<ModelLoader["load"]>[1]>;
+
+type ZipModelPackage = {
+    rootFile: File;
+    fileBlobMap: Map<string, Blob>;
+    rootPath: string;
+};
+
+const ZIP_BASE64_PREFIX = "UEsDB";
+
+const isUsdZipContainer = (format: string | undefined): boolean =>
+    format === "usdz" || format === "kmz";
+
+const dataUrlMime = (url: string): string | undefined => {
+    if (!url.startsWith("data:")) return undefined;
+    const comma = url.indexOf(",");
+    if (comma < 0) return undefined;
+    const header = url.slice("data:".length, comma);
+    return header.split(";")[0]?.toLowerCase() || undefined;
+};
+
+const isZipDataUrl = (url: string): boolean => {
+    if (!url.startsWith("data:")) return false;
+    const mime = dataUrlMime(url);
+    if (mime?.includes("zip")) return true;
+    const comma = url.indexOf(",");
+    if (comma < 0) return false;
+    return url.slice(comma + 1, comma + 1 + ZIP_BASE64_PREFIX.length) === ZIP_BASE64_PREFIX;
+};
+
+const isZipModelPackage = (result: Awaited<ReturnType<AssetLoader["getModelDataUrl"]>>): boolean => {
+    const format = result.format?.toLowerCase();
+    if (isUsdZipContainer(format)) return false;
+
+    if (typeof result.metadata?.zipMainFile === "string") {
+        return true;
+    }
+
+    const contentType = result.contentType?.toLowerCase();
+    if (contentType?.includes("zip")) {
+        return true;
+    }
+
+    return isZipDataUrl(result.url);
+};
+
+const fetchModelBlob = async (url: string, fallbackContentType: string): Promise<Blob> => {
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch packaged model (${response.status})`);
+    }
+    const blob = await response.blob();
+    return blob.type ? blob : blob.slice(0, blob.size, fallbackContentType);
+};
+
+const findZipRootFilePath = (
+    zip: JSZip,
+    metadata: Record<string, unknown> | undefined,
+): string | undefined => {
+    const paths = Object.entries(zip.files)
+        .filter(([, entry]) => !entry.dir)
+        .map(([path]) => path);
+
+    const metadataRoot = typeof metadata?.zipMainFile === "string"
+        ? metadata.zipMainFile
+        : undefined;
+
+    if (metadataRoot) {
+        const direct = paths.find(path => path === metadataRoot);
+        if (direct) return direct;
+
+        const byBasename = paths.find(path => path.split("/").pop() === metadataRoot);
+        if (byBasename) return byBasename;
+    }
+
+    return paths.find(path => SUPPORTED_MODEL_FORMATS_REGEX.test(path));
+};
+
+const expandZipModelPackage = async (
+    archive: Blob,
+    metadata: Record<string, unknown> | undefined,
+): Promise<ZipModelPackage> => {
+    const zip = await new JSZip().loadAsync(archive);
+    const rootFilePath = findZipRootFilePath(zip, metadata);
+    if (!rootFilePath) {
+        throw new Error("Packaged model ZIP does not contain a supported root model file");
+    }
+
+    const fileBlobMap = new Map<string, Blob>();
+    await Promise.all(
+        Object.entries(zip.files)
+            .filter(([, entry]) => !entry.dir)
+            .map(async ([path, entry]) => {
+                fileBlobMap.set(path, await entry.async("blob"));
+            }),
+    );
+
+    const rootBlob = fileBlobMap.get(rootFilePath);
+    if (!rootBlob) {
+        throw new Error(`Packaged model ZIP root file is missing: ${rootFilePath}`);
+    }
+
+    const rootFilename = rootFilePath.split("/").pop() || "model";
+    const rootPath = rootFilePath.split("/").slice(0, -1).join("/");
+
+    return {
+        rootFile: new File([rootBlob], rootFilename, { type: rootBlob.type }),
+        fileBlobMap,
+        rootPath,
+    };
+};
+
+const getPackageTextureOptions = async (
+    rootFile: File,
+    fileBlobMap: Map<string, Blob>,
+    rootPath: string,
+): Promise<{atlasData?: Awaited<ReturnType<typeof loadAtlas>>; textureOverrides?: TextureOverrides}> => {
+    const atlasFiles = findAtlasFiles(fileBlobMap);
+    const atlasData = atlasFiles[0]
+        ? await loadAtlas(atlasFiles[0], fileBlobMap, rootPath)
+        : undefined;
+
+    if (atlasData) {
+        return { atlasData };
+    }
+
+    const textureDetection = detectTexturesAndModels(fileBlobMap);
+    if (!textureDetection.hasLooseTextures) {
+        return {};
+    }
+
+    const modelBaseName = getBaseName(rootFile.name);
+    let textureOverrides = getTextureOverridesForModel(modelBaseName, textureDetection);
+
+    if ((!textureOverrides || Object.keys(textureOverrides).length === 0)
+        && textureDetection.modelPaths.length === 1
+        && textureDetection.texturePaths.length >= 1) {
+        const firstTexturePath = textureDetection.texturePaths[0]!;
+        const textureBlob = fileBlobMap.get(firstTexturePath);
+        if (textureBlob) {
+            textureOverrides = {
+                map: { blob: textureBlob, path: firstTexturePath },
+            };
+        }
+    }
+
+    return textureOverrides && Object.keys(textureOverrides).length > 0
+        ? { textureOverrides }
+        : {};
+};
+
+const loadZipModelPackage = async (
+    result: Awaited<ReturnType<AssetLoader["getModelDataUrl"]>>,
+    loadOptions: RuntimeModelLoaderOptions,
+): Promise<Object3D | null> => {
+    const archive = await fetchModelBlob(result.url, result.contentType || "application/zip");
+    const { rootFile, fileBlobMap, rootPath } = await expandZipModelPackage(archive, result.metadata);
+    const format = rootFile.name.split(".").pop()?.toLowerCase();
+
+    if (!format || !isSupportedModelFormat(format)) {
+        throw new Error(`Unsupported packaged model format: ${format || "(none)"}`);
+    }
+
+    const { atlasData, textureOverrides } = await getPackageTextureOptions(rootFile, fileBlobMap, rootPath);
+    const rootUrl = URL.createObjectURL(rootFile);
+    const loader = new ModelLoader();
+
+    try {
+        return await loader.load(
+            rootUrl,
+            {
+                ...loadOptions,
+                Type: format,
+                ForceGaussianSplatPly: loadOptions.ForceGaussianSplatPly
+                    || (format === "ply" && await isGaussianSplatPlyBlob(rootFile)),
+                fileBlobMap,
+                rootPath,
+                atlasData: atlasData ?? undefined,
+                textureOverrides,
+            },
+        );
+    } finally {
+        loader.dispose();
+        URL.revokeObjectURL(rootUrl);
+    }
+};
+
 /**
  * Load a model using an AssetLoader for efficient caching.
  * This avoids redundant API calls when the asset is already cached.
@@ -159,18 +354,17 @@ export const loadModelWithLoader = async (
         `[loadModelWithLoader] Loading ${resolvedModelId} with LOD ${result.lodLevel ?? 'original'}`,
     );
 
-    const loader = new ModelLoader();
-    const object = await loader.load(
-        result.url,
-        {
-            Type: result.format,
-            ForceGaussianSplatPly: hasGaussianSplatPlyMetadata(result.metadata),
-            DisableReupload: true,
-            DisableDefaultPhysics: true,
-            Priority: options.priority,
-            CacheKey: `${resolvedModelId}:${revisionId}:${result.lodLevel ?? "original"}`,
-        },
-    );
+    const loadOptions: RuntimeModelLoaderOptions = {
+        Type: result.format,
+        ForceGaussianSplatPly: hasGaussianSplatPlyMetadata(result.metadata),
+        DisableReupload: true,
+        DisableDefaultPhysics: true,
+        Priority: options.priority,
+        CacheKey: `${resolvedModelId}:${revisionId}:${result.lodLevel ?? "original"}`,
+    };
+    const object = isZipModelPackage(result)
+        ? await loadZipModelPackage(result, loadOptions)
+        : await new ModelLoader().load(result.url, loadOptions);
     if (!object) {
         throw new Error(`Failed to load model ${resolvedModelId}`);
     }

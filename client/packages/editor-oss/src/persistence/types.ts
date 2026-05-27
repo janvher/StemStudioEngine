@@ -67,6 +67,8 @@ export interface StoredAsset {
     name: string;
     /** MIME type of the payload, when known. */
     contentType?: string;
+    /** Revision metadata needed to restore packaged assets. */
+    metadata?: Record<string, unknown>;
     /** Base64-encoded payload bytes (no `data:` prefix). */
     data: string;
     /**

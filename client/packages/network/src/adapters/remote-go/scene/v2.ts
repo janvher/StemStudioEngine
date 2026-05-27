@@ -116,6 +116,7 @@ async function loadSceneFromProjectStore(sceneId: string): Promise<DomainSceneDt
                 format: a.format,
                 name: a.name,
                 contentType: a.contentType,
+                metadata: a.metadata,
                 dataUrl: `data:${mime};base64,${a.data}`,
                 thumbnailDataUrl,
                 projectId: sceneId,
@@ -249,7 +250,7 @@ export const createSceneAsset = async ({
         // ProjectStore is self-contained; asset records are synthetic so
         // the rest of the editor's bookkeeping (assetAdded events, scene
         // userData asset refs) still has a stable id to reference.
-        const synthetic = synthOSSAsset({type, format, name, description, data, sceneId, contentType});
+        const synthetic = synthOSSAsset({type, format, name, description, data, sceneId, contentType, metadata: options.metadata});
         global.app?.call("assetAdded", null, {assetId: synthetic.id});
         return synthetic;
     }
@@ -277,7 +278,7 @@ export const createSceneAsset = async ({
     return response.data;
 };
 
-function synthOSSAsset(params: {type: DomainAssetType; format: string; name: string; description?: string; data?: string; sceneId?: string; contentType?: string}): Asset {
+function synthOSSAsset(params: {type: DomainAssetType; format: string; name: string; description?: string; data?: string; sceneId?: string; contentType?: string; metadata?: Record<string, unknown>}): Asset {
     const id = `oss-asset-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const revisionId = `oss-rev-${id}`;
     const now = new Date().toISOString();
@@ -285,7 +286,7 @@ function synthOSSAsset(params: {type: DomainAssetType; format: string; name: str
     if (typeof params.data === "string" && params.data.length > 0) {
         // params.data is already base64-encoded — wrap it as a data: URL so
         // downstream consumers that fetch revision.dataUrl can decode it.
-        const mime = params.format === "json" ? "application/json" : "application/octet-stream";
+        const mime = params.format === "json" ? "application/json" : (params.contentType || "application/octet-stream");
         dataUrl = `data:${mime};base64,${params.data}`;
     }
     registerOssAsset({
@@ -295,6 +296,7 @@ function synthOSSAsset(params: {type: DomainAssetType; format: string; name: str
         format: params.format,
         name: params.name,
         contentType: params.contentType,
+        metadata: params.metadata,
         dataUrl,
         projectId: params.sceneId,
     });

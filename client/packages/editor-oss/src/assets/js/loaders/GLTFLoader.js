@@ -14,6 +14,7 @@ import global from "../../../global";
 import { DetectDevice } from '../../../utils/DetectDevice';
 import { loadGLTFWithAssetResolution } from "../../../utils/LoaderWrappers";
 import MeshUtils from "../../../utils/MeshUtils";
+import GLTFLoaderExtended from "./GLTFLoaderExtended";
 
 const GEOMETRY_CACHE = new Map();
 const TEXTURE_CACHE = new Map();
@@ -413,7 +414,33 @@ class _GLTFLoader extends BaseLoader {
         }
     }
 
-    async load(url) {
+    async load(url, options = {}) {
+        const fileBlobMap = options?.fileBlobMap;
+        if (fileBlobMap && typeof fileBlobMap.size === "number" && fileBlobMap.size > 0) {
+            try {
+                const obj3d = await new GLTFLoaderExtended().load(
+                    url,
+                    options.rootPath || "",
+                    fileBlobMap,
+                    options.atlasData,
+                    options.textureOverrides,
+                );
+
+                applyGeometryCache(url, obj3d);
+                applyTextureCache(url, obj3d);
+
+                if (DetectDevice.isMobile()) {
+                    dropMipmapsInObject(obj3d, MAX_MOBILE_MIPMAP_RESOLUTION);
+                }
+
+                return obj3d;
+            } catch (error) {
+                console.error("Failed to load GLTF:", error);
+                console.error("GLTF URL:", url);
+                return null;
+            }
+        }
+
         try {
             const resolvedUrl = await loadGLTFWithAssetResolution(url);
 

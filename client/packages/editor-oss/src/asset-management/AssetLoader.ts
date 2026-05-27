@@ -40,10 +40,12 @@ export interface ModelDataUrlResult {
     url: string;
     /** The format of the model (e.g., 'glb', 'gltf') */
     format: string;
+    /** MIME type of the returned payload, when known */
+    contentType?: string;
     /** The LOD level used, if a derivative was selected */
     lodLevel?: number;
     /** Immutable revision metadata when the original revision payload is used */
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
 }
 
 export interface ImageDataUrlResult {
@@ -58,6 +60,7 @@ export interface CachedAsset {
     id: string;
     revisionId?: string;
     format: string;
+    contentType?: string;
     derivatives?: AssetDerivative[];
     /** Signed data URL for the revision payload. */
     dataUrl?: string;
@@ -630,6 +633,7 @@ export class AssetLoader {
             return {
                 url: derivative.dataUrl,
                 format: derivative.format,
+                contentType: derivative.contentType,
                 lodLevel: derivative.lodLevel,
             };
         }
@@ -648,7 +652,8 @@ export class AssetLoader {
 
         return {
             url: revision.dataUrl,
-            format: asset.format,
+            format: revision.format || asset.format,
+            contentType: revision.contentType || asset.contentType,
             metadata: revision.metadata ?? undefined,
         };
     }
