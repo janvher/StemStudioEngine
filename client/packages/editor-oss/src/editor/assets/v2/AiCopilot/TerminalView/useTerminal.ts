@@ -45,6 +45,14 @@ const CONTENT_TYPE_BY_EXT: Record<string, string> = {
 
 const getEngineRuntime = (): EngineRuntime | undefined => global.app as EngineRuntime | undefined;
 
+type SceneAuditObject = {
+    visible?: boolean;
+    parent?: SceneAuditObject | null;
+    name?: string;
+    type?: string;
+    uuid?: string;
+};
+
 /**
  * Derive a usable filename from a URL, preserving the extension when present.
  * @param url
@@ -639,17 +647,117 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
     useEffect(() => {
         if (!IS_OSS) return;
         const w = window as unknown as {
-            __stemGetScene?: () => {sceneName: string | null; objectNames: string[]};
+            __stemGetScene?: () => {
+                sceneName: string | null;
+                mode: string | null;
+                isPlaying: boolean;
+                assetCount: number;
+                objectNames: string[];
+                visibleObjectNames: string[];
+                renderableNames: string[];
+                visibleRenderableNames: string[];
+                objectCount: number;
+                visibleObjectCount: number;
+                renderableCount: number;
+                visibleRenderableCount: number;
+                meshCount: number;
+                visibleMeshCount: number;
+            };
         };
         w.__stemGetScene = () => {
             const app = getEngineRuntime();
             const scene = app?.editor?.scene;
-            if (!scene) return {sceneName: null, objectNames: []};
+            if (!scene) {
+                return {
+                    sceneName: null,
+                    mode: null,
+                    isPlaying: false,
+                    assetCount: 0,
+                    objectNames: [],
+                    visibleObjectNames: [],
+                    renderableNames: [],
+                    visibleRenderableNames: [],
+                    objectCount: 0,
+                    visibleObjectCount: 0,
+                    renderableCount: 0,
+                    visibleRenderableCount: 0,
+                    meshCount: 0,
+                    visibleMeshCount: 0,
+                };
+            }
+
+            const isVisibleInHierarchy = (object: SceneAuditObject) => {
+                let current: SceneAuditObject | null | undefined = object;
+                while (current) {
+                    if (current.visible === false) return false;
+                    current = current.parent;
+                }
+                return true;
+            };
+
+            const getObjectLabel = (object: SceneAuditObject) =>
+                object.name || `${object.type || "Object3D"}:${object.uuid || "unknown"}`;
+
             const names: string[] = [];
-            scene.traverse((o: {name?: string}) => {
-                if (o?.name) names.push(o.name);
+            const visibleObjectNames: string[] = [];
+            const renderableNames: string[] = [];
+            const visibleRenderableNames: string[] = [];
+            let objectCount = 0;
+            let visibleObjectCount = 0;
+            let renderableCount = 0;
+            let visibleRenderableCount = 0;
+            let meshCount = 0;
+            let visibleMeshCount = 0;
+
+            scene.traverse(object => {
+                objectCount += 1;
+                if (object.name) names.push(object.name);
+
+                const visible = isVisibleInHierarchy(object);
+                if (visible) {
+                    visibleObjectCount += 1;
+                    visibleObjectNames.push(getObjectLabel(object));
+                }
+
+                const renderable =
+                    object.type === "Mesh" ||
+                    object.type === "SkinnedMesh" ||
+                    object.type === "InstancedMesh" ||
+                    object.type === "Sprite" ||
+                    object.type === "Line" ||
+                    object.type === "LineSegments" ||
+                    object.type === "Points";
+
+                if (object.type === "Mesh" || object.type === "SkinnedMesh" || object.type === "InstancedMesh") {
+                    meshCount += 1;
+                    if (visible) visibleMeshCount += 1;
+                }
+
+                if (renderable) {
+                    renderableCount += 1;
+                    renderableNames.push(getObjectLabel(object));
+                    if (visible) {
+                        visibleRenderableCount += 1;
+                        visibleRenderableNames.push(getObjectLabel(object));
+                    }
+                }
             });
-            return {sceneName: app?.editor?.sceneName ?? null, objectNames: names};
+            return {
+                sceneName: app?.editor?.sceneName ?? null,
+                mode: app?.mode ?? null,
+                isPlaying: !!app?.isPlaying,
+                assetCount: app?.editor?.assetsCount ?? 0,
+                objectNames: names,
+                visibleObjectNames,
+                renderableNames,
+                visibleRenderableNames,
+                objectCount,
+                visibleObjectCount,
+                renderableCount,
+                visibleRenderableCount,
+                meshCount,
+                visibleMeshCount,
+            };
         };
         return () => {
             delete (window as unknown as {__stemGetScene?: unknown}).__stemGetScene;

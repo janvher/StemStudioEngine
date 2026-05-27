@@ -36,6 +36,7 @@
     "test": "BUILD_MODE=oss bunx --bun vitest run",
     "test:e2e": "node scripts/playwright/oss-smoke.mjs",
     "test:e2e:import": "node scripts/playwright/oss-import-3dchess.mjs",
+    "test:e2e:stemscript-play-remix": "node scripts/playwright/oss-stemscript-play-remix-assets.mjs",
     "test:e2e:site": "node scripts/playwright/site-deploy-routing.mjs && node scripts/playwright/site-landing.mjs && node scripts/playwright/site-docs.mjs && node scripts/playwright/site-nav.mjs && node scripts/playwright/site-playground.mjs",
     "test:e2e:site:routing": "node scripts/playwright/site-deploy-routing.mjs",
     "deploy": "./scripts/deploy.sh",

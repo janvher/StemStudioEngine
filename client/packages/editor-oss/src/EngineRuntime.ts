@@ -50,6 +50,7 @@ import SimpleMultiplayerCollaborativeClient from "./multiplayer/worker/SimpleMul
 import PackageManager from "./package/PackageManager";
 import {IPhysics, PhysicsEngineType} from "./physics/common/types";
 import {preloadPhysics} from "./physics/preloadPhysics";
+import {GAME_GRAVITY_DEFAULT} from "./constants/game";
 import AiWorldControl from "@web-shared/player/component/AiWorldControl";
 import PlayerAudio from "@web-shared/player/component/PlayerAudio";
 import PlayerEvent from "@web-shared/player/component/PlayerEvent";
@@ -1041,7 +1042,7 @@ export class EngineRuntime extends AppRuntime implements RuntimeContext {
                 const {engine, gravity} = Converter.getPhysicsSettings(sceneData?.data);
                 preloadPhysics(
                     (engine as PhysicsEngineType | undefined) ?? PhysicsEngineType.Ammo,
-                    Number(gravity ?? 0),
+                    Number(gravity ?? GAME_GRAVITY_DEFAULT),
                 );
                 SceneLoadProfiler.end("physicsPreload");
             }
@@ -1674,7 +1675,7 @@ export class EngineRuntime extends AppRuntime implements RuntimeContext {
         // is stashed and will be adopted by `PhysicsProxy.start()`).
         const physicsEngine = this.scene.userData?.physics?.engine as PhysicsEngineType | undefined;
         const gravity =
-            this.scene.userData?.physics?.gravity ?? this.scene.userData?.game?.gravity ?? 0;
+            this.scene.userData?.physics?.gravity ?? this.scene.userData?.game?.gravity ?? GAME_GRAVITY_DEFAULT;
         preloadPhysics(physicsEngine ?? PhysicsEngineType.Ammo, Number(gravity));
 
         this.scene.traverse(obj => {
