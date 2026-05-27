@@ -39,6 +39,7 @@ import {OverviewActionBar} from "./OverviewActionBar";
 import {getPlaceholderThumbnail} from "./placeholderThumbnails";
 import {uploadSceneThumbnail} from "@stem/network/api/scene/thumbnail";
 import {ROUTES} from "@web-shared/routes";
+import {isPlaygroundMode} from "@web-shared/playgroundMode";
 import {useAuthorizationContext, useHomepageContext} from "@stem/editor-oss/context";
 import {getThumbnail} from "@stem/editor-oss/services";
 import {showToast} from "@stem/editor-oss/showToast";
@@ -95,6 +96,7 @@ export const GameOverview = () => {
     const titleInputRef = useRef<HTMLInputElement>(null);
     const thumbnailInputRef = useRef<HTMLInputElement>(null);
     const tagsEditorRef = useRef<HTMLDivElement>(null);
+    const isPlayground = isPlaygroundMode();
 
     useOnClickOutside(tagsEditorRef as React.RefObject<HTMLElement>, () => {
         if (isEditingTags) setIsEditingTags(false);
@@ -415,11 +417,15 @@ export const GameOverview = () => {
                     <InfoLabel>Developer:</InfoLabel>
                     <InfoValue>{author ? `@${author}` : "Stem Studio Community"}</InfoValue>
 
-                    <InfoLabel>Total Plays:</InfoLabel>
-                    <InfoValue>{formatMetricValue(scene.PlayCount)}</InfoValue>
+                    {!isPlayground && (
+                        <>
+                            <InfoLabel>Total Plays:</InfoLabel>
+                            <InfoValue>{formatMetricValue(scene.PlayCount)}</InfoValue>
 
-                    <InfoLabel>Remixes:</InfoLabel>
-                    <InfoValue>{formatMetricValue(scene.RemixCount)}</InfoValue>
+                            <InfoLabel>Remixes:</InfoLabel>
+                            <InfoValue>{formatMetricValue(scene.RemixCount)}</InfoValue>
+                        </>
+                    )}
 
                     <InfoLabel>Released:</InfoLabel>
                     <InfoValue>{formatReleaseDate(scene.UpdateTime)}</InfoValue>
@@ -489,11 +495,12 @@ export const GameOverview = () => {
                 )}
             </DescriptionSection>
 
-            {/* Remixes of this game (public only, sorted by play count desc). */}
-            <MoreRemixes
-                sceneId={scene.ID}
-                returnTo={returnTo}
-            />
+            {!isPlayground && (
+                <MoreRemixes
+                    sceneId={scene.ID}
+                    returnTo={returnTo}
+                />
+            )}
 
             {/* More Games by User. When the viewer is the owner we pass the
                 in-memory lists from HomepageContext — which include private /

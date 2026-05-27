@@ -7,6 +7,7 @@ import {forkScene} from "@stem/network/api/scene/v2";
 import {useAuthorizationContext} from "@stem/editor-oss/context";
 import {IS_OSS} from "@stem/editor-oss/mode/buildMode";
 import {ROUTES} from "@web-shared/routes";
+import {isPlaygroundMode} from "@web-shared/playgroundMode";
 import {getThumbnail} from "@stem/editor-oss/services";
 import {showToast} from "@stem/editor-oss/showToast";
 import closedEyeIcon from "../../../../../ui/tree/v2/icons/closed-eye.svg";
@@ -91,6 +92,7 @@ export const SceneListItem = React.memo(
         const navigate = useNavigate();
         const {dbUser, isAuthorized} = useAuthorizationContext();
         const [isForking, setIsForking] = useState(false);
+        const isPlayground = isPlaygroundMode();
 
         // Resolve the route from the explicit prop when supplied (the
         // dashboard + discover grids both pass it), otherwise fall back
@@ -160,6 +162,8 @@ export const SceneListItem = React.memo(
         // directly editable, so the cloud-only "fork to own copy"
         // affordance doesn't apply.
         const showRemixButton = !IS_OSS && !isDashboardRoute;
+        const showEngagementStats = !isPlayground;
+        const showPlayButton = !isPlayground;
 
         const handleFork = async (e: React.MouseEvent) => {
             e.stopPropagation();
@@ -292,28 +296,30 @@ export const SceneListItem = React.memo(
                                             By: <strong>{authorDisplay}</strong>
                                         </CardMetaAuthor>
                                     </CardMetaText>
-                                    <CardMetaStats>
-                                        <CardMetaStatItem aria-label="likes">
-                                            <img src={heartOutlineIcon} alt="" />
-                                            <span>{formatMetricValue(likeCount)}</span>
-                                        </CardMetaStatItem>
-                                        {showVisibilityState && visibilityIcon ? (
-                                            <CardMetaStatItem
-                                                aria-label={item.IsPublic ? "public" : "private"}
-                                            >
-                                                <img
-                                                    src={visibilityIcon}
-                                                    alt=""
-                                                />
-                                                <span>{formatMetricValue(shareCount)}</span>
+                                    {showEngagementStats && (
+                                        <CardMetaStats>
+                                            <CardMetaStatItem aria-label="likes">
+                                                <img src={heartOutlineIcon} alt="" />
+                                                <span>{formatMetricValue(likeCount)}</span>
                                             </CardMetaStatItem>
-                                        ) : (
-                                            <CardMetaStatItem aria-label="views">
-                                                <img src={openEyeIcon} alt="" />
-                                                <span>{formatMetricValue(shareCount)}</span>
-                                            </CardMetaStatItem>
-                                        )}
-                                    </CardMetaStats>
+                                            {showVisibilityState && visibilityIcon ? (
+                                                <CardMetaStatItem
+                                                    aria-label={item.IsPublic ? "public" : "private"}
+                                                >
+                                                    <img
+                                                        src={visibilityIcon}
+                                                        alt=""
+                                                    />
+                                                    <span>{formatMetricValue(shareCount)}</span>
+                                                </CardMetaStatItem>
+                                            ) : (
+                                                <CardMetaStatItem aria-label="views">
+                                                    <img src={openEyeIcon} alt="" />
+                                                    <span>{formatMetricValue(shareCount)}</span>
+                                                </CardMetaStatItem>
+                                            )}
+                                        </CardMetaStats>
+                                    )}
                                 </CardMetaBlock>
                             </CardThumbBottomOverlay>
                             {/* The "More options" button opens the /game/:id
@@ -369,15 +375,17 @@ export const SceneListItem = React.memo(
                                     <CardActionCount>{formatMetricValue(remixCount)}</CardActionCount>
                                 </CardActionForkButton>
                             )}
-                            <CardActionPlayButton
-                                onClick={handlePlay}
-                                aria-label="Play this game"
-                                data-testid="game-card-play"
-                            >
-                                <img src={playStatIcon} alt="" />
-                                <CardActionLabel>Play</CardActionLabel>
-                                <CardActionCount>{formatMetricValue(playCount)}</CardActionCount>
-                            </CardActionPlayButton>
+                            {showPlayButton && (
+                                <CardActionPlayButton
+                                    onClick={handlePlay}
+                                    aria-label="Play this game"
+                                    data-testid="game-card-play"
+                                >
+                                    <img src={playStatIcon} alt="" />
+                                    <CardActionLabel>Play</CardActionLabel>
+                                    <CardActionCount>{formatMetricValue(playCount)}</CardActionCount>
+                                </CardActionPlayButton>
+                            )}
                         </CardActionRow>
                     </CardInfoSection>
                 )}

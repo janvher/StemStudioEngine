@@ -13,6 +13,7 @@ import {
     Stats,
     StatsItem,
 } from "./SingleTemplate.style";
+import {isPlaygroundMode} from "@web-shared/playgroundMode";
 import {getThumbnail} from "@stem/editor-oss/services";
 import {StyledButton} from "../../common/StyledButton";
 import {TagsList} from "../../common/Tags/TagsList/TagsList";
@@ -43,6 +44,7 @@ interface Props {
 const SingleTemplateComponent = ({onClick, onDoubleClick, selectedItemId, item}: Props) => {
     const thumbnail = getThumbnail(item.Thumbnail || "null");
     const isSelected = selectedItemId === item.ID;
+    const isPlayground = isPlaygroundMode();
 
     const debouncedOnClick = useCallback(
         debounce((id: string) => {
@@ -73,24 +75,26 @@ const SingleTemplateComponent = ({onClick, onDoubleClick, selectedItemId, item}:
                 data-label={item.IsSandbox ? "Sandbox" : "Game"}
                 $noLabel
             />
-            <Stats>
-                {!TEMPLATES.find(el => el.ID === item.ID) && (
+            {!isPlayground && (
+                <Stats>
+                    {!TEMPLATES.find(el => el.ID === item.ID) && (
+                        <StatsItem>
+                            <img
+                                src={playIcon}
+                                alt="play count"
+                            />{" "}
+                            {item.PlayCount ?? 0}
+                        </StatsItem>
+                    )}
                     <StatsItem>
                         <img
-                            src={playIcon}
-                            alt="play count"
+                            src={remixIcon}
+                            alt="remix count"
                         />{" "}
-                        {item.PlayCount ?? 0}
+                        {item.RemixCount ?? 0}
                     </StatsItem>
-                )}
-                <StatsItem>
-                    <img
-                        src={remixIcon}
-                        alt="remix count"
-                    />{" "}
-                    {item.RemixCount ?? 0}
-                </StatsItem>
-            </Stats>
+                </Stats>
+            )}
             <Content>
                 <SceneName className="sceneName">{item.Name}</SceneName>
                 <TagsList

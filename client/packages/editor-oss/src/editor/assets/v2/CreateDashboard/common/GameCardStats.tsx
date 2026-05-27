@@ -5,6 +5,7 @@ import {ClipLoader} from "react-spinners";
 import {CardStat, CardStatsRow} from "./GameCard.style";
 import {addLikedGame} from "@stem/network/api/updateUser";
 import {ROUTES} from "@web-shared/routes";
+import {isPlaygroundMode} from "@web-shared/playgroundMode";
 import {useAuthorizationContext} from "@stem/editor-oss/context";
 import {HeartIcon} from "../../../../../v2/pages/Home/PlayPage/HeartIcon";
 import {FileData} from "../../types/file";
@@ -30,6 +31,7 @@ export const formatMetricValue = (value?: number) => {
 export const GameCardStats = ({scene}: {scene: FileData}) => {
     const {setDbUser, handleGetLikedGames, likedGamesIds} = useAuthorizationContext();
     const navigate = useNavigate();
+    const isPlayground = isPlaygroundMode();
 
     const [localLikes, setLocalLikes] = useState(scene.Likes ?? 0);
     const [userLikedGame, setUserLikedGame] = useState(false);
@@ -61,6 +63,10 @@ export const GameCardStats = ({scene}: {scene: FileData}) => {
     const remixCount = scene.RemixCount ?? 0;
     const shareCount = scene.ShareCount ?? 0;
     const isNonRemixable = scene.IsCloneable === false;
+
+    if (isPlayground) {
+        return null;
+    }
 
     return (
         <CardStatsRow>

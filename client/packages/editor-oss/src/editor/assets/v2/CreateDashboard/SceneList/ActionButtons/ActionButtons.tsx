@@ -4,6 +4,7 @@ import React, {useEffect, useState} from "react";
 
 import {fetchRemixesOfScene} from "@stem/network/api/scene";
 import {forkScene} from "@stem/network/api/scene/v2";
+import {isPlaygroundMode} from "@web-shared/playgroundMode";
 import {useAuthorizationContext} from "@stem/editor-oss/context";
 import global from "@stem/editor-oss/global";
 import {showToast} from "@stem/editor-oss/showToast";
@@ -65,6 +66,7 @@ export const ActionButtons = ({
     const [buttonIsLoading, setButtonIsLoading] = useState<ButtonType[]>([]);
     const [isRightClickMenuOpen, setIsRightClickMenuOpen] = useState(false);
     const [menuPosition, setMenuPosition] = useState<{x: number; y: number} | null>(null);
+    const isPlayground = isPlaygroundMode();
     const handleRightClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault();
         event.stopPropagation();
@@ -313,7 +315,7 @@ export const ActionButtons = ({
                         Remix
                     </Button>
                 )}
-                {scene.IsPublished && (
+                {scene.IsPublished && !isPlayground && (
                     <Button
                         style={{
                             background: "var(--theme-dialog-button-purple-green)",
@@ -327,7 +329,7 @@ export const ActionButtons = ({
                         Play
                     </Button>
                 )}
-                <ShareScene scene={scene} />
+                {!isPlayground && <ShareScene scene={scene} />}
             </FlexWrapper>
         </>
     );

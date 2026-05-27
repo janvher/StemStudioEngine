@@ -1,6 +1,7 @@
-import {useRef, useState} from "react";
+import {useEffect, useMemo, useRef, useState} from "react";
 import {useOnClickOutside} from "usehooks-ts";
 
+import {isPlaygroundMode} from "@web-shared/playgroundMode";
 import {ActiveFilterOption, FilterOption} from "./CommunityFilters.style";
 import filterIcon from "./filter-icon.svg";
 import {FilterButton, FiltersList} from "./Filters.style";
@@ -23,7 +24,20 @@ export const Filters = () => {
     const [filtersOpen, setFiltersOpen] = useState(false);
     const {setProjectsFilter, projectsFilter} = useHomepageContext();
     const ref = useRef<HTMLDivElement>(null);
+    const isPlayground = isPlaygroundMode();
+    const filterOptions = useMemo(
+        () => PROJECT_FILTER_OPTIONS.filter(option =>
+            !isPlayground || !["plays", "likes", "remixed", "shared_count"].includes(option.value),
+        ),
+        [isPlayground],
+    );
     useOnClickOutside(ref as React.RefObject<HTMLElement>, () => setFiltersOpen(false));
+
+    useEffect(() => {
+        if (!filterOptions.some(option => option.value === projectsFilter)) {
+            setProjectsFilter("date_modified");
+        }
+    }, [filterOptions, projectsFilter, setProjectsFilter]);
 
     return (
         <FilterButton
@@ -36,7 +50,7 @@ export const Filters = () => {
             />
             {filtersOpen && (
                 <FiltersList ref={ref}>
-                    {PROJECT_FILTER_OPTIONS.map(({label, value}) => {
+                    {filterOptions.map(({label, value}) => {
                         const isActive = projectsFilter === value;
                         const Component = isActive ? ActiveFilterOption : FilterOption;
 

@@ -1,6 +1,7 @@
 import {useRef, useState} from "react";
 import {useOnClickOutside} from "usehooks-ts";
 
+import {isPlaygroundMode} from "@web-shared/playgroundMode";
 import {ActiveFilterOption, FilterOption} from "./CommunityFilters.style";
 import filterIcon from "./filter-icon.svg";
 import {FilterButton, FiltersList} from "./Filters.style";
@@ -15,10 +16,15 @@ const COMMUNITY_FILTER_OPTIONS: {label: string; value: CommunityFilterType}[] = 
 ];
 
 export const CommunityFilters = () => {
+    const isPlayground = isPlaygroundMode();
     const [filtersOpen, setFiltersOpen] = useState(false);
     const {communityFilter, setCommunityFilter} = useHomepageContext();
     const ref = useRef<HTMLDivElement>(null);
     useOnClickOutside(ref as React.RefObject<HTMLElement>, () => setFiltersOpen(false));
+
+    if (isPlayground) {
+        return null;
+    }
 
     return (
         <FilterButton

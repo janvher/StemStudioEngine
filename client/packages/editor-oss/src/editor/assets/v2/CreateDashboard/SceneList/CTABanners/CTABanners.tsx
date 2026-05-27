@@ -1,5 +1,6 @@
 import {useMemo} from "react";
 
+import {isPlaygroundMode} from "@web-shared/playgroundMode";
 import {BannerCard, BannerOverlay, BannerStat, BannerTag, BannerTitle, BannersGrid} from "./CTABanners.style";
 import {ProgressiveImage} from "../../../common/ProgressiveImage/ProgressiveImage";
 import {getThumbnail} from "@stem/editor-oss/services";
@@ -18,6 +19,7 @@ type Props = {
 };
 
 export const CTABanners = ({communityGames, onGameClick}: Props) => {
+    const isPlayground = isPlaygroundMode();
     const mostPlayed = useMemo(
         () =>
             [...communityGames].sort((a, b) => (b.PlayCount ?? 0) - (a.PlayCount ?? 0))[0] ?? null,
@@ -30,7 +32,7 @@ export const CTABanners = ({communityGames, onGameClick}: Props) => {
         [communityGames],
     );
 
-    if (!mostPlayed && !mostRemixed) return null;
+    if (isPlayground || (!mostPlayed && !mostRemixed)) return null;
 
     return (
         <BannersGrid>

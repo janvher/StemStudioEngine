@@ -27,6 +27,7 @@ import {
 } from "./BaseGamePickerModal.style";
 import {extractKeywords} from "./templateMatching";
 import {getGamesByQuery} from "@stem/network/api/getGames";
+import {isPlaygroundMode} from "@web-shared/playgroundMode";
 import {getThumbnail} from "@stem/editor-oss/services";
 import {IBasicGameInterface} from "../../../../../v2/pages/types";
 import {useEscapeDismiss} from "../../common/hooks/useEscapeDismiss";
@@ -63,6 +64,7 @@ export const BaseGamePickerModal = ({
     const [suggestedGames, setSuggestedGames] = useState<IBasicGameInterface[]>([]);
     const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(true);
     const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+    const isPlayground = isPlaygroundMode();
 
     useOnClickOutside(containerRef as React.RefObject<HTMLElement>, onClose);
     useEscapeDismiss({onEscape: onClose});
@@ -145,10 +147,12 @@ export const BaseGamePickerModal = ({
                 <GameCardThumbnail $src={thumb} />
                 <GameCardInfo>
                     <GameCardTitle>{game.Name}</GameCardTitle>
-                    <GameCardStats>
-                        <span>{i18n.t("{{count}} plays", {count: formatCount(game.PlayCount)})}</span>
-                        <span>{i18n.t("{{count}} likes", {count: formatCount(game.Likes)})}</span>
-                    </GameCardStats>
+                    {!isPlayground && (
+                        <GameCardStats>
+                            <span>{i18n.t("{{count}} plays", {count: formatCount(game.PlayCount)})}</span>
+                            <span>{i18n.t("{{count}} likes", {count: formatCount(game.Likes)})}</span>
+                        </GameCardStats>
+                    )}
                 </GameCardInfo>
             </GameCard>
         );

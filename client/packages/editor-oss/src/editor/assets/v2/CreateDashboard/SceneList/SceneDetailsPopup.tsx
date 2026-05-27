@@ -14,6 +14,7 @@ import {
     StatsItem,
 } from "./SceneDetailsPopup.style";
 import {ShareScene} from "./ShareScene";
+import {isPlaygroundMode} from "@web-shared/playgroundMode";
 import i18n from "@stem/editor-oss/i18n/config";
 import {getThumbnail} from "@stem/editor-oss/services";
 import {IEditorUser} from "../../../../../v2/pages/types";
@@ -48,6 +49,7 @@ export const SceneDetailsPopup = (props: SceneItemProps) => {
     const {scene, isCommunityGame, gameOwner} = props;
     const isMyGame = !isCommunityGame;
     const thumbnail = getThumbnail(scene.Thumbnail);
+    const isPlayground = isPlaygroundMode();
     useEscapeDismiss({onEscape: () => props.setIsMenuOpen(false)});
 
     return (
@@ -70,22 +72,24 @@ export const SceneDetailsPopup = (props: SceneItemProps) => {
                         alt={scene.Name}
                     />
                 </SceneImage>
-                <Stats>
-                    <StatsItem>
-                        <img
-                            src={playIcon}
-                            alt={i18n.t("play count")}
-                        />{" "}
-                        {scene.PlayCount ?? 0}
-                    </StatsItem>
-                    <StatsItem>
-                        <img
-                            src={remixIcon}
-                            alt={i18n.t("remix count")}
-                        />{" "}
-                        {scene.RemixCount ?? 0}
-                    </StatsItem>
-                </Stats>
+                {!isPlayground && (
+                    <Stats>
+                        <StatsItem>
+                            <img
+                                src={playIcon}
+                                alt={i18n.t("play count")}
+                            />{" "}
+                            {scene.PlayCount ?? 0}
+                        </StatsItem>
+                        <StatsItem>
+                            <img
+                                src={remixIcon}
+                                alt={i18n.t("remix count")}
+                            />{" "}
+                            {scene.RemixCount ?? 0}
+                        </StatsItem>
+                    </Stats>
+                )}
                 <Content>
                     {isMyGame ? (
                         <SceneInfoGrid>

@@ -11,6 +11,7 @@ import {forkScene, getScene, updateScene} from "@stem/network/api/scene/v2";
 import {useSetTemplateIds, useTemplateIds} from "@stem/network/api/templates/hooks";
 import {addLikedGame} from "@stem/network/api/updateUser";
 import {ROUTES} from "@web-shared/routes";
+import {isPlaygroundMode} from "@web-shared/playgroundMode";
 import {useAppGlobalContext, useAuthorizationContext, useHomepageContext} from "@stem/editor-oss/context";
 import {IS_OSS} from "@stem/editor-oss/mode/buildMode";
 import global from "@stem/editor-oss/global";
@@ -89,6 +90,7 @@ export const OverviewActionBar = ({scene, canEdit, isOwner, onSceneUpdate}: Over
     const [isOffScreen, setIsOffScreen] = useState(false);
     const barRef = useRef<HTMLDivElement>(null);
     const [fixedBarStyle, setFixedBarStyle] = useState<React.CSSProperties>({});
+    const isPlayground = isPlaygroundMode();
     const isOwnerOrAdmin = isOwner || isAdmin;
     const isTemplate = templateIds.includes(scene.ID);
     const canMarkAsTemplate = isPublished && isPublic && scene.IsCloneable === true;
@@ -468,7 +470,7 @@ export const OverviewActionBar = ({scene, canEdit, isOwner, onSceneUpdate}: Over
                     {canEdit ? "Edit" : "Inspect"}
                 </ActionButton>
             )}
-            {isPlayable && (
+            {isPlayable && !isPlayground && (
                 <ActionButton
                     $variant="primary"
                     customIcon={playIcon}
@@ -582,22 +584,26 @@ export const OverviewActionBar = ({scene, canEdit, isOwner, onSceneUpdate}: Over
                     )}
                 </ActionButton>
             )}
-            <ActionButton
-                $variant="secondary"
-                customIcon={heartOutlineIcon}
-                onClick={e => void handleLike(e)}
-                disabled={loadingAction === "like"}
-            >
-                {loadingAction === "like" ? (
-                    <ClipLoader loading size={14} color="#0284c7" />
-                ) : (
-                    scene.Likes ?? 0
-                )}
-            </ActionButton>
-            <ActionButton $variant="secondary" className="shareActionButton" onClick={handleShare}>
-                <RxShare2 size={16} aria-hidden="true" focusable="false" />
-                {scene.ShareCount ?? 0}
-            </ActionButton>
+            {!isPlayground && (
+                <>
+                    <ActionButton
+                        $variant="secondary"
+                        customIcon={heartOutlineIcon}
+                        onClick={e => void handleLike(e)}
+                        disabled={loadingAction === "like"}
+                    >
+                        {loadingAction === "like" ? (
+                            <ClipLoader loading size={14} color="#0284c7" />
+                        ) : (
+                            scene.Likes ?? 0
+                        )}
+                    </ActionButton>
+                    <ActionButton $variant="secondary" className="shareActionButton" onClick={handleShare}>
+                        <RxShare2 size={16} aria-hidden="true" focusable="false" />
+                        {scene.ShareCount ?? 0}
+                    </ActionButton>
+                </>
+            )}
             {isAdmin && !isOwner && (
                 <AdminBadge>
                     <img src={adminBadgeIcon} alt="admin" />
