@@ -33,6 +33,7 @@
 
 import {reversePainterSortStable} from "@ni2khanna/uikit";
 import {forwardHtmlEvents} from "@pmndrs/pointer-events";
+import {Vector2} from "three";
 import type {Camera, OrthographicCamera, PerspectiveCamera, Scene} from "three";
 
 // UIKit Component interface (minimal typing for what we need)
@@ -69,6 +70,123 @@ let gameRef: GameManagerLike | null = null;
 let initRefCount = 0;
 const activeRoots = new Set<UIKitComponent>();
 let hasConfiguredTransparentSort = false;
+
+// Diagnostic logging for UIKit layout/sizing issues. Bounded so a stuck
+// scene doesn't spam the console forever.
+const UIKIT_DIAG = true;
+const diagFramesRemaining = new Map<UIKitComponent, number>();
+const DIAG_MAX_FRAMES = 6;
+
+const diagSizeVec = new Vector2();
+
+interface SignalLike<T> {
+    value: T;
+    peek?: () => T;
+}
+interface FullscreenLike {
+    renderer?: {getSize?: (target: Vector2) => Vector2; domElement?: HTMLCanvasElement};
+    parent?: unknown;
+    sizeX?: SignalLike<number>;
+    sizeY?: SignalLike<number>;
+    pixelSize?: SignalLike<number>;
+    properties?: {peek?: () => Record<string, unknown>};
+}
+interface YogaNodeLike {
+    getComputedWidth?: () => number;
+    getComputedHeight?: () => number;
+    getComputedLeft?: () => number;
+    getComputedTop?: () => number;
+}
+interface UIKitInternal {
+    node?: {node?: YogaNodeLike; size?: SignalLike<unknown>};
+    children?: UIKitInternal[];
+    constructor?: {name?: string};
+    properties?: {peek?: () => Record<string, unknown>};
+}
+
+function snapshotComponent(component: UIKitComponent, depth: number, maxDepth: number): unknown {
+    const c = component as unknown as UIKitInternal;
+    const yoga = c.node?.node;
+    const props = c.properties?.peek?.() ?? {};
+    const out: Record<string, unknown> = {
+        type: c.constructor?.name,
+        width: props.width,
+        height: props.height,
+        text: (props as {text?: string}).text,
+        computed: yoga
+            ? {
+                  w: yoga.getComputedWidth?.(),
+                  h: yoga.getComputedHeight?.(),
+                  left: yoga.getComputedLeft?.(),
+                  top: yoga.getComputedTop?.(),
+              }
+            : undefined,
+    };
+    if (depth < maxDepth && Array.isArray(c.children) && c.children.length > 0) {
+        out.children = c.children
+            .slice(0, 4)
+            .map(ch => snapshotComponent(ch as unknown as UIKitComponent, depth + 1, maxDepth));
+        if (c.children.length > 4) {
+            (out.children as unknown[]).push({truncated: c.children.length - 4});
+        }
+    }
+    return out;
+}
+
+function logRootDiag(label: string, component: UIKitComponent): void {
+    if (!UIKIT_DIAG) return;
+    const fs = component as unknown as FullscreenLike;
+    const renderer = fs.renderer;
+    let size: {x: number; y: number} | undefined;
+    try {
+        if (renderer?.getSize) {
+            const result = renderer.getSize(diagSizeVec);
+            size = {x: result.x, y: result.y};
+        }
+    } catch (err) {
+        size = undefined;
+        console.warn("[UIKitDiag] renderer.getSize threw", err);
+    }
+    const canvas = renderer?.domElement;
+    const parent = fs.parent as
+        | undefined
+        | {
+              isPerspectiveCamera?: boolean;
+              isOrthographicCamera?: boolean;
+              fov?: number;
+              near?: number;
+              far?: number;
+              aspect?: number;
+              zoom?: number;
+              parent?: unknown;
+          };
+    const fullscreenProps = fs.properties?.peek?.() ?? {};
+    console.warn(`[UIKitDiag] ${label}`, {
+        rendererCanvasPixels: size ? {x: size.x, y: size.y} : null,
+        canvasCSS: canvas ? {w: canvas.clientWidth, h: canvas.clientHeight, width: canvas.width, height: canvas.height} : null,
+        parentCamera: parent
+            ? {
+                  isPerspective: !!parent.isPerspectiveCamera,
+                  isOrtho: !!parent.isOrthographicCamera,
+                  fov: parent.fov,
+                  near: parent.near,
+                  aspect: parent.aspect,
+                  zoom: parent.zoom,
+                  hasParent: !!parent.parent,
+              }
+            : "NO_PARENT_CAMERA",
+        fullscreenSignals: {
+            sizeX: fs.sizeX?.value ?? fs.sizeX?.peek?.(),
+            sizeY: fs.sizeY?.value ?? fs.sizeY?.peek?.(),
+            pixelSize: fs.pixelSize?.value ?? fs.pixelSize?.peek?.(),
+        },
+        fullscreenProps: {
+            pixelSize: (fullscreenProps as {pixelSize?: unknown}).pixelSize,
+            distanceToCamera: (fullscreenProps as {distanceToCamera?: unknown}).distanceToCamera,
+        },
+        tree: snapshotComponent(component, 0, 3),
+    });
+}
 
 /**
  * Ensures UIKit transparent objects use stable painter sorting.
@@ -152,8 +270,11 @@ export function registerRoot(component: UIKitComponent): void {
     // update on a stable root is harmless; the regular `update()` call
     // in the per-frame `UIKitPointerEvents.update` continues to handle
     // subsequent dimension changes.
+    logRootDiag("registerRoot.before-warmup", component);
+    diagFramesRemaining.set(component, DIAG_MAX_FRAMES);
     try {
         component.update(0);
+        logRootDiag("registerRoot.after-warmup", component);
     } catch (err) {
         // Fullscreen.update throws if the component isn't parented to a
         // camera yet. Helpers attach BEFORE calling registerRoot, so this
@@ -176,6 +297,7 @@ export function unregisterRoot(component: UIKitComponent): void {
     }
 
     activeRoots.delete(component);
+    diagFramesRemaining.delete(component);
 
     // Clean up pointer events if no roots remain
     if (activeRoots.size === 0) {
@@ -203,7 +325,18 @@ export function update(deltaTime: number = 0): void {
 
     // Update all UIKit roots
     for (const root of activeRoots) {
+        const framesLeft = diagFramesRemaining.get(root);
+        const wantLog = UIKIT_DIAG && framesLeft !== undefined && framesLeft > 0;
+        if (wantLog) {
+            logRootDiag(`update.before-frame${DIAG_MAX_FRAMES - framesLeft + 1}`, root);
+        }
         root.update(deltaTime);
+        if (wantLog) {
+            logRootDiag(`update.after-frame${DIAG_MAX_FRAMES - framesLeft + 1}`, root);
+            const next = framesLeft - 1;
+            if (next <= 0) diagFramesRemaining.delete(root);
+            else diagFramesRemaining.set(root, next);
+        }
     }
 }
 

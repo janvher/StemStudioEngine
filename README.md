@@ -111,8 +111,10 @@ WebGL2 is required. WebGPU support is experimental and opt-in.
 |  [<img src="https://github.com/papiguy.png" width="100"><br><sub><b>papiguy</b></sub>](https://github.com/papiguy)   | [<img src="https://github.com/mvromanov.png" width="100"><br><sub><b>mvromanov</b></sub>](https://github.com/mvromanov) | [<img src="https://github.com/fayd404.png" width="100"><br><sub><b>fayd404</b></sub>](https://github.com/fayd404) | [<img src="https://github.com/ikerr.png" width="100"><br><sub><b>ikerr</b></sub>](https://github.com/ikerr) |
 |:--------------------------------------------------------------------------------------------------------------------:| :---: | :---: | :---: |
 |                                                  CTO & Venture Lead                                                  | Head of Engineering | Head of Product | Platform & Physics |
-| [<img src="https://github.com/querielo.png" width="100"><br><sub><b>querielo</b></sub>](https://github.com/querielo) | [<img src="https://github.com/AndreiRudenko.png" width="100"><br><sub><b>AndreiRudenko</b></sub>](https://github.com/AndreiRudenko) | | |
-|                                                   Three.js Wizard                                                    | Games | | |
+| [<img src="https://github.com/querielo.png" width="100"><br><sub><b>querielo</b></sub>](https://github.com/querielo) | [<img src="https://github.com/AndreiRudenko.png" width="100"><br><sub><b>AndreiRudenko</b></sub>](https://github.com/AndreiRudenko) | [<img src="https://github.com/gajendra906.png" width="100"><br><sub><b>gajendra906</b></sub>](https://github.com/gajendra906) | [<img src="https://github.com/nafeezable.png" width="100"><br><sub><b>nafeezable</b></sub>](https://github.com/nafeezable) |
+|                                                   Three.js Wizard                                                    | Games | QA | Community |
+| [<img src="https://github.com/JNicoSD.png" width="100"><br><sub><b>JNicoSD</b></sub>](https://github.com/JNicoSD) | | | |
+| Game Dev | | | |
 
 ## Contributing
 

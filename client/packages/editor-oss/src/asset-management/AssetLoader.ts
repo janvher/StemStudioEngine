@@ -825,8 +825,21 @@ export class AssetLoader {
             texture.anisotropy = settings.rendering.textureAnisotropy;
         } catch { /* use default */ }
 
-        // Cache and return
+        // Cache and return. Auto-evict on dispose so that the next
+        // `createTexture(ref)` after a play→edit teardown (which calls
+        // `MeshUtils.dispose` on every mesh, which in turn disposes every
+        // material's texture slot) creates a fresh Texture instead of
+        // handing back the now-dead one. Without this, repeated play/stop
+        // cycles progressively replace live textures with disposed
+        // references and meshes render untextured/blank.
         this.textureCache.set(key, texture);
+        const onDispose = () => {
+            texture.removeEventListener("dispose", onDispose);
+            if (this.textureCache.get(key) === texture) {
+                this.textureCache.delete(key);
+            }
+        };
+        texture.addEventListener("dispose", onDispose);
         return texture;
     }
 
@@ -844,11 +857,13 @@ export class AssetLoader {
         // these to persist between scenes, tabs, etc., because they are
         // lightweight and greatly improve asset caching.
 
-        // Dispose cached textures
-        for (const texture of this.textureCache.values()) {
+        // Snapshot before disposing — each texture's dispose listener
+        // mutates the cache, so iterating it live would skip entries.
+        const cachedTextures = Array.from(this.textureCache.values());
+        this.textureCache.clear();
+        for (const texture of cachedTextures) {
             texture.dispose();
         }
-        this.textureCache.clear();
 
         console.debug('[AssetLoader] Cache cleared');
     }

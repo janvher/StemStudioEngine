@@ -210,6 +210,7 @@ export class EnvironmentSettingsManager {
             ...updates,
         };
 
+        this.mirrorRenderingToSceneUserData();
         await this.applyEnvironmentSettings();
     }
 
@@ -219,9 +220,33 @@ export class EnvironmentSettingsManager {
             return;
         }
 
+        // Scene JSON persists rendering under `scene.userData.rendering`. OSS
+        // doesn't carry editor.rendering through the API metadata path, so
+        // SceneConfig resets it to defaults on every load. Hydrate from the
+        // scene's own userData before applying, otherwise saved background,
+        // ambient, fog, etc. would silently revert.
+        const persisted = this.editor.scene.userData?.rendering as
+            | Partial<RenderingSettings>
+            | undefined;
+        if (persisted && typeof persisted === "object") {
+            this.editor.rendering = {
+                ...this.editor.rendering,
+                ...persisted,
+            };
+        }
+
         if (this.editor.rendering) {
             await this.applyEnvironmentSettings();
         }
+    }
+
+    private mirrorRenderingToSceneUserData(): void {
+        const scene = this.editor?.scene;
+        const rendering = this.editor?.rendering;
+        if (!scene || !rendering) return;
+        scene.userData = scene.userData || {};
+        // Deep clone so later in-place mutations on either side don't alias.
+        scene.userData.rendering = JSON.parse(JSON.stringify(rendering));
     }
 
     private getDynamicGroup(scene: Scene) {
