@@ -104,7 +104,7 @@ To export a single project as a Player-only static site, use the in-editor **Fil
 - **Firefox**: full feature set with IndexedDB storage only (no folder access).
 - **Safari**: full feature set with IndexedDB storage only (no folder access).
 
-WebGL2 is required. WebGPU support is experimental and opt-in.
+WebGPU support is required. We do not support WebGL
 
 ## Team
 
