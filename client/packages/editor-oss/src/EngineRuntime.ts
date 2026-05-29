@@ -1869,6 +1869,8 @@ export class EngineRuntime extends AppRuntime implements RuntimeContext {
         this.playerMask.hide();
 
         //global.app.setAutoSave(this.autoSaveState);
+        // NOTE: game.reset() tears down the HUD DOM root via `this.hud?.clear()`,
+        // so the `hud-view-container` created in startPlayer is removed here.
         this.game?.reset();
 
         this.clock.stop();
