@@ -334,9 +334,17 @@ class EffectRenderer extends BaseRenderer {
      * @param scene
      */
     initializeBatchManager(scene) {
+        const previousBatchRoot = this.batchManager?.getBatchRoot?.();
+        if (previousBatchRoot && this.sceneTraverser) {
+            this.sceneTraverser.removeSkipRoot(previousBatchRoot);
+        }
         if (this.batchManager) this.batchManager.dispose();
         this.batchManager = new BatchManager(scene);
         this.batchManager.isWebGPU = this.renderer.isWebGPURenderer && this.renderer.backend.isWebGPUBackend;
+        const batchRoot = this.batchManager.getBatchRoot();
+        if (batchRoot && this.sceneTraverser) {
+            this.sceneTraverser.addSkipRoot(batchRoot);
+        }
         console.log("[EffectRenderer] Internal BatchManager initialized");
         // const batchedCount = this.batchManager.batchSceneMeshes();
         // console.log(`[EffectRenderer] Automatically batched ${batchedCount} existing meshes`);
