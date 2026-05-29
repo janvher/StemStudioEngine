@@ -43,6 +43,11 @@ try {
         /stem\s*studio|open[- ]?source/i.test(introHeading),
         introHeading.slice(0, 120),
     );
+    const introLinks = await page.locator(".docs-content a").evaluateAll((els) =>
+        els.map((e) => e.getAttribute("href") ?? ""),
+    );
+    const hasGithubRewrite = introLinks.some((h) => h.includes("github.com/"));
+    assert("relative repo links rewritten to github.com", hasGithubRewrite, introLinks.slice(0, 4).join(", "));
 
     const sectionLabels = await page.locator(".docs-sidebar h5").allInnerTexts();
     assert(
@@ -53,6 +58,10 @@ try {
     assert(
         "sidebar includes Engine section",
         sectionLabels.some((s) => /engine/i.test(s)),
+    );
+    assert(
+        "sidebar includes APIs section",
+        sectionLabels.some((s) => /apis/i.test(s)),
     );
 
     // Navigate to Architecture
@@ -73,13 +82,16 @@ try {
     const byokHeadings = await page.locator(".docs-content h1, .docs-content h2").count();
     assert("BYOK page renders headings", byokHeadings > 0);
 
-    const links = await page.locator(".docs-content a").evaluateAll((els) =>
-        els.map((e) => e.getAttribute("href") ?? ""),
+    // API docs added for the playground scripting surface.
+    await page.locator('.docs-sidebar a:has-text("Runtime API")').first().click();
+    await page.waitForURL(/\/docs\/runtime-api/, {timeout: 5000});
+    await page.waitForSelector('.docs-content h1:has-text("Runtime API")', {timeout: 6000});
+    const runtimeText = await page.locator(".docs-content").innerText();
+    assert(
+        "Runtime API page documents current erth events surface",
+        /this\.erth\.events\.on/.test(runtimeText),
+        runtimeText.slice(0, 160),
     );
-    const relativeRepoLink = links.find((h) => /^github\.com|^https?:\/\/github\.com|^\/docs\//.test(h));
-    void relativeRepoLink;
-    const hasGithubRewrite = links.some((h) => h.includes("github.com/"));
-    assert("relative repo links rewritten to github.com", hasGithubRewrite, links.slice(0, 4).join(", "));
 } catch (e) {
     failures.push(`exception: ${e.message}`);
     console.error(e);

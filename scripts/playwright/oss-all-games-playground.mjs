@@ -156,7 +156,12 @@ async function runGame(game) {
     const page = await ctx.newPage();
     const {dismissBootstrap, dismissTutorial} = mkHelpers(page);
     page.on("console", m => { if (m.type() === "error") rec.consoleErrors.push(m.text().slice(0, 400)); });
-    page.on("pageerror", e => rec.pageErrors.push((e.message || String(e)).slice(0, 400)));
+    page.on("pageerror", e => {
+        // Capture the first stack frame too — it carries the behavior:// URL and
+        // line, which pinpoints which game behavior threw.
+        const stackFrame = (e.stack || "").split("\n").find(l => /behavior:\/\/|http/.test(l)) || "";
+        rec.pageErrors.push(`${(e.message || String(e)).slice(0, 200)}${stackFrame ? ` @@ ${stackFrame.trim().slice(0, 200)}` : ""}`);
+    });
     page.on("requestfailed", r => { const u = r.url(); if (!/favicon|analytics|sentry/i.test(u)) rec.failedRequests.push(`${r.method()} ${u} :: ${r.failure()?.errorText}`); });
 
     try {
