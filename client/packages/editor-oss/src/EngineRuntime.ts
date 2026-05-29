@@ -1872,6 +1872,8 @@ export class EngineRuntime extends AppRuntime implements RuntimeContext {
             }
         }
 
+        this.effectRenderer?.initializeBatchManager?.(this.scene);
+
         this.playerMask.hide();
 
         //global.app.setAutoSave(this.autoSaveState);
