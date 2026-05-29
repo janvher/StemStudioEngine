@@ -81,6 +81,14 @@ const normalizeProjectGameSettings = (
     };
 };
 
+const SERIALIZED_GAME_BOOLEAN_SETTINGS = new Set([
+    "showHUD",
+    "useAvatar",
+    "isMultiplayer",
+    "multiplayerAutoJoin",
+    "voiceChatEnabled",
+]);
+
 const loadGameMappingApi = () => import("@stem/network/api/gameMapping");
 
 const GameSettingsComponent = ({openUIPanel}: {openUIPanel: () => void}) => {
@@ -316,6 +324,18 @@ const GameSettingsComponent = ({openUIPanel}: {openUIPanel: () => void}) => {
         const current = (editor as any)[key] as boolean;
         const newValue = !current;
         (editor as any)[key] = newValue;
+
+        if (SERIALIZED_GAME_BOOLEAN_SETTINGS.has(key)) {
+            if (!editor.scene.userData) editor.scene.userData = {};
+            const gameSettings = {
+                ...normalizeProjectGameSettings(editor.scene.userData.game),
+                [key]: newValue,
+            };
+            editor.scene.userData.game = gameSettings;
+            setGame(gameSettings);
+            app.call("objectChanged", app.editor, app.editor?.scene);
+        }
+
         setter(newValue);
     };
 
