@@ -317,6 +317,7 @@ export default class BatchManager {
      * @returns {void}
      */
     public dispose(): void {
+        this.showOriginalMeshes();
         this.clear();
         if (this.batchRoot && this.batchRoot.parent) {
             this.batchRoot.parent.remove(this.batchRoot);
@@ -405,6 +406,8 @@ export default class BatchManager {
                 }
             }
         }
+
+        this.hiddenMaterials.clear();
     }
 
     private isDynamicBatchingEnabled(): boolean {
