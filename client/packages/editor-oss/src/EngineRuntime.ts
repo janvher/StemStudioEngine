@@ -1805,6 +1805,12 @@ export class EngineRuntime extends AppRuntime implements RuntimeContext {
             return;
         }
 
+        try {
+            this.effectRenderer?.showOriginalMeshes();
+        } catch (err) {
+            console.warn("[BatchManager] Failed to restore original meshes during play teardown", err);
+        }
+
         // Flip runtime flags immediately so edit/remix interaction is not blocked
         // by stale play-state checks while async teardown is still running.
         this.isPlaying = false;
@@ -1865,6 +1871,8 @@ export class EngineRuntime extends AppRuntime implements RuntimeContext {
                 });
             }
         }
+
+        this.effectRenderer?.initializeBatchManager?.(this.scene);
 
         this.playerMask.hide();
 
