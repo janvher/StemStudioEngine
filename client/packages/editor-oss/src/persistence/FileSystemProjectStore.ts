@@ -82,6 +82,53 @@ export class FileSystemProjectStore implements ProjectStore {
 
     constructor(private readonly dir: FsDirectoryHandle) {}
 
+    // Serializes mutating operations. The File System Access API throws
+    // `NoModificationAllowedError` if two `createWritable()` calls target the
+    // same file concurrently, and our save flow writes many files plus a
+    // manifest. When two saves overlap (e.g. an autosave firing while a manual
+    // save is mid-write — more likely for large projects that take seconds to
+    // persist), the second save's writes collide with the first, the asset
+    // persist throws, and the project is left with no/partial assets. Chaining
+    // every write through this promise guarantees they run one-at-a-time.
+    private writeChain: Promise<unknown> = Promise.resolve();
+
+    private serializeWrite<T>(op: () => Promise<T>): Promise<T> {
+        const run = this.writeChain.then(() => this.runWithRetry(op), () => this.runWithRetry(op));
+        // Keep the chain alive regardless of this op's outcome.
+        this.writeChain = run.then(
+            () => undefined,
+            () => undefined,
+        );
+        return run;
+    }
+
+    /**
+     * Heavy writes (e.g. a project with tens of MB of GLBs) intermittently fail
+     * with transient File System Access errors — `NotFoundError`,
+     * `InvalidStateError`, `NoModificationAllowedError` — when the browser is
+     * under write pressure. These are not real data errors; the same op
+     * succeeds on a retry. Retry a few times with a short backoff before giving
+     * up so a single transient blip doesn't fail an entire project save.
+     */
+    private async runWithRetry<T>(op: () => Promise<T>, attempts = 3): Promise<T> {
+        let lastErr: unknown;
+        for (let i = 0; i < attempts; i++) {
+            try {
+                return await op();
+            } catch (err) {
+                lastErr = err;
+                const name = (err as {name?: string})?.name ?? "";
+                const transient =
+                    name === "NotFoundError" ||
+                    name === "InvalidStateError" ||
+                    name === "NoModificationAllowedError";
+                if (!transient || i === attempts - 1) throw err;
+                await new Promise(resolve => setTimeout(resolve, 150 * (i + 1)));
+            }
+        }
+        throw lastErr;
+    }
+
     /** Folder name the user picked, surfaced in the dashboard UI. */
     getDirectoryName(): string {
         return this.dir.name;
@@ -159,7 +206,11 @@ export class FileSystemProjectStore implements ProjectStore {
         return JSON.parse(await file.text()) as ProjectBody;
     }
 
-    async save(body: ProjectBody): Promise<ProjectMeta> {
+    save(body: ProjectBody): Promise<ProjectMeta> {
+        return this.serializeWrite(() => this.saveLocked(body));
+    }
+
+    private async saveLocked(body: ProjectBody): Promise<ProjectMeta> {
         const meta: ProjectMeta = {
             ...body.meta,
             id: body.meta.id || newId(),
@@ -182,7 +233,11 @@ export class FileSystemProjectStore implements ProjectStore {
         return meta;
     }
 
-    async delete(id: string): Promise<void> {
+    delete(id: string): Promise<void> {
+        return this.serializeWrite(() => this.deleteLocked(id));
+    }
+
+    private async deleteLocked(id: string): Promise<void> {
         for (const name of await this.matchingNamesForId(id)) {
             await this.dir.removeEntry(name);
         }
@@ -194,7 +249,11 @@ export class FileSystemProjectStore implements ProjectStore {
         }
     }
 
-    async saveAssets(projectId: string, assets: StoredAsset[]): Promise<void> {
+    saveAssets(projectId: string, assets: StoredAsset[]): Promise<void> {
+        return this.serializeWrite(() => this.saveAssetsLocked(projectId, assets));
+    }
+
+    private async saveAssetsLocked(projectId: string, assets: StoredAsset[]): Promise<void> {
         // Replace the whole subdirectory so a re-save drops assets no longer
         // referenced. The project lives as `<name>.<id>.stemscript.json` in
         // the picked folder; its binary assets live in a sibling `<id>/`.
@@ -208,8 +267,13 @@ export class FileSystemProjectStore implements ProjectStore {
         }
 
         const projectDir = await this.dir.getDirectoryHandle(projectId, {create: true});
-        const manifest: AssetManifestEntry[] = [];
-        for (const asset of assets) {
+        // Write the asset files concurrently. Each targets a distinct file, so
+        // there's no `NoModificationAllowedError` risk (that only arises from two
+        // writers on the *same* file — prevented by serializeWrite at the call
+        // level). Sequential awaits made large projects (dozens of MB) take many
+        // seconds, long enough that a reload could beat the manifest write and
+        // lose every asset. Parallelizing cuts that window dramatically.
+        const writeAsset = async (asset: StoredAsset): Promise<AssetManifestEntry> => {
             const file = `${asset.assetId}.${asset.format || "bin"}`;
             const handle = await projectDir.getFileHandle(file, {create: true});
             const writable = await handle.createWritable();
@@ -219,8 +283,11 @@ export class FileSystemProjectStore implements ProjectStore {
                 await writable.close();
             }
             const {data: _omit, ...meta} = asset;
-            manifest.push({...meta, file});
-        }
+            return {...meta, file};
+        };
+        // The manifest is still written LAST (after all file writes resolve) so
+        // loadAssets never sees a manifest referencing a not-yet-written file.
+        const manifest: AssetManifestEntry[] = await Promise.all(assets.map(writeAsset));
 
         const manifestHandle = await projectDir.getFileHandle(ASSET_MANIFEST, {create: true});
         const manifestWritable = await manifestHandle.createWritable();

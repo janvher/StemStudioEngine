@@ -243,7 +243,7 @@ this.game.updateBlendedAnimationWeights(this.target, {
 
 ## Input
 
-Use `inputManager.getAction(actionId)`.
+Use `inputManager.getAction(actionId)` for boolean buttons and `inputManager.getMotion(motionId)` for continuous axes.
 
 ```ts
 this.update = function () {
@@ -253,7 +253,15 @@ this.update = function () {
 };
 ```
 
-Current built-in action names include `jump`, `run`, `use`, `drop`, `pull`, and `primary`.
+```ts
+this.update = function () {
+  const steer = this.game?.inputManager.getMotion("lateral") ?? 0;
+  const throttle = this.game?.inputManager.getMotion("forward") ?? 0;
+  this.drive(steer, throttle);
+};
+```
+
+Current built-in action names include `jump`, `run`, `use`, `drop`, `pull`, and `primary`. Common motion names include `forward`, `lateral`, `view_x`, and `view_y`.
 
 ## Direct subsystem access
 
@@ -321,3 +329,100 @@ this.onEvent = function (msg, data) {
 };
 ```
 
+## Patterns from real playground games
+
+These examples are adapted from game behaviors and keep to the current supported API surface.
+
+### Controller loop with input, motion, and telemetry
+
+Vehicle and flight behaviors usually store the `GameManager`, read input every frame, mutate the `GameObject` transform, then publish plain telemetry for HUD and audio behaviors.
+
+```ts
+const forward = new THREE.Vector3();
+const up = new THREE.Vector3(0, 1, 0);
+
+this.init = function (game) {
+  this.game = game;
+  this.speed = 0;
+  this.drift = 0;
+};
+
+this.update = function (deltaTime) {
+  const input = this.game.inputManager;
+  const steer = input.getMotion("lateral");
+  const throttle = input.getMotion("forward");
+  const boost = input.getAction("use");
+
+  const acceleration = boost ? 26 : 14;
+  this.speed = THREE.MathUtils.clamp(
+    this.speed + throttle * acceleration * deltaTime,
+    -8,
+    38,
+  );
+
+  this.target.getWorldDirection(forward);
+  this.gameObject.position.addScaledVector(forward, this.speed * deltaTime);
+  this.target.rotateOnAxis(up, -steer * deltaTime * 1.7);
+
+  this.drift = Math.abs(steer) * Math.min(Math.abs(this.speed) / 24, 1);
+  this.erth.store.set("vehicle.telemetry", {
+    speed: this.speed,
+    boost,
+    drift: this.drift,
+  });
+};
+```
+
+Keep the controller authoritative for movement. Let HUD, sound, particles, and camera behaviors read telemetry instead of duplicating the driving math.
+
+### Camera follow behavior
+
+Rail and vehicle games often keep camera logic in a separate behavior so the player controller can stay focused on movement.
+
+```ts
+const desired = new THREE.Vector3();
+const offset = new THREE.Vector3(0, 4, 9);
+
+this.init = function (game) {
+  this.game = game;
+};
+
+this.update = function (deltaTime) {
+  desired.copy(offset)
+    .applyQuaternion(this.target.quaternion)
+    .add(this.gameObject.position);
+
+  const camera = this.game.camera;
+  camera.position.lerp(desired, Math.min(deltaTime * 5, 1));
+  camera.lookAt(this.gameObject.position);
+};
+```
+
+Use `this.game.camera` when you need the raw Three.js camera. Use `this.erth.camera.lookAt(x, y, z)` for simpler camera aiming.
+
+### Targeted behavior events
+
+Chess, weapon, and vehicle systems use targeted behavior messages when one object owns a gameplay decision and another behavior should respond.
+
+```ts
+// Sender behavior
+this.fire = function () {
+  this.game.behaviorManager.sendEventToObjectBehaviors(this.target, "weapon.fire", {
+    origin: this.gameObject.position.toArray(),
+    speed: 32,
+  });
+};
+```
+
+```ts
+// Receiver behavior on the same object, or on a targeted object
+this.onEvent = function (msg, data) {
+  if (msg !== "weapon.fire") return;
+
+  const projectile = this.spawnProjectile();
+  projectile.position.fromArray(data.origin);
+  projectile.physics.getBody()?.setVelocity({x: 0, y: 0, z: -data.speed});
+};
+```
+
+This is the right tool when a message is about a specific object. For broad engine state such as login, score, or health topics, use `this.erth.events.on()`.

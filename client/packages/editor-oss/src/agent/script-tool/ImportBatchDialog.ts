@@ -50,18 +50,25 @@ export function autoResolveImports(
     const claimed = new Set<string>();
 
     for (const req of imports) {
-        const extMatches = folderFiles.filter(f =>
-            !claimed.has(fileKey(f)) && req.extensions.some(ext => f.name.toLowerCase().endsWith(ext)),
-        );
-        if (extMatches.length === 0) continue;
+        const extOf = (f: File) => req.extensions.some(ext => f.name.toLowerCase().endsWith(ext));
 
         let match: File | null = null;
 
+        // An explicit filepath wins and may reuse a file already claimed by
+        // another import: one asset file can legitimately back several imports
+        // (e.g. four wheels all referencing wheel.glb, or one image reused as a
+        // texture and the scene thumbnail). Matching only *unclaimed* files left
+        // those duplicates unresolved, which popped a blocking import dialog and
+        // hung headless / automated imports. So resolve filepath against the
+        // full file list, not the claimed-filtered subset.
         if (req.filepath) {
-            match = findByFilepath(extMatches, req.filepath);
+            match = findByFilepath(folderFiles.filter(extOf), req.filepath);
         }
 
         if (!match) {
+            // Fuzzy fallback only considers still-unclaimed files so two
+            // ambiguous imports don't grab the same file.
+            const extMatches = folderFiles.filter(f => !claimed.has(fileKey(f)) && extOf(f));
             if (extMatches.length === 1) {
                 match = extMatches[0]!;
             } else if (req.name) {

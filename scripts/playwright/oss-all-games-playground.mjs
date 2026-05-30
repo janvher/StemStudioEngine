@@ -31,7 +31,13 @@ import {dirname, resolve, basename, join} from "node:path";
 import {fileURLToPath} from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const outRoot = resolve(__dirname, "oss-all-games-playground-output");
+// STORE_MODE=filesystem exercises the File System Access (folder) project store
+// instead of the default IndexedDB store. Output goes to a mode-specific dir so
+// the two runs don't clobber each other.
+const storeMode = process.env.STORE_MODE === "filesystem" ? "filesystem" : "indexeddb";
+const outRoot = resolve(__dirname, storeMode === "filesystem"
+    ? "oss-all-games-filesystem-output"
+    : "oss-all-games-playground-output");
 mkdirSync(outRoot, {recursive: true});
 
 const baseUrl = (process.env.PLAYWRIGHT_BASE_URL || "http://localhost:5173").replace(/\/$/, "");
@@ -123,8 +129,29 @@ const games = discoverGames();
 console.log(`Discovered ${games.length} games under ${gamesRoot}${gamesFilter.length ? ` (filtered: ${gamesFilter.join(",")})` : ""}`);
 if (!games.length) { console.error("No games found"); process.exit(1); }
 
+console.log(`Project store mode: ${storeMode}`);
 const browser = await chromium.launch({headless: !headed});
-const summary = {baseUrl, gamesRoot, startedAt: new Date().toISOString(), games: []};
+const summary = {baseUrl, gamesRoot, storeMode, startedAt: new Date().toISOString(), games: []};
+
+// Bootstrap the File System Access (folder) store via OPFS so no directory
+// picker is needed. Each browser context has its own OPFS partition, so a fresh
+// "stem-fs" folder per game keeps them isolated. Must run on the origin before
+// the navigation that boots the editor (rehydrateProjectStore reads these).
+const bootstrapFilesystemStore = async (page) => {
+    await page.evaluate(async () => {
+        const root = await navigator.storage.getDirectory();
+        try { await root.removeEntry("stem-fs", {recursive: true}); } catch { /* first run */ }
+        const fsRoot = await root.getDirectoryHandle("stem-fs", {create: true});
+        await new Promise((res, rej) => {
+            const req = indexedDB.open("stemstudio-fs-handle", 1);
+            req.onupgradeneeded = () => { const db = req.result; if (!db.objectStoreNames.contains("handles")) db.createObjectStore("handles"); };
+            req.onsuccess = () => { const tx = req.result.transaction("handles", "readwrite"); tx.objectStore("handles").put(fsRoot, "project-dir"); tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); };
+            req.onerror = () => rej(req.error);
+        });
+        localStorage.setItem("stemstudio.persistence.mode", "filesystem");
+        localStorage.setItem("stemstudio.bootstrap.complete", "true");
+    });
+};
 
 // dialog/modal helpers parameterised by page
 const mkHelpers = (page) => ({
@@ -147,7 +174,7 @@ async function runGame(game) {
     mkdirSync(outDir, {recursive: true});
     const rec = {
         name: game.name, script: basename(game.scriptFile.name), files: game.files.length,
-        steps: [], consoleErrors: [], pageErrors: [], failedRequests: [],
+        steps: [], consoleErrors: [], pageErrors: [], failedRequests: [], assetErrors: [],
         startClicked: false, canvasVisible: false, status: "pending", failReasons: [],
     };
     const step = (s, ok = true, d) => { rec.steps.push({s, ok, d}); console.log(`   ${ok ? "·" : "✗"} ${s}${d ? ` (${d})` : ""}`); };
@@ -155,7 +182,15 @@ async function runGame(game) {
     const ctx = await browser.newContext({viewport: {width: 1440, height: 900}});
     const page = await ctx.newPage();
     const {dismissBootstrap, dismissTutorial} = mkHelpers(page);
-    page.on("console", m => { if (m.type() === "error") rec.consoleErrors.push(m.text().slice(0, 400)); });
+    // Asset-load failures surface as console WARNINGS (not errors), so the
+    // exception filter misses them. These mean the scene didn't load fully
+    // (missing models / skybox) — a hard fail for "loads perfectly".
+    const ASSET_FAIL = /No data URL found for|Failed to load model|Failed to load texture|failed to restore project assets|failed to persist project assets/i;
+    page.on("console", m => {
+        const t = m.text();
+        if (m.type() === "error") rec.consoleErrors.push(t.slice(0, 400));
+        if (ASSET_FAIL.test(t)) rec.assetErrors.push(t.slice(0, 300));
+    });
     page.on("pageerror", e => {
         // Capture the first stack frame too — it carries the behavior:// URL and
         // line, which pinpoints which game behavior threw.
@@ -175,6 +210,10 @@ async function runGame(game) {
         await dismissBootstrap();
         const pg = await page.evaluate(() => { try { return window.sessionStorage.getItem("stem.playgroundMode") === "1"; } catch { return false; } });
         step("playground activated", pg);
+        if (storeMode === "filesystem") {
+            await bootstrapFilesystemStore(page);
+            step("filesystem (OPFS) store bootstrapped");
+        }
 
         // 2. fresh project
         await page.goto(baseUrl + "/create/project", {waitUntil: "domcontentloaded", timeout: 30000});
@@ -211,7 +250,18 @@ async function runGame(game) {
         await page.locator('[data-testid="topnav-app-menu"]').first().click({timeout: 3000, force: true}).catch(() => {});
         await page.waitForTimeout(400);
         const save = page.locator("text=Save Project").first();
-        if (await save.isVisible().catch(() => false)) { await save.click({timeout: 3000}).catch(() => {}); await page.waitForTimeout(3500); }
+        if (await save.isVisible().catch(() => false)) {
+            await save.click({timeout: 3000}).catch(() => {});
+            // Filesystem (OPFS) saves write asset files then assets.json LAST and
+            // can take several seconds; reloading before the manifest is written
+            // loses every asset (skybox/models). Wait for the "Saved" toast,
+            // which the save handler emits only after assets are fully persisted.
+            // Heavy games (cubecity's ~21MB of building GLBs) take well over a
+            // minute to write to OPFS; wait generously for the "Saved" toast so
+            // the body + asset manifest are fully persisted before we reload.
+            await page.locator("text=/^Saved$/").first().waitFor({state: "visible", timeout: 180000}).catch(() => {});
+            await page.waitForTimeout(1500);
+        }
         const sceneId = (page.url().match(/\/create\/project\/([^/?#]+)/) || [])[1] || null;
         step("saved", !!sceneId, sceneId ?? "no scene id");
 
@@ -222,6 +272,9 @@ async function runGame(game) {
         await page.waitForTimeout(2000);
         if (sceneId) {
             const card = page.locator(`[data-scene-id="${sceneId}"]`).first();
+            // Poll for the card: the folder store's project list can take a
+            // moment to rehydrate from OPFS, especially right after a heavy save.
+            await card.waitFor({state: "attached", timeout: 30000}).catch(() => {});
             if (await card.count()) {
                 await card.click({timeout: 5000}).catch(() => {});
                 await page.waitForLoadState("networkidle", {timeout: 30000}).catch(() => {});
@@ -257,7 +310,10 @@ async function runGame(game) {
             } catch {
                 step("no START GAME button (auto-start game)", true);
             }
-            await page.waitForTimeout(12000);
+            // Generous settle: runtime-generated games (procedural terrain,
+            // spawned troops) and FS-mode asset decode need time before the
+            // scene is fully populated for the screenshot / UIKit check.
+            await page.waitForTimeout(20000);
             await page.screenshot({path: resolve(outDir, "04-playing.png")}).catch(() => {});
         } else {
             step("Play button not visible", false);
@@ -270,8 +326,10 @@ async function runGame(game) {
         // classify errors
         rec.exceptionErrors = [...new Set(rec.consoleErrors.filter(isException))].slice(0, 15);
         rec.noiseErrorCount = rec.consoleErrors.filter(isNoise).length;
+        rec.assetErrors = [...new Set(rec.assetErrors)].slice(0, 15);
         if (rec.pageErrors.length) rec.failReasons.push(`${rec.pageErrors.length} uncaught page error(s)`);
         if (rec.exceptionErrors.length) rec.failReasons.push(`${rec.exceptionErrors.length} exception-like console error(s)`);
+        if (rec.assetErrors.length) rec.failReasons.push(`${rec.assetErrors.length} asset-load failure(s)`);
         if (!rec.canvasVisible) rec.failReasons.push("canvas-not-visible");
         rec.status = rec.failReasons.length ? "FAIL" : "PASS";
         writeFileSync(resolve(outDir, "report.json"), JSON.stringify(rec, null, 2));
@@ -297,7 +355,7 @@ console.log(`\n=================== SUMMARY ===================`);
 console.log(`Passed: ${summary.passed.length}/${summary.games.length}`);
 for (const g of summary.games) {
     const tag = g.status === "PASS" ? "✅" : "❌";
-    console.log(`${tag} ${g.name.padEnd(22)} start=${g.startClicked ? "Y" : "-"} canvas=${g.canvasVisible ? "Y" : "-"} exc=${g.exceptionErrors?.length ?? 0} page=${g.pageErrors.length} noise=${g.noiseErrorCount ?? 0}${g.failReasons.length ? "  << " + g.failReasons.join("; ") : ""}`);
+    console.log(`${tag} ${g.name.padEnd(22)} start=${g.startClicked ? "Y" : "-"} canvas=${g.canvasVisible ? "Y" : "-"} exc=${g.exceptionErrors?.length ?? 0} page=${g.pageErrors.length} asset=${g.assetErrors?.length ?? 0} noise=${g.noiseErrorCount ?? 0}${g.failReasons.length ? "  << " + g.failReasons.join("; ") : ""}`);
 }
 console.log(`\nReport dir: ${outRoot}`);
 await browser.close();

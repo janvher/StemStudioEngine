@@ -1,9 +1,10 @@
 import * as THREE from "three";
 import {PCFShadowMap, PCFSoftShadowMap} from "three";
 
-import {Asset, AssetType, getAssetRevisionData} from "@stem/network/api/asset";
+import {Asset, AssetType} from "@stem/network/api/asset";
 import {updateSceneThumbnail} from "@stem/network/api/scene/thumbnail";
 import {getAssetResolutionContext, resolveAssetRevisionId} from "../../asset-management/AssetResolutionContext";
+import type {AssetRef} from "../../asset-management/AssetRef";
 import EngineRuntime from "../../EngineRuntime";
 import {
     normalizeBackgroundGradient,
@@ -48,8 +49,24 @@ const DEFAULT_RENDERING = {
 export class SettingsHandlers {
     constructor(private engine: EngineRuntime) {}
 
-    private async resolveImageSource(source?: string): Promise<string | undefined> {
-        if (!source) return source;
+    /**
+     * Resolves a background image source to the value that should be PERSISTED
+     * in the scene's rendering config: the original source string (a literal
+     * URL/path, or the asset name) plus, when it names a scene image asset, the
+     * stable {@link AssetRef} for that asset.
+     *
+     * Crucially this never returns a `blob:` object URL. The old code persisted
+     * `URL.createObjectURL(blob)` as the background texture, which is the cause
+     * of the "scene goes dark on reload" bug: object URLs are revoked when the
+     * page reloads, so the saved background/environment texture could no longer
+     * be fetched — the scene lost both its skybox and its image-based
+     * environment lighting, and the loader logged "Failed to load texture:
+     * blob:…". The AssetRef is what survives a reload;
+     * {@link EnvironmentSettingsManager.applyBackgroundSettings} prefers it and
+     * re-fetches the texture through the asset loader.
+     */
+    private async resolveImageAsset(source?: string): Promise<{value?: string; assetRef?: AssetRef}> {
+        if (!source) return {value: source};
         if (
             source.startsWith("http://")
             || source.startsWith("https://")
@@ -57,25 +74,26 @@ export class SettingsHandlers {
             || source.startsWith("blob:")
             || source.startsWith("/")
         ) {
-            return source;
+            return {value: source};
         }
 
         const assetSource = this.engine.editor?.assetSource;
         if (!assetSource) {
-            return source;
+            return {value: source};
         }
 
         const {assets} = await assetSource.getAssets({types: [AssetType.Image]});
         const match = assets?.find((asset: Asset) => asset.name.toLowerCase() === source.toLowerCase());
         if (!match) {
-            return source;
+            return {value: source};
         }
 
         const context = getAssetResolutionContext(this.engine.scene);
         const revisionId = context ? resolveAssetRevisionId(match.id, context) : undefined;
         const finalRevisionId = revisionId || match.headRevisionId;
-        const blob = await getAssetRevisionData(match.id, finalRevisionId, "blob");
-        return URL.createObjectURL(blob);
+        // Keep the human-readable source (the asset name) as the persisted
+        // `texture` value; the AssetRef is the durable handle used to re-fetch.
+        return {value: source, assetRef: {assetId: match.id, revisionId: finalRevisionId}};
     }
 
     /**
@@ -247,18 +265,26 @@ export class SettingsHandlers {
         const current = scene.userData.rendering.background || {...DEFAULT_BACKGROUND};
         const normalizedGradient = normalizeBackgroundGradient(gradient, current.gradient);
         const normalizedGradientMode = normalizeGradientMode(gradientMode, current.gradientMode);
-        const resolvedTexture = texture ? await this.resolveImageSource(texture) : undefined;
+        // Resolve to a displayable URL AND a stable AssetRef. The AssetRef is
+        // what survives a reload (the `blob:` URL does not), so persisting it
+        // keeps the skybox + environment lighting after the project is saved
+        // and reopened.
+        const resolvedTexture = texture ? await this.resolveImageAsset(texture) : undefined;
         const resolvedCubemap = cubemap
-            ? await Promise.all(cubemap.map(face => this.resolveImageSource(face)))
+            ? await Promise.all(cubemap.map(face => this.resolveImageAsset(face)))
             : undefined;
         scene.userData.rendering.background = {
             ...current,
             type: type ?? current.type,
             color: color ?? current.color,
-            texture: resolvedTexture ?? current.texture,
+            texture: resolvedTexture?.value ?? current.texture,
+            textureAsset: texture ? resolvedTexture?.assetRef : current.textureAsset,
             cubemap: resolvedCubemap
-                ? (resolvedCubemap as [string, string, string, string, string, string])
+                ? (resolvedCubemap.map(face => face.value ?? "") as [string, string, string, string, string, string])
                 : current.cubemap,
+            cubemapAssets: resolvedCubemap
+                ? resolvedCubemap.map(face => face.assetRef)
+                : current.cubemapAssets,
             gradient: normalizedGradient,
             gradientMode: normalizedGradientMode,
             rotation: rotation ?? current.rotation,

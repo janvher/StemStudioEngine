@@ -377,7 +377,17 @@ const applyOrClearMap = (params: {
  * @param value
  */
 export const isAssetId = (value: string): boolean => {
-    return /^([a-f0-9]{24}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i.test(value);
+    if (typeof value !== "string" || !value) return false;
+    // Mongo-style 24-hex id or UUID (integrated builds).
+    if (/^([a-f0-9]{24}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i.test(value)) {
+        return true;
+    }
+    // OSS synthesizes asset ids as `oss-asset-<timestamp>-<rand>` (see
+    // network/.../asset/index.ts). These are real asset ids, not URLs. Without
+    // this, a material texture backed by an imported OSS image asset fails both
+    // the apply path (treated as a URL → TextureLoader 404 → blank texture) and
+    // the resolve path (skipped entirely), so the texture renders empty.
+    return value.startsWith("oss-asset-");
 };
 
 /**

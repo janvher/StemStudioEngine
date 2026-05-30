@@ -405,3 +405,137 @@ octree.getBox();
 
 `fromGroup()` walks mesh descendants and should be called when static world geometry changes, not every frame.
 
+## Patterns from real playground games
+
+These examples are condensed from working game projects and adjusted to the current author-facing API. They show how the APIs above tend to fit together in full behaviors.
+
+### Procedural runtime world builder
+
+Kenny Cars-style track builders create raw Three.js geometry, wrap it as a `GameObject`, add it to the scene, then publish spawn state for the player controller.
+
+```ts
+this.onStart = async function () {
+  const root = new THREE.Group();
+  root.name = "RuntimeTrack";
+  root.userData.isRuntimeOnly = true;
+
+  const road = new THREE.Mesh(
+    new THREE.BoxGeometry(24, 0.25, 80),
+    new THREE.MeshStandardMaterial({color: 0x30343a}),
+  );
+  road.position.set(0, 0, -20);
+  road.userData.isRuntimeOnly = true;
+  root.add(road);
+
+  const startGate = new THREE.Mesh(
+    new THREE.BoxGeometry(8, 4, 0.25),
+    new THREE.MeshStandardMaterial({color: 0xffcc33}),
+  );
+  startGate.position.set(0, 2, 12);
+  startGate.userData.isRuntimeOnly = true;
+  root.add(startGate);
+
+  const track = this.erth.object.createFromThreeObject(root);
+  await this.erth.scene.addObject(track);
+
+  this.erth.store.set("race.spawn", {
+    position: {x: 0, y: 0.5, z: 10},
+    yaw: Math.PI,
+  });
+  this.erth.store.set("race.trackReady", true);
+};
+```
+
+This pattern is useful when authored scene data describes a course, puzzle, or arena, but the actual mesh layout is generated at runtime.
+
+### Asset-driven model, texture, and sound setup
+
+Rail shooters and chess games commonly let designers pick model/image/audio assets as behavior attributes, with name lookup as a fallback for template projects.
+
+```ts
+this.onStart = async function () {
+  let shipRef = this.getAttribute("shipModel");
+  if (!shipRef) {
+    shipRef = await this.erth.asset.model.findByName("Player Ship");
+  }
+
+  if (shipRef) {
+    const ship = await this.erth.asset.model.createInstance(shipRef);
+    const shipObject = ship._internal?.three ?? ship.target ?? ship;
+    shipObject.userData.isRuntimeOnly = true;
+    this.target.add(shipObject);
+    this.ship = shipObject;
+  }
+
+  let reticleRef = this.getAttribute("reticleImage");
+  if (!reticleRef) {
+    reticleRef = await this.erth.asset.image.findByName("Reticle");
+  }
+  if (reticleRef) {
+    this.reticleTexture = await this.erth.asset.image.createTexture(reticleRef);
+  }
+
+  let fireRef = this.getAttribute("fireSound");
+  if (!fireRef) {
+    fireRef = await this.erth.asset.audio.findByName("LaserFire");
+  }
+  if (fireRef) {
+    this.fireSoundUrl = await this.erth.asset.audio.getUrl(fireRef);
+  }
+};
+```
+
+Prefer passing an `AssetRef` into `createInstance()`, `createTexture()`, or `getUrl()`. `getUrlByName()` still exists for audio/video/file/script assets, but behavior attributes and `findByName()` keep the asset dependency explicit.
+
+### Store as a lightweight blackboard
+
+Vehicle games and HUD-heavy arcade games use `erth.store` to share numbers between independent behaviors without introducing hard references. Keep the values plain and overwrite them as state changes.
+
+```ts
+// Vehicle controller behavior
+this.update = function () {
+  this.erth.store.set("car.telemetry", {
+    speed: this.speed,
+    drift: this.driftAmount,
+    boost: this.boostActive,
+  });
+};
+```
+
+```ts
+// Audio or HUD behavior
+this.update = function () {
+  const telemetry = this.erth.store.get("car.telemetry") ?? {};
+  const speed = telemetry.speed ?? 0;
+  const drift = telemetry.drift ?? 0;
+
+  this.speedText?.setProperties({text: `${Math.round(speed)} km/h`});
+  this.engineGain = THREE.MathUtils.lerp(0.35, 1.0, Math.min(speed / 140, 1));
+  this.driftGain = Math.min(drift, 1);
+};
+```
+
+For cross-client or authoritative state, use the multiplayer systems instead. The store is local to one running game session.
+
+### Engine topic subscription with cleanup
+
+Menu and lobby behaviors can react to engine topics such as `game.loginSuccess`, then tear down the subscription when the behavior is disposed.
+
+```ts
+this.onStart = function () {
+  this.offLogin = this.erth.events.on("game.loginSuccess", (_topic, user) => {
+    this.erth.store.set("player.profile", {
+      id: user?.id,
+      name: user?.displayName ?? "Player",
+    });
+    this.showLobby();
+  });
+};
+
+this.dispose = function () {
+  this.offLogin?.();
+  this.offLogin = null;
+};
+```
+
+Use targeted behavior events for object-to-object gameplay messages. Use `erth.events.on()` for engine-wide topics.

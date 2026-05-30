@@ -505,6 +505,19 @@ export class EnvironmentSettingsManager {
             rendering.background;
         const textureAsset: AssetRef | undefined = backgroundWithAssets.textureAsset;
         const cubemapAssets: Array<AssetRef | undefined> = backgroundWithAssets.cubemapAssets || [];
+        // A `blob:` object URL only lives for the session that created it. Older
+        // scenes persisted such URLs as the background texture; on reload they
+        // are revoked and unfetchable. When there's no AssetRef to recover from,
+        // treat the texture as absent so we fall back to a plain background
+        // instead of throwing "Failed to load texture: blob:…".
+        const usableTexture =
+            typeof texture === "string" && texture.startsWith("blob:") && !textureAsset ? undefined : texture;
+        if (usableTexture !== texture) {
+            console.warn(
+                "EnvironmentSettingsManager: ignoring stale blob: background texture with no asset reference " +
+                    "(re-set the scene background to restore it).",
+            );
+        }
         const currentRotation = rotation ?? 0;
         const currentIntensity = intensity ?? 1;
         const currentBlurriness = blurriness ?? 0;
@@ -568,7 +581,7 @@ export class EnvironmentSettingsManager {
             fogType: effectiveFogType,
         };
 
-        if (type === "Color" || !type || (type === "Texture" && !texture && !textureAsset)) {
+        if (type === "Color" || !type || (type === "Texture" && !usableTexture && !textureAsset)) {
             if (scene.background instanceof Texture) {
                 scene.background.dispose();
             }
@@ -585,11 +598,11 @@ export class EnvironmentSettingsManager {
                 sceneWithNodes.backgroundNode = null;
             }
             sceneWithNodes.environmentNode = bgNode;
-        } else if (type === "Texture" && (texture || textureAsset)) {
+        } else if (type === "Texture" && (usableTexture || textureAsset)) {
             if (effectiveFogType !== "height") {
                 sceneWithNodes.backgroundNode = null;
             }
-            const resolvedTexture = await this.resolveBackgroundImageSource(texture, textureAsset);
+            const resolvedTexture = await this.resolveBackgroundImageSource(usableTexture, textureAsset);
             const ext = (resolvedTexture.format || resolvedTexture.url.split(".").pop()?.toLowerCase())?.toLowerCase();
             const engine = this.editor.engine;
 

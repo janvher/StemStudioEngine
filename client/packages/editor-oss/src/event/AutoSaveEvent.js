@@ -72,13 +72,27 @@ class AutoSaveEvent extends BaseEvent {
 
         const now = TimeUtils.getDateTime("yyyy-MM-dd HH:mm:ss");
 
-        window.localStorage.setItem("autoSaveData", JSON.stringify(obj));
-        window.localStorage.setItem("autoSaveTime", now);
-        window.localStorage.setItem("autoSaveSceneID", global.app.editor.sceneID);
-        window.localStorage.setItem("autoSaveSceneName", global.app.editor.sceneName);
-        window.localStorage.setItem("autoSaveSceneLockedItems", JSON.stringify(editor.sceneLockedItems || []));
-
-        console.log(`${now}, scene auto saved.`);
+        // The localStorage autosave is a best-effort "recover unsaved work"
+        // cache; the authoritative save is commitSaveScene() -> ProjectStore.
+        // A large scene (e.g. many imported GLBs) can serialize to several MB
+        // and blow the ~5MB localStorage quota. A QuotaExceededError here must
+        // not break the editor — and a stale oversized blob left behind would
+        // poison every later localStorage.setItem (including the camera save
+        // that handlePlay() makes), so drop it on failure to free the quota.
+        try {
+            window.localStorage.setItem("autoSaveData", JSON.stringify(obj));
+            window.localStorage.setItem("autoSaveTime", now);
+            window.localStorage.setItem("autoSaveSceneID", global.app.editor.sceneID);
+            window.localStorage.setItem("autoSaveSceneName", global.app.editor.sceneName);
+            window.localStorage.setItem("autoSaveSceneLockedItems", JSON.stringify(editor.sceneLockedItems || []));
+            console.log(`${now}, scene auto saved.`);
+        } catch (e) {
+            console.warn("AutoSaveEvent: localStorage autosave skipped (quota exceeded); scene still saves via ProjectStore", e);
+            try {
+                window.localStorage.removeItem("autoSaveData");
+                window.localStorage.removeItem("autoSaveSceneLockedItems");
+            } catch { /* ignore */ }
+        }
 
         if (this.autoSave) {
             this.commitSaveScene(obj);

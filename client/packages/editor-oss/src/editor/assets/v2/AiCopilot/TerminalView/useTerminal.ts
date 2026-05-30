@@ -621,7 +621,12 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
             // the timeout breadcrumb. Generous enough that a full game
             // import (dozens of models, real GLB parsing) completes inside
             // it rather than tripping a spurious timeout.
-            const HARD_TIMEOUT_MS = 240_000;
+            // Bumped from 240s→600s→1200s: the heaviest games (procedural
+            // terrain; cubecity's 32 building GLBs through the per-model
+            // texture-conversion pipeline; 100+ vehicle GLBs) can take many
+            // minutes, and a premature timeout makes the harness save/reload
+            // before every asset is created (a partial import).
+            const HARD_TIMEOUT_MS = 1_200_000;
             try {
                 await Promise.race([
                     runScript(content, folderFiles),
@@ -649,6 +654,7 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
         const w = window as unknown as {
             __stemGetScene?: () => {
                 sceneName: string | null;
+                sceneID: string | null;
                 mode: string | null;
                 isPlaying: boolean;
                 assetCount: number;
@@ -662,6 +668,24 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
                 visibleRenderableCount: number;
                 meshCount: number;
                 visibleMeshCount: number;
+                lights: Array<{type: string; name: string; intensity: number; visible: boolean; parent: string | null}>;
+                rendering: {
+                    ambient: {color: string; intensity: number} | null;
+                    hemisphere: {skyColor: string; groundColor: string; intensity: number} | null;
+                    backgroundType: string | null;
+                    backgroundTexture: string | null;
+                    hasBackgroundTextureAsset: boolean;
+                };
+                sceneEnv: {
+                    background: string | null;
+                    environment: string | null;
+                    backgroundDetail?: unknown;
+                    hasBackgroundNode?: boolean;
+                    hasEnvironmentNode?: boolean;
+                    backgroundIntensity?: number | null;
+                    backgroundBlurriness?: number | null;
+                    backgroundRotationY?: number | null;
+                };
             };
         };
         w.__stemGetScene = () => {
@@ -670,6 +694,7 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
             if (!scene) {
                 return {
                     sceneName: null,
+                    sceneID: null,
                     mode: null,
                     isPlaying: false,
                     assetCount: 0,
@@ -683,6 +708,15 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
                     visibleRenderableCount: 0,
                     meshCount: 0,
                     visibleMeshCount: 0,
+                    lights: [],
+                    rendering: {
+                        ambient: null,
+                        hemisphere: null,
+                        backgroundType: null,
+                        backgroundTexture: null,
+                        hasBackgroundTextureAsset: false,
+                    },
+                    sceneEnv: {background: null, environment: null},
                 };
             }
 
@@ -698,6 +732,45 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
             const getObjectLabel = (object: SceneAuditObject) =>
                 object.name || `${object.type || "Object3D"}:${object.uuid || "unknown"}`;
 
+            // Classifies scene.background / scene.environment into a coarse,
+            // serializable label so Playwright can assert the skybox/IBL is
+            // present (Texture/CubeTexture) vs. lost (a flat Color / null).
+            const classifyEnv = (value: unknown): string | null => {
+                if (!value || typeof value !== "object") return null;
+                const v = value as {isCubeTexture?: boolean; isTexture?: boolean; isColor?: boolean};
+                if (v.isCubeTexture) return "CubeTexture";
+                if (v.isTexture) return "Texture";
+                if (v.isColor) return "Color";
+                return "Unknown";
+            };
+            // Detailed texture description so we can tell a *correctly rendered*
+            // skybox from one that loaded with the wrong mapping/colorSpace or a
+            // missing image (which renders flat/black even though it classifies
+            // as "Texture").
+            const describeTexture = (value: unknown) => {
+                const t = value as {
+                    isTexture?: boolean;
+                    isColor?: boolean;
+                    mapping?: number;
+                    colorSpace?: string;
+                    flipY?: boolean;
+                    image?: {width?: number; height?: number} | null;
+                    source?: {data?: {width?: number; height?: number} | null} | null;
+                } | null;
+                if (!t || typeof t !== "object") return null;
+                if (t.isColor) return {kind: "Color"};
+                if (!t.isTexture) return {kind: "Unknown"};
+                const img = t.image || t.source?.data || null;
+                return {
+                    kind: "Texture",
+                    mapping: t.mapping ?? null,
+                    colorSpace: t.colorSpace ?? null,
+                    flipY: t.flipY ?? null,
+                    width: img?.width ?? null,
+                    height: img?.height ?? null,
+                };
+            };
+
             const names: string[] = [];
             const visibleObjectNames: string[] = [];
             const renderableNames: string[] = [];
@@ -708,10 +781,34 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
             let visibleRenderableCount = 0;
             let meshCount = 0;
             let visibleMeshCount = 0;
+            const lights: Array<{
+                type: string;
+                name: string;
+                intensity: number;
+                visible: boolean;
+                parent: string | null;
+            }> = [];
 
             scene.traverse(object => {
                 objectCount += 1;
                 if (object.name) names.push(object.name);
+
+                if ((object as unknown as {isLight?: boolean}).isLight) {
+                    const light = object as unknown as {
+                        type: string;
+                        name: string;
+                        intensity: number;
+                        visible: boolean;
+                        parent?: {name?: string; type?: string} | null;
+                    };
+                    lights.push({
+                        type: light.type,
+                        name: light.name,
+                        intensity: light.intensity,
+                        visible: light.visible,
+                        parent: light.parent ? light.parent.name || light.parent.type || null : null,
+                    });
+                }
 
                 const visible = isVisibleInHierarchy(object);
                 if (visible) {
@@ -744,6 +841,7 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
             });
             return {
                 sceneName: app?.editor?.sceneName ?? null,
+                sceneID: app?.editor?.sceneID ?? null,
                 mode: app?.mode ?? null,
                 isPlaying: !!app?.isPlaying,
                 assetCount: app?.editor?.assetsCount ?? 0,
@@ -757,10 +855,102 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
                 visibleRenderableCount,
                 meshCount,
                 visibleMeshCount,
+                lights,
+                rendering: {
+                    ambient: app?.editor?.rendering?.ambient ?? null,
+                    hemisphere: app?.editor?.rendering?.hemisphere ?? null,
+                    backgroundType: app?.editor?.rendering?.background?.type ?? null,
+                    backgroundTexture: app?.editor?.rendering?.background?.texture ?? null,
+                    hasBackgroundTextureAsset: !!app?.editor?.rendering?.background?.textureAsset,
+                },
+                sceneEnv: {
+                    background: classifyEnv((scene as {background?: unknown}).background),
+                    environment: classifyEnv((scene as {environment?: unknown}).environment),
+                    backgroundDetail: describeTexture((scene as {background?: unknown}).background),
+                    hasBackgroundNode: !!(scene as {backgroundNode?: unknown}).backgroundNode,
+                    hasEnvironmentNode: !!(scene as {environmentNode?: unknown}).environmentNode,
+                    backgroundIntensity: (scene as {backgroundIntensity?: number}).backgroundIntensity ?? null,
+                    backgroundBlurriness: (scene as {backgroundBlurriness?: number}).backgroundBlurriness ?? null,
+                    backgroundRotationY: (scene as {backgroundRotation?: {y?: number}}).backgroundRotation?.y ?? null,
+                },
             };
+        };
+        // Test affordance: deterministically pin the editor camera so visual
+        // skybox/background regression shots are comparable across reloads
+        // (the camera otherwise resets to a default orientation on reload).
+        const wc = window as unknown as {
+            __stemSetEditorCamera?: (pos: [number, number, number], target: [number, number, number]) => boolean;
+        };
+        wc.__stemSetEditorCamera = (pos, target) => {
+            const app = getEngineRuntime() as unknown as {
+                camera?: {
+                    position?: {set: (x: number, y: number, z: number) => void};
+                    lookAt?: (x: number, y: number, z: number) => void;
+                    updateMatrixWorld?: () => void;
+                };
+                editor?: {controls?: {current?: {controls?: {target?: {set: (x: number, y: number, z: number) => void}; update?: () => void}}}};
+            };
+            const cam = app?.camera;
+            if (!cam?.position) return false;
+            const orbit = app?.editor?.controls?.current?.controls;
+            cam.position.set(pos[0], pos[1], pos[2]);
+            if (orbit?.target?.set) {
+                orbit.target.set(target[0], target[1], target[2]);
+                orbit.update?.();
+            }
+            cam.lookAt?.(target[0], target[1], target[2]);
+            cam.updateMatrixWorld?.();
+            return true;
+        };
+        // Debug affordance: dump the material maps applied to named objects so a
+        // Playwright probe can verify which texture slots actually resolved.
+        (window as unknown as {__stemInspectMaterials?: (names: string[]) => unknown}).__stemInspectMaterials = (
+            names: string[],
+        ) => {
+            const scene = getEngineRuntime()?.editor?.scene;
+            if (!scene) return {error: "no scene"};
+            const tex = (t: any) =>
+                t ? {cs: t.colorSpace, w: t.image?.width ?? null, h: t.image?.height ?? null, hasImg: !!t.image} : null;
+            const mat = (m: any) => ({
+                type: m?.type ?? m?.constructor?.name,
+                isNode: !!(m?.isNodeMaterial || /NodeMaterial/.test(m?.type ?? m?.constructor?.name ?? "")),
+                color: m?.color ? "#" + m.color.getHexString() : null,
+                map: tex(m?.map),
+                normalMap: tex(m?.normalMap),
+                metalnessMap: tex(m?.metalnessMap),
+                roughnessMap: tex(m?.roughnessMap),
+                metalness: m?.metalness,
+                roughness: m?.roughness,
+            });
+            const byName: Record<string, any> = {};
+            scene.traverse((o: any) => {
+                if (o.name && !byName[o.name]) byName[o.name] = o;
+            });
+            const out: Record<string, unknown> = {};
+            for (const name of names) {
+                const obj = byName[name];
+                if (!obj) {
+                    out[name] = {missing: true};
+                    continue;
+                }
+                const meshes: unknown[] = [];
+                obj.traverse((c: any) => {
+                    if (!c.isMesh) return;
+                    const mats = Array.isArray(c.material) ? c.material : [c.material];
+                    mats.forEach((m: any, i: number) => meshes.push({mesh: c.name || "(unnamed)", idx: i, ...mat(m)}));
+                });
+                out[name] = {
+                    meshCount: meshes.length,
+                    hasMaterialSettings: !!obj.userData?.materialSettings,
+                    materials: meshes,
+                };
+            }
+            return out;
         };
         return () => {
             delete (window as unknown as {__stemGetScene?: unknown}).__stemGetScene;
+            delete (window as unknown as {__stemSetEditorCamera?: unknown}).__stemSetEditorCamera;
+            delete (window as unknown as {__stemInspectMaterials?: unknown}).__stemInspectMaterials;
         };
     }, []);
 

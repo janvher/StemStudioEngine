@@ -295,3 +295,118 @@ button.add(new UIKit.Text({
 }));
 ```
 
+## Patterns from real playground games
+
+These examples are adapted from UIKit-heavy games such as puzzle boards, title screens, lobbies, and combat HUDs.
+
+### Dual play/editor UIKit root
+
+The built-in `uikit-dual-mode` script is useful when a HUD should render both in the editor preview and in play mode. Import it from a behavior script, build your UI once, then let the helper attach and update the root.
+
+```ts
+@import "uikit-dual-mode" as uikit;
+
+this.init = function (game) {
+  this.game = game;
+  this._uikitCtx = uikit.createPlayContext(game);
+  this._uiRoot = uikit.buildRoot(this._uikitCtx, {
+    pointerEvents: "auto",
+  });
+
+  this.buildHud();
+  uikit.attach(this, this._uikitCtx);
+};
+
+this.buildHud = function () {
+  this.scoreText = new UIKit.Text({
+    text: "Score 0",
+    fontSize: 28,
+    color: 0xffffff,
+  });
+  this._uiRoot.add(this.scoreText);
+};
+
+this.update = function (deltaTime) {
+  uikit.tick(this, deltaTime);
+  const score = this.erth.store.get("score") ?? 0;
+  this.scoreText.setProperties({text: `Score ${score}`});
+};
+
+this.dispose = function () {
+  uikit.teardown(this);
+};
+```
+
+For editor preview support, add `onEditorAdded`, `onEditorAttributesUpdated`, and `onEditorDispose` using the helper's `createEditorContext()` and `teardown()` methods.
+
+### HUD button that drives gameplay
+
+Chess and lobby screens use UIKit buttons to send targeted behavior events back into game logic. This keeps UI code from directly mutating board or match state.
+
+```ts
+this.createHudButton = function (label, eventName, payload) {
+  const button = new UIKit.Container({
+    width: 160,
+    height: 44,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: 0x26334d,
+    borderRadius: 6,
+    pointerEvents: "auto",
+    hover: {backgroundColor: 0x314263},
+    active: {backgroundColor: 0x1b2538},
+    onClick: () => {
+      this.game.behaviorManager.sendEventToObjectBehaviors(
+        this.target,
+        eventName,
+        payload ?? {},
+      );
+    },
+  });
+
+  button.add(new UIKit.Text({
+    text: label,
+    fontSize: 18,
+    color: 0xffffff,
+  }));
+
+  return button;
+};
+
+this._uiRoot.add(this.createHudButton("Reset", "resetGame"));
+this._uiRoot.add(this.createHudButton("Promote", "promotePiece", {piece: "queen"}));
+```
+
+The receiver implements `onEvent(msg, data)` in the gameplay behavior.
+
+### Input and UIKit in the same puzzle loop
+
+Puzzle games often support both UI clicks and keyboard/gamepad input. Keep input reads in one method, then let the game update decide what state changes are legal.
+
+```ts
+this.readControls = function () {
+  const input = this.game.inputManager;
+  const lateral = input.getMotion("lateral");
+
+  return {
+    left: input.getAction("drop7_Left") || lateral < -0.5,
+    right: input.getAction("drop7_Right") || lateral > 0.5,
+    drop: input.getAction("drop7_Drop") ||
+      input.getAction("jump") ||
+      input.getAction("use"),
+    restart: input.getAction("drop7_Restart"),
+  };
+};
+
+this.update = function (deltaTime) {
+  UIKitPointerEvents.update(deltaTime);
+
+  const controls = this.readControls();
+  if (controls.left) this.moveCursor(-1);
+  if (controls.right) this.moveCursor(1);
+  if (controls.drop) this.dropPiece();
+  if (controls.restart) this.resetBoard();
+};
+```
+
+For pointer interactions, put `onClick` handlers on the relevant `UIKit.Container` cells or buttons. For continuous input, poll `game.inputManager` in `update()`.

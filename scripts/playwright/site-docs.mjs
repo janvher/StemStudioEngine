@@ -92,6 +92,11 @@ try {
         /this\.erth\.events\.on/.test(runtimeText),
         runtimeText.slice(0, 160),
     );
+    assert(
+        "Runtime API page includes game-derived examples",
+        /Patterns from real playground games/.test(runtimeText) && /race\.trackReady/.test(runtimeText),
+        runtimeText.slice(-220),
+    );
 } catch (e) {
     failures.push(`exception: ${e.message}`);
     console.error(e);

@@ -71,9 +71,11 @@ let initRefCount = 0;
 const activeRoots = new Set<UIKitComponent>();
 let hasConfiguredTransparentSort = false;
 
-// Diagnostic logging for UIKit layout/sizing issues. Bounded so a stuck
-// scene doesn't spam the console forever.
-const UIKIT_DIAG = true;
+// Diagnostic logging for UIKit layout/sizing issues. OFF by default — this is
+// developer instrumentation that emits per-frame `[UIKitDiag]` snapshots for the
+// first few frames of every registered root, which is console noise in normal
+// use. Flip to true locally when debugging UIKit sizing/positioning.
+const UIKIT_DIAG = false;
 const diagFramesRemaining = new Map<UIKitComponent, number>();
 const DIAG_MAX_FRAMES = 6;
 
@@ -423,7 +425,21 @@ function initializePointerEvents(): void {
         return;
     }
 
-    pointerEventsInstance = forwardHtmlEvents(canvas, camera, scene, {
+    // The camera controls call setPointerCapture() on the scene container
+    // (#scene-container) on pointerdown for drag handling. That capture
+    // redirects every subsequent pointermove/pointerup for the gesture to the
+    // container, so a listener bound to the <canvas> only ever sees the initial
+    // pointerdown — never the pointerup that completes a click. The result is
+    // that UIKit buttons receive pointerdown but never click. Bind the pointer
+    // forwarder to the capturing ancestor (falling back to the canvas) so the
+    // UI pointer system sees the full down -> up -> click sequence. The
+    // container and canvas share the same client rect, so the pointer -> NDC
+    // coordinate mapping (which uses the bound element's bounding rect) is
+    // unchanged.
+    const eventSource =
+        canvas.closest<HTMLElement>("#scene-container") ?? canvas.parentElement ?? canvas;
+
+    pointerEventsInstance = forwardHtmlEvents(eventSource, camera, scene, {
         batchEvents: true,
         intersectEveryFrame: false,
         forwardPointerCapture: true,
