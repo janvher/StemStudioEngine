@@ -51,7 +51,8 @@ export function autoResolveImports(
 
     for (const req of imports) {
         const extMatches = folderFiles.filter(f =>
-            !claimed.has(fileKey(f)) && req.extensions.some(ext => f.name.toLowerCase().endsWith(ext)),
+            //if multiple objects are created from the same model, this check filters out this file after first use
+            /*!claimed.has(fileKey(f)) && */req.extensions.some(ext => f.name.toLowerCase().endsWith(ext)),
         );
         if (extMatches.length === 0) continue;
 

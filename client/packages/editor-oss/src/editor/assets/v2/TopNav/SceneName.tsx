@@ -119,9 +119,10 @@ export const SceneName = () => {
                 </span>
 
                 {isOverflow ? (
-                    <Marquee speed={25} delay={1}>
-                        {sceneName} <div style={{ width: "24px" }} />
-                    </Marquee>
+                    //for some reason sometimes this code causes exception in React
+                    // <Marquee speed={25} delay={1}>
+                    <span>{sceneName} <div style={{ width: "24px" }} /></span>
+                    // </Marquee>
                 ) : (
                     <span>{sceneName}</span>
                 )}

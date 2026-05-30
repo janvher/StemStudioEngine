@@ -158,6 +158,7 @@ import EmptySceneTemplate from "./menu/scene/EmptySceneTemplate";
 import {isStemEditor} from "./stem-editor/isStemEditor";
 import type {StemEditorMetadata} from "./stem-editor/saveStemEditor";
 import {ParticleSystemPreviewObject} from "../object/particle/ParticleSystemPreviewObject";
+import {DYNAMIC_ROOT_NAME} from "@stem/editor-oss/scene/dynamicRoots";
 
 export {defaultRendering};
 
@@ -1451,6 +1452,10 @@ class Editor {
 
         while (objects.length > 0) {
             this.removeObject(objects[0]!);
+            //this object is added back if removed
+            if (objects.length == 1 && objects[0]?.name === DYNAMIC_ROOT_NAME) {
+                break;
+            }
         }
 
         this.scripts.length = 0;
