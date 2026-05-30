@@ -50,6 +50,13 @@ export function autoResolveImports(
     const claimed = new Set<string>();
 
     for (const req of imports) {
+        // Extension predicate reused below for both filepath and fuzzy matching.
+        // origin's variant filtered `folderFiles` into a local `extMatches` here
+        // and removed the claimed-filter so one model file can back several
+        // imports; that concern is already handled below where filepath matches
+        // resolve against the full (unfiltered) list. The fuzzy fallback still
+        // redeclares its own claimed-filtered `extMatches`, so keep the shared
+        // predicate form to avoid a duplicate declaration.
         const extOf = (f: File) => req.extensions.some(ext => f.name.toLowerCase().endsWith(ext));
 
         let match: File | null = null;
