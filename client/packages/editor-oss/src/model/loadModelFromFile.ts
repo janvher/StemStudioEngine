@@ -85,12 +85,13 @@ export const loadModelFromFile = async (
     file: File,
     abortSignal: AbortSignal,
     companionFiles?: File[],
+    overriddenFileType: string = ""
 ): Promise<LoadModelFromFileResult> => {
     abortSignal.throwIfAborted();
 
     // If the file is a zip, identify the "root" model file and expand the zip
     // to a map of file names to blobs
-    const isZip = file.type === "application/zip";
+    const isZip = file.type === "application/zip" || overriddenFileType === "application/zip";
     let rootFile = file;
     let fileBlobMap = new Map<string, Blob>();
     let rootPath: string | undefined = undefined;

@@ -491,7 +491,8 @@ export async function processImportedFile(
                 // 1. Load model into Three.js (needed for thumbnail + texture cleanup)
                 let model;
                 try {
-                    ({model} = await loadModelFromFile(file, abortSignal, companionFiles));
+                    //all models are ZIP archives
+                    ({model} = await loadModelFromFile(file, abortSignal, companionFiles, "application/zip"));
                 } catch (loadErr) {
                     if (loadErr instanceof AnimationOnlyModelError) {
                         return {success: true, message: `Skipped "${modelName}": This file contains only animations (no 3D geometry). Animation files should be imported via the Animation Combiner tool.`};
