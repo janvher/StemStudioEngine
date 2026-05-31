@@ -331,6 +331,8 @@ export async function processImportedFile(
                         );
                     }
                 }
+                let survivorAssetId: string | undefined;
+                let resultMessage = `Behavior "${config.name}" imported`;
                 if (existingBhvConfig) {
                     const assetId = existingBhvConfig.id || originalConfigId;
                     // Always fetch the asset's actual HEAD revision to avoid stale-parent 409s
@@ -355,18 +357,59 @@ export async function processImportedFile(
                             aliasId,
                             retryOnConflict: true,
                         });
-                        return {success: true, message: `Behavior "${config.name}" updated (new revision)`};
+                        survivorAssetId = assetId;
+                        resultMessage = `Behavior "${config.name}" updated (new revision)`;
                     }
                 }
 
-                const newBehavior = await createBehavior({
-                    assetSource: global.app?.editor?.assetSource,
-                    name: config.name,
-                    code,
-                    config,
-                    aliasId: originalConfigId !== config.name ? originalConfigId : undefined,
-                });
-                return {success: true, message: `Behavior "${config.name}" imported (${newBehavior.id})`};
+                if (!survivorAssetId) {
+                    const newBehavior = await createBehavior({
+                        assetSource: global.app?.editor?.assetSource,
+                        name: config.name,
+                        code,
+                        config,
+                        aliasId: originalConfigId !== config.name ? originalConfigId : undefined,
+                    });
+                    survivorAssetId = newBehavior.id;
+                    resultMessage = `Behavior "${config.name}" imported (${newBehavior.id})`;
+                }
+
+                // OSS de-duplication (on import, per user request). OSS has no
+                // revision history — there is only the latest version — so earlier
+                // imports of the same behavior leave orphan asset records that pile
+                // up in the Behaviors panel (the reported 3× copies). Collapse every
+                // other same-named behavior record down to the survivor we just
+                // imported. Scene objects attach by the logical/alias id, which
+                // resolves to this survivor, so dropping the other records is safe
+                // for attachments. Gated to OSS; integrated keeps server-side history.
+                const {IS_OSS} = await import("../../mode/buildMode");
+                if (IS_OSS) {
+                    const {getOssAssetsForProject, unregisterOssAsset} = await import("@stem/network/api/asset");
+                    const projectId = editor.sceneID;
+                    if (projectId) {
+                        const configRegistry = editor.behaviorConfigRegistry;
+                        const scriptRegistry = editor.behaviorScriptRegistry;
+                        const dupes = getOssAssetsForProject(projectId).filter(r =>
+                            r.type === AssetType.Behavior &&
+                            r.name === config.name &&
+                            r.assetId !== survivorAssetId &&
+                            r.assetId !== originalConfigId,
+                        );
+                        for (const dup of dupes) {
+                            unregisterOssAsset(dup.assetId);
+                            configRegistry?.unregisterConfig(dup.assetId, true);
+                            scriptRegistry?.unregisterScript(dup.assetId, true);
+                        }
+                        if (dupes.length) {
+                            console.info(
+                                `[ScriptImport] OSS dedup: collapsed ${dupes.length} duplicate ` +
+                                `"${config.name}" behavior record(s) into ${survivorAssetId}`,
+                            );
+                        }
+                    }
+                }
+
+                return {success: true, message: resultMessage};
             }
 
             case "lambda": {
@@ -490,9 +533,34 @@ export async function processImportedFile(
 
                 // 1. Load model into Three.js (needed for thumbnail + texture cleanup)
                 let model;
+                let loadedFormat: string | undefined;
+                let loadedRootFile: File | Blob | undefined;
+                let loadedAtlas: unknown;
+                let loadedTextureOverrides: unknown;
                 try {
-                    //all models are ZIP archives
-                    ({model} = await loadModelFromFile(file, abortSignal, companionFiles, "application/zip"));
+                    // Sniff the real container. A model import can be EITHER a
+                    // ZIP archive bundling model + textures (e.g. pirate-ship's
+                    // `.glb` files are actually `PK\x03\x04` zips) OR a raw
+                    // model file (`.glb`/`.gltf`/`.fbx`/`.obj`, e.g. 100-cars,
+                    // 3d-chess). Hardcoding "application/zip" here forced JSZip
+                    // onto raw files, which threw "Can't find end of central
+                    // directory" and silently dropped every non-zipped model
+                    // from the scene. Detect by magic bytes so both shapes work.
+                    const head = new Uint8Array(await file.slice(0, 4).arrayBuffer());
+                    const isZipArchive =
+                        head[0] === 0x50 && head[1] === 0x4b && head[2] === 0x03 && head[3] === 0x04;
+                    ({
+                        model,
+                        format: loadedFormat,
+                        rootFile: loadedRootFile,
+                        atlasData: loadedAtlas,
+                        textureOverrides: loadedTextureOverrides,
+                    } = await loadModelFromFile(
+                        file,
+                        abortSignal,
+                        companionFiles,
+                        isZipArchive ? "application/zip" : "",
+                    ));
                 } catch (loadErr) {
                     if (loadErr instanceof AnimationOnlyModelError) {
                         return {success: true, message: `Skipped "${modelName}": This file contains only animations (no 3D geometry). Animation files should be imported via the Animation Combiner tool.`};
@@ -503,8 +571,23 @@ export async function processImportedFile(
                 // 2. Fix broken textures (especially FBX)
                 await cleanupInvalidTextures(model);
 
-                // 3. Convert to GLB
-                const sourceGlbBuffer = await convertToGlb(model, abortSignal, {});
+                // 3. Produce the GLB buffer to store.
+                // Fast path: a self-contained GLB source (no atlas, no loose
+                // texture remapping) is already a valid GLB — reuse its bytes
+                // and skip the GLTFExporter round-trip. `convertToGlb` here runs
+                // with empty options, so for GLB sources it would only re-encode
+                // the same data. The exporter is the dominant synchronous cost
+                // per model; skipping it for the common all-GLB asset pack case
+                // is what keeps large imports (e.g. 100+ models) from blocking
+                // the main thread for many minutes. FBX/OBJ/gltf-with-loose-
+                // textures/atlas still need the exporter to normalize into one
+                // GLB, so they take the fallback.
+                let sourceGlbBuffer: ArrayBuffer;
+                if (loadedFormat === "glb" && !loadedAtlas && !loadedTextureOverrides && loadedRootFile) {
+                    sourceGlbBuffer = await loadedRootFile.arrayBuffer();
+                } else {
+                    sourceGlbBuffer = await convertToGlb(model, abortSignal, {});
+                }
 
                 // 4. Create LODs with meshopt compression + texture compression (best effort).
                 // Skip in OSS: derivatives don't persist (no upload endpoint), and the

@@ -17,7 +17,7 @@ import {refreshEditorAssets} from "../../../../../editor/asset-management/hooks/
 import type EngineRuntime from "@stem/editor-oss/EngineRuntime";
 import global from "@stem/editor-oss/global";
 import {queryClient} from "@web-shared/queryClient";
-import {showToast} from "@stem/editor-oss/showToast";
+import {showToast, showLoadingToast, dismissToast} from "@stem/editor-oss/showToast";
 
 const DEFAULT_EXTENSION_BY_TYPE: Record<string, string> = {
     model: ".glb",
@@ -428,6 +428,11 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
             }
         }
 
+        // Persistent spinner toast for the duration of execution + auto-save, so
+        // the user has feedback while the stemscript runs (imports can take a
+        // while). Dismissed in the `finally` below — no auto-dismiss.
+        const importSpinnerId = showLoadingToast("Importing scene…", "Running stemscript…");
+
         try {
             const result = editor
                 ? await editor.runInScriptImportContext(() =>
@@ -476,6 +481,7 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
                 }
             }
 
+            dismissToast(importSpinnerId);
             importResultsRef.current = null;
             importCounterRef.current = 0;
         }

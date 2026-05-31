@@ -232,7 +232,18 @@ export function registerScriptCompletions(
                 return {suggestions};
             }
 
-            // General → globals + lifecycle function names
+            // General → globals + lifecycle function names. Only offer these
+            // when the cursor is actually on a word being typed. Without this
+            // guard the provider returns the full list for *any* position,
+            // including right after a space, so the suggest widget pops up (or
+            // refuses to dismiss) every time you type a space — most visibly on
+            // the first line of top-level code. An empty word means "not typing
+            // an identifier", so return whatever context-specific suggestions we
+            // already collected (e.g. @import) and nothing else.
+            if (!word.word) {
+                return {suggestions};
+            }
+
             for (const g of globals) {
                 suggestions.push({
                     label: g.name,

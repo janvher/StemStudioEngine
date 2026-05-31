@@ -114,6 +114,28 @@ const showToast = (props: ToastMessageProps) => {
 export {showToast};
 
 /**
+ * Show a persistent spinner ("loading") toast and return its id. Unlike
+ * `showToast`, this does NOT auto-dismiss — the caller owns the lifecycle and
+ * must call `dismissToast(id)` when the work finishes. Use for long async work
+ * with no fixed duration, e.g. while a stemscript import is executing.
+ *
+ * @param title - Headline shown next to the spinner.
+ * @param body - Optional secondary line.
+ * @returns The toast id, to pass to `dismissToast`.
+ */
+export const showLoadingToast = (title: string, body?: string): number =>
+    toastywaveToast.loading(title, {
+        description: body,
+        duration: Infinity,
+        showCountdown: false,
+    });
+
+/** Dismiss a toast (e.g. a `showLoadingToast` spinner) by its id. No-op if already gone. */
+export const dismissToast = (id: number): void => {
+    toastywaveToast.dismiss(id);
+};
+
+/**
  * Utility function to create clickable items for objects in the scene
  *
  * @param items

@@ -625,9 +625,23 @@ export const fetchAssetImageDerivative = async (
     const derivatives = await getAssetDerivatives(assetId, resolvedRevisionId, {includeDataUrl: true});
     const imageDerivative = derivatives.find(d => d.type === AssetDerivativeType.Image);
 
-    if (!imageDerivative?.dataUrl) throw new Error("Image derivative missing dataUrl");
+    if (imageDerivative?.dataUrl) return imageDerivative.dataUrl;
 
-    return imageDerivative.dataUrl;
+    // No image derivative — fall back to the revision's inline data URL, the
+    // same fallback AssetLoader.getImageDataUrl uses. This is the *only* path
+    // that works in OSS: there is no integrated CDN, so getAssetDerivatives
+    // always returns [] and the image bytes live inline as a data: URL on the
+    // synthesized revision record. (It also covers the integrated case where a
+    // derivative simply hasn't been generated yet.) Without this, textures
+    // resolved through this fallback — e.g. an OceanSurface base map whose
+    // revision id isn't in the resolution context, so materialUtils skips the
+    // assetLoader path — never render.
+    const revision = await getAssetRevision(defaultQueryClient, assetId, resolvedRevisionId, {
+        includeDataUrl: true,
+    });
+    if (revision?.dataUrl) return revision.dataUrl;
+
+    throw new Error("Image derivative missing dataUrl");
 };
 
 export const useAssetImageDerivative = (assetId?: string, revisionId?: string) => {
