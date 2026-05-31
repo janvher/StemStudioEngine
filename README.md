@@ -30,7 +30,7 @@ If StemStudio is useful to you or your organization, please consider sponsoring 
 
 ## Quick start
 
-Prerequisites: [Bun](https://bun.sh) 1.0+, [Go](https://go.dev) 1.21+, [Node.js](https://nodejs.org) 20+.
+Prerequisites: [Bun](https://bun.sh) 1.0+, [Go](https://go.dev) 1.21+, [Node.js](https://nodejs.org) 20+. New machine? See [Setting up your dev environment](#setting-up-your-dev-environment) for per-OS install steps (macOS, Windows, Linux).
 
 ```bash
 git clone https://github.com/your-org/stemstudio.git
@@ -59,6 +59,72 @@ ANYTHING_WORLD_API_KEY=...
 ```
 
 Any key you omit makes that provider unavailable — the editor will prompt you for it when you first try a feature that needs it.
+
+## Setting up your dev environment
+
+You need three tools on your `PATH`: **[Bun](https://bun.sh) 1.0+** (package manager + task runner), **[Go](https://go.dev) 1.21+** (the AI proxy server), and **[Node.js](https://nodejs.org) 20+** with `npm` (the multiplayer sidecar). Pick your OS below, then continue with [Quick start](#quick-start).
+
+### macOS
+
+Using [Homebrew](https://brew.sh):
+
+```bash
+brew install oven-sh/bun/bun go node git
+```
+
+Or install each from its official site (links above). Apple Silicon and Intel are both supported.
+
+### Linux
+
+```bash
+# Bun
+curl -fsSL https://bun.sh/install | bash
+
+# Node.js 20+ — via nvm (recommended; distro packages are often older)
+curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+nvm install 20
+
+# Go 1.21+ — prefer the official tarball; distro `golang-go` may lag
+#   https://go.dev/doc/install   (or: sudo apt install golang-go / sudo dnf install golang)
+
+# Build essentials for any native dependency compilation
+sudo apt install -y build-essential git    # Debian/Ubuntu
+# sudo dnf groupinstall "Development Tools"  # Fedora/RHEL
+```
+
+Open a new shell (or `source ~/.bashrc`) so the freshly installed tools land on your `PATH`.
+
+### Windows
+
+**Use [WSL2](https://learn.microsoft.com/windows/wsl/install) (recommended).** Several `package.json` scripts use Unix-shell idioms — inline env vars like `BUILD_MODE=oss …` and `.sh` deploy scripts — that do not run under native `cmd`/PowerShell. WSL2 gives you a real Linux shell where everything works as documented.
+
+```powershell
+wsl --install            # installs Ubuntu; reboot if prompted
+```
+
+Then open the **Ubuntu** terminal and follow the **Linux** instructions above. Clone the repo *inside* the WSL filesystem (e.g. `~/code/…`, not `/mnt/c/…`) for usable file-watch and build performance.
+
+<details>
+<summary>Native Windows (advanced, unsupported)</summary>
+
+```powershell
+winget install OpenJS.NodeJS.LTS GoLang.Go Git.Git
+powershell -c "irm bun.sh/install.ps1 | iex"
+```
+
+You will still need to work around the Unix-style scripts (e.g. run the editor, AI server, and MP sidecar separately and set `BUILD_MODE` via `$env:BUILD_MODE`). WSL2 is strongly preferred.
+
+</details>
+
+### Verify
+
+```bash
+bun --version     # 1.0+
+go version        # go1.21+
+node --version    # v20+
+```
+
+If all three print a version, you're ready for [Quick start](#quick-start).
 
 ## What's in the box
 
