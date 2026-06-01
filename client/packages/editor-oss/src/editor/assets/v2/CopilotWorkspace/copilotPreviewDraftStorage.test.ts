@@ -75,19 +75,16 @@ describe("copilotPreviewDraftStorage", () => {
         vi.unstubAllGlobals();
     });
 
-    it("persists, reads, and clears active preview drafts through the local fallback", async () => {
-        await persistCopilotPreviewDraft(makeApp() as any, makeSession());
+    it("never falls back to localStorage when IndexedDB is unavailable", async () => {
+        // Preview drafts carry a full scene snapshot and must NOT be mirrored
+        // into localStorage (that bloated storage and threw QuotaExceededError).
+        // With IndexedDB unavailable, persist/read/clear are graceful no-ops and
+        // localStorage stays untouched.
+        await expect(persistCopilotPreviewDraft(makeApp() as any, makeSession())).resolves.toBeUndefined();
+        expect(window.localStorage.length).toBe(0);
 
-        const draft = await readCopilotPreviewDraft("scene-1");
-        expect(draft?.sceneId).toBe("scene-1");
-        expect(draft?.baseRevisionId).toBe("rev-1");
-        expect(draft?.previewId).toBe("preview-1");
-        expect(draft?.previewSceneJson).toEqual([{type: "Scene", uuid: "preview-scene"}]);
-        expect(draft?.previewAssetResolutionContext.assetIdToRevisionId).toEqual({
-            "asset-player": "rev-player-preview",
-        });
-
-        await clearCopilotPreviewDraft("scene-1");
         await expect(readCopilotPreviewDraft("scene-1")).resolves.toBeNull();
+        await expect(clearCopilotPreviewDraft("scene-1")).resolves.toBeUndefined();
+        expect(window.localStorage.length).toBe(0);
     });
 });

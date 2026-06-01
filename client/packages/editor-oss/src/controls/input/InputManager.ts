@@ -275,7 +275,8 @@ export class InputManager<ActionsAndMotions extends string> implements InputProv
      */
     getMotion(motionId: Motion): number {
         const motion = this.motions.get(motionId);
-        return motion ? motion.value + motion.delta : 0;
+        const value = motion ? motion.value + motion.delta : 0;
+        return value;
     }
 
     getVirtualDispatcher(): VirtualInputDispatcher {

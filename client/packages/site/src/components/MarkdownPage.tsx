@@ -9,8 +9,11 @@ import type {DocEntry} from "../content/docs-nav";
 import architectureMd from "../../../../../docs/architecture.md?raw";
 import byokMd from "../../../../../docs/byok.md?raw";
 import exportingMd from "../../../../../docs/exporting-a-game.md?raw";
+import gameObjectAndGameManagerApiMd from "../../../../../docs/gameobject-and-game-manager-api.md?raw";
 import multiplayerMd from "../../../../../docs/multiplayer.md?raw";
+import runtimeApiMd from "../../../../../docs/runtime-api.md?raw";
 import serverSideStorageMd from "../../../../../docs/server-side-storage.md?raw";
+import uikitApiMd from "../../../../../docs/uikit-api.md?raw";
 import readmeMd from "../../../../../README.md?raw";
 import contributingMd from "../../../../../CONTRIBUTING.md?raw";
 
@@ -18,8 +21,11 @@ const SOURCES: Record<string, string> = {
     "repo-docs:architecture.md": architectureMd,
     "repo-docs:byok.md": byokMd,
     "repo-docs:exporting-a-game.md": exportingMd,
+    "repo-docs:gameobject-and-game-manager-api.md": gameObjectAndGameManagerApiMd,
     "repo-docs:multiplayer.md": multiplayerMd,
+    "repo-docs:runtime-api.md": runtimeApiMd,
     "repo-docs:server-side-storage.md": serverSideStorageMd,
+    "repo-docs:uikit-api.md": uikitApiMd,
     "repo-root:README.md": readmeMd,
     "repo-root:CONTRIBUTING.md": contributingMd,
 };

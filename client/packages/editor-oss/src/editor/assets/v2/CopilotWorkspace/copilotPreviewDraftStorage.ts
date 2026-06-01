@@ -27,7 +27,24 @@ export type StoredCopilotPreviewDraft = {
     };
 };
 
-const localStorageKey = (sceneId: string) => `${LOCAL_STORAGE_PREFIX}:${encodeURIComponent(sceneId)}`;
+// One-time cleanup: earlier builds mirrored the full preview scene snapshot
+// into localStorage as a "fallback". That is scene-scoped data and has no
+// business in the ~5MB localStorage budget — it bloated storage and threw
+// QuotaExceededError. Drafts live in IndexedDB only now; purge any leftovers.
+const purgeLegacyLocalDrafts = (): void => {
+    if (typeof window === "undefined") return;
+    try {
+        const keys: string[] = [];
+        for (let i = 0; i < window.localStorage.length; i++) {
+            const key = window.localStorage.key(i);
+            if (key && key.startsWith(LOCAL_STORAGE_PREFIX)) keys.push(key);
+        }
+        keys.forEach(key => window.localStorage.removeItem(key));
+    } catch {
+        /* localStorage unavailable — nothing to purge */
+    }
+};
+purgeLegacyLocalDrafts();
 
 const cloneRecord = (record?: Readonly<Record<string, string>>): Record<string, string> => ({...(record ?? {})});
 
@@ -104,31 +121,6 @@ const runStoreRequest = async <T>(
     });
 };
 
-const writeLocalDraft = (draft: StoredCopilotPreviewDraft) => {
-    if (typeof window === "undefined") return;
-    window.localStorage.setItem(localStorageKey(draft.sceneId), JSON.stringify(draft));
-};
-
-const readLocalDraft = (sceneId: string): StoredCopilotPreviewDraft | null => {
-    if (typeof window === "undefined") return null;
-    const raw = window.localStorage.getItem(localStorageKey(sceneId));
-    if (!raw) return null;
-
-    try {
-        const parsed = JSON.parse(raw) as StoredCopilotPreviewDraft;
-        if (parsed.schemaVersion !== 1 || parsed.sceneId !== sceneId || !parsed.session?.previewId) return null;
-        return parsed;
-    } catch (error) {
-        console.warn("[copilotPreviewDraftStorage] Failed to read local preview draft:", error);
-        return null;
-    }
-};
-
-const clearLocalDraft = (sceneId: string) => {
-    if (typeof window === "undefined") return;
-    window.localStorage.removeItem(localStorageKey(sceneId));
-};
-
 export const persistCopilotPreviewDraft = async (
     app: EngineRuntime,
     session: CopilotPreviewSession,
@@ -136,15 +128,13 @@ export const persistCopilotPreviewDraft = async (
     const draft = createDraft(app, session);
     if (!draft || typeof window === "undefined") return;
 
+    // IndexedDB only. The draft carries a full scene snapshot — it must never
+    // touch localStorage. If IndexedDB is unavailable the draft is simply not
+    // persisted (preview is recoverable from the authoritative scene anyway).
     try {
         await runStoreRequest("readwrite", store => store.put(draft));
-        clearLocalDraft(draft.sceneId);
     } catch (error) {
-        try {
-            writeLocalDraft(draft);
-        } catch (fallbackError) {
-            console.warn("[copilotPreviewDraftStorage] Failed to persist preview draft:", error, fallbackError);
-        }
+        console.warn("[copilotPreviewDraftStorage] Failed to persist preview draft:", error);
     }
 };
 
@@ -160,18 +150,15 @@ export const readCopilotPreviewDraft = async (sceneId: string): Promise<StoredCo
             return draft;
         }
     } catch (error) {
-        const localDraft = readLocalDraft(sceneId);
-        if (localDraft) return localDraft;
         console.warn("[copilotPreviewDraftStorage] Failed to read preview draft:", error);
     }
 
-    return readLocalDraft(sceneId);
+    return null;
 };
 
 export const clearCopilotPreviewDraft = async (sceneId?: string | null): Promise<void> => {
     if (!sceneId || typeof window === "undefined") return;
 
-    clearLocalDraft(sceneId);
     try {
         await runStoreRequest("readwrite", store => store.delete(sceneId));
     } catch (error) {

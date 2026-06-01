@@ -46,4 +46,31 @@ describe("BehaviorObjectSettingsApplier", () => {
 
         expect(group.userData.physics.shape).toBe(BodyShapeType.SPHERE);
     });
+
+    it("seeds default physics on an object that has none", () => {
+        const object = new Mesh(new BoxGeometry(1, 1, 1), new MeshBasicMaterial());
+
+        BehaviorObjectSettingsApplier.applyObjectSettings(object, {
+            physics: { enabled: true, shape: "capsule" },
+        });
+
+        // No prior physics → the behavior default applies, including enabling it.
+        expect(object.userData.physics.enabled).toBe(true);
+    });
+
+    it("does NOT override an explicit physics.enabled:false with a behavior default", () => {
+        // Repro of the pirate-ship freeze: the object's physics was deliberately
+        // disabled (e.g. by an import's `physics set ... enabled:false`). Attaching
+        // a behavior whose default physics is enabled (the character controller)
+        // must NOT re-enable it — a re-enabled dynamic body would hijack the
+        // object's transform and override the game's own controller.
+        const object = new Mesh(new BoxGeometry(1, 1, 1), new MeshBasicMaterial());
+        object.userData.physics = { enabled: false };
+
+        BehaviorObjectSettingsApplier.applyObjectSettings(object, {
+            physics: { enabled: true, shape: "capsule" },
+        });
+
+        expect(object.userData.physics.enabled).toBe(false);
+    });
 });

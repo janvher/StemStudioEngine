@@ -120,6 +120,7 @@ import Vector3AttributeConverter from "./behaviors/converters/Vector3AttributeCo
 import VideoAttributeConverter from "./behaviors/converters/VideoAttributeConverter";
 import {isSceneBehaviorsMigrated, migrateLegacyBehaviors} from "./behaviors/LegacyBehaviorMigration";
 import {isLegacyBehaviorId} from "../behaviors/util";
+import {IS_OSS} from "../mode/buildMode";
 import AssetAttributeConverter from "./behaviors/converters/AssetAttributeConverter";
 import BooleanWidget from "./behaviors/widgets/BooleanWidget";
 import ButtonWidget from "./behaviors/widgets/ButtonWidget";
@@ -1099,8 +1100,12 @@ class Editor {
             return;
         }
 
-        // Migrate legacy behaviors to Assets API
-        if (this.engine?.mode === ApplicationMode.EDIT && this.sceneID) {
+        // Migrate legacy behaviors to Assets API.
+        // OSS has no legacy cloud/Mongo behavior backend — and OSS asset IDs
+        // ("oss-asset-<ts>-<rand>") are not 24-char Mongo ObjectIDs, so
+        // `isLegacyBehaviorId` would wrongly flag every OSS behavior as legacy
+        // and mint a fresh duplicate asset on every load. Skip migration in OSS.
+        if (!IS_OSS && this.engine?.mode === ApplicationMode.EDIT && this.sceneID) {
             await migrateLegacyBehaviors({
                 scene: this.scene,
                 sceneId: this.sceneID,
@@ -3256,14 +3261,30 @@ class Editor {
         const compact = (config: BehaviorConfig): BehaviorConfig | {id: string} =>
             builtInIds.has(config.id) ? {id: config.id} : config;
 
+        // A behavior can be registered under more than one registry key — its
+        // asset id AND an import alias (the YAML config.id) — so getAllConfigs()
+        // returns the SAME behavior more than once, every copy carrying the same
+        // config.id. Worse, a behavior edit re-registers only the asset-id key
+        // (and moves it to the end of the registry Map), leaving the alias-keyed
+        // copy stale with the OLD code/config. Writing both a fresh and a stale
+        // copy into the scene is what made the FIRST behavior edit revert on
+        // reload: the stale duplicate could be hydrated last and win. De-duplicate
+        // by config.id, keeping the LAST (newest) entry — re-registration moves
+        // the freshly-saved config to the end, so last-wins selects new content.
+        const dedupeById = (configs: BehaviorConfig[]): BehaviorConfig[] => {
+            const byId = new Map<string, BehaviorConfig>();
+            for (const config of configs) byId.set(config.id, config);
+            return Array.from(byId.values());
+        };
+
         if (this.isSandbox) {
-            this.scene.userData.behaviorConfigs = legacyConfigs.map(compact);
+            this.scene.userData.behaviorConfigs = dedupeById(legacyConfigs).map(compact);
             return;
         }
 
-        this.scene.userData.behaviorConfigs = legacyConfigs
-            .filter(config => this.usedBehaviorIds.has(config.id) || config.isScript)
-            .map(compact);
+        this.scene.userData.behaviorConfigs = dedupeById(
+            legacyConfigs.filter(config => this.usedBehaviorIds.has(config.id) || config.isScript),
+        ).map(compact);
 
         const configNames = this.scene.userData.behaviorConfigs.map((config: any) => config.id || config.name);
         console.debug("[Editor] Saved scene behavior configs", configNames);

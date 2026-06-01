@@ -103,6 +103,19 @@ When you add a new feature that needs to write data, route it through
 - Reach the engine from inside a behavior via `this.erth.*` and
   `this.gameObject`. Old `EventBus` and `this.target` style code is
   deprecated.
+- **Editor lifecycle hooks run without `init()`.** `onEditorAdded`,
+  `onEditorAttributesUpdated`, and `onEditorUpdate` fire in the editor
+  (e.g. at import/attach time) where `init(game)` is never called. A
+  common bug class: a behavior caches `const erth = this.erth` (or
+  `game`) *only* inside `init()`, then dereferences that module-local in
+  an editor hook — yielding `Cannot read properties of undefined (reading
+  'asset')` and silently failing to load textures/assets. Always read
+  engine handles from `this.erth` / `this.gameObject` directly, or
+  re-derive the locals at the top of *every* lifecycle entry point —
+  never assume `init()` already ran. Note `this.gameObject` exposes
+  `uuid`/`position`/`rotation`/`scale`/`visible`/`physics`/`_internal.three`
+  only — there is **no** `gameObject.game`; in the editor `game` is
+  typically `undefined`, so guard any `game.renderer.*` access.
 - Lifecycle docs: `docs/behaviors/`.
 
 ## Lambdas (ECS)

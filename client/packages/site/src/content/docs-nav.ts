@@ -26,6 +26,14 @@ export const DOC_SECTIONS: DocSection[] = [
         ],
     },
     {
+        label: "APIs",
+        entries: [
+            {slug: "runtime-api", title: "Runtime API", source: "repo-docs", file: "runtime-api.md"},
+            {slug: "gameobject-and-game-manager-api", title: "GameObject & GameManager", source: "repo-docs", file: "gameobject-and-game-manager-api.md"},
+            {slug: "uikit-api", title: "UIKit API", source: "repo-docs", file: "uikit-api.md"},
+        ],
+    },
+    {
         label: "AI & Multiplayer",
         entries: [
             {slug: "byok", title: "BYOK & AI providers", source: "repo-docs", file: "byok.md"},

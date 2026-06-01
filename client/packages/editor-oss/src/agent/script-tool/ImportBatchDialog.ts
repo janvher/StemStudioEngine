@@ -50,19 +50,41 @@ export function autoResolveImports(
     const claimed = new Set<string>();
 
     for (const req of imports) {
-        const extMatches = folderFiles.filter(f =>
-            //if multiple objects are created from the same model, this check filters out this file after first use
-            /*!claimed.has(fileKey(f)) && */req.extensions.some(ext => f.name.toLowerCase().endsWith(ext)),
-        );
-        if (extMatches.length === 0) continue;
+        // Extension predicate reused below for both filepath and fuzzy matching.
+        // origin's variant filtered `folderFiles` into a local `extMatches` here
+        // and removed the claimed-filter so one model file can back several
+        // imports; that concern is already handled below where filepath matches
+        // resolve against the full (unfiltered) list. The fuzzy fallback still
+        // redeclares its own claimed-filtered `extMatches`, so keep the shared
+        // predicate form to avoid a duplicate declaration.
+        const extOf = (f: File) => req.extensions.some(ext => f.name.toLowerCase().endsWith(ext));
 
         let match: File | null = null;
 
+        // An explicit filepath wins and may reuse a file already claimed by
+        // another import: one asset file can legitimately back several imports
+        // (e.g. four wheels all referencing wheel.glb, or one image reused as a
+        // texture and the scene thumbnail). Matching only *unclaimed* files left
+        // those duplicates unresolved, which popped a blocking import dialog and
+        // hung headless / automated imports. So resolve filepath against the
+        // full file list, not the claimed-filtered subset.
         if (req.filepath) {
-            match = findByFilepath(extMatches, req.filepath);
+            // Match an explicit filepath against the FULL file list, not the
+            // extension-filtered subset. A generator can emit a source file
+            // whose name carries a non-standard extension — e.g. duplicate
+            // textures saved as `PIR_Water.png-2`, `…-3`. Gating filepath
+            // resolution by `extOf` silently drops those files, leaving the
+            // import "unresolved", which pops the blocking batch-import dialog
+            // and hangs any headless/automated run forever (no user to click).
+            // The explicit filepath is already precise (exact path / basename),
+            // so it does not need — and is actively harmed by — the ext guard.
+            match = findByFilepath(folderFiles, req.filepath);
         }
 
         if (!match) {
+            // Fuzzy fallback only considers still-unclaimed files so two
+            // ambiguous imports don't grab the same file.
+            const extMatches = folderFiles.filter(f => !claimed.has(fileKey(f)) && extOf(f));
             if (extMatches.length === 1) {
                 match = extMatches[0]!;
             } else if (req.name) {

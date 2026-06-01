@@ -265,6 +265,14 @@ export function getSupportedImportTypes(): string[] {
  * @param name
  * @param companionFiles
  */
+/** Hex SHA-256 of a byte buffer, used to content-address imported model files. */
+async function sha256Hex(buffer: ArrayBuffer): Promise<string> {
+    const digest = await crypto.subtle.digest("SHA-256", buffer);
+    return Array.from(new Uint8Array(digest))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
+}
+
 export async function processImportedFile(
     file: File,
     type: string,
@@ -279,6 +287,16 @@ export async function processImportedFile(
      * the behavior is imported but never attached to any object.
      */
     behaviorIdOverride?: string,
+    /**
+     * Run-scoped cache keyed by source-file content hash → the asset created for
+     * it. A stemscript that places the same model many times (e.g. pirate-ship's
+     * 77 `import model … filepath=models/rocks-a.glb`) otherwise creates a fresh
+     * multi-MB inline asset per placement. With this cache, identical source
+     * bytes import once and every later placement reuses that one asset (a new
+     * scene object still gets created per placement). Pass the same Map for an
+     * entire import batch; omit it for one-off imports.
+     */
+    modelAssetDedupCache?: Map<string, {id: string; headRevisionId: string}>,
 ): Promise<{success: boolean; message: string}> {
     // Dynamic imports to keep module resolution lightweight for tests
     const [{default: global}, {setAssetRevision, resolveAssetRevisionId, getAssetResolutionContext}, {AssetType, ModelFormat, createAssetRevisionWithData, isNoChangesError, getAsset}, {createAsset}] = await Promise.all([
@@ -331,14 +349,27 @@ export async function processImportedFile(
                         );
                     }
                 }
+                let survivorAssetId: string | undefined;
+                let resultMessage = `Behavior "${config.name}" imported`;
                 if (existingBhvConfig) {
                     const assetId = existingBhvConfig.id || originalConfigId;
                     // Always fetch the asset's actual HEAD revision to avoid stale-parent 409s
                     let headRevisionId: string;
                     try {
                         headRevisionId = (await getAsset(assetId)).headRevisionId;
-                    } catch {
-                        // Fall back to scene-pinned revision if getAsset fails
+                    } catch (err) {
+                        // We matched this asset in the scene's behavior configs, so
+                        // it exists — a getAsset failure here is unexpected. Falling
+                        // back to the scene-pinned revision silently risks building
+                        // a revision on a STALE parent (the merge-on-stale path can
+                        // then drop the user's first edit). Surface it loudly; the
+                        // pinned revision is only a last resort, not a quiet default.
+                        console.error(
+                            `[ScriptImport] getAsset("${assetId}") failed while resolving HEAD for ` +
+                            `behavior "${config.name}"; falling back to scene-pinned revision. ` +
+                            `A stale parent here can drop the next edit.`,
+                            err,
+                        );
                         const context = getAssetResolutionContext(scene);
                         headRevisionId = (context ? resolveAssetRevisionId(assetId, context) : undefined) as string;
                     }
@@ -355,18 +386,59 @@ export async function processImportedFile(
                             aliasId,
                             retryOnConflict: true,
                         });
-                        return {success: true, message: `Behavior "${config.name}" updated (new revision)`};
+                        survivorAssetId = assetId;
+                        resultMessage = `Behavior "${config.name}" updated (new revision)`;
                     }
                 }
 
-                const newBehavior = await createBehavior({
-                    assetSource: global.app?.editor?.assetSource,
-                    name: config.name,
-                    code,
-                    config,
-                    aliasId: originalConfigId !== config.name ? originalConfigId : undefined,
-                });
-                return {success: true, message: `Behavior "${config.name}" imported (${newBehavior.id})`};
+                if (!survivorAssetId) {
+                    const newBehavior = await createBehavior({
+                        assetSource: global.app?.editor?.assetSource,
+                        name: config.name,
+                        code,
+                        config,
+                        aliasId: originalConfigId !== config.name ? originalConfigId : undefined,
+                    });
+                    survivorAssetId = newBehavior.id;
+                    resultMessage = `Behavior "${config.name}" imported (${newBehavior.id})`;
+                }
+
+                // OSS de-duplication (on import, per user request). OSS has no
+                // revision history — there is only the latest version — so earlier
+                // imports of the same behavior leave orphan asset records that pile
+                // up in the Behaviors panel (the reported 3× copies). Collapse every
+                // other same-named behavior record down to the survivor we just
+                // imported. Scene objects attach by the logical/alias id, which
+                // resolves to this survivor, so dropping the other records is safe
+                // for attachments. Gated to OSS; integrated keeps server-side history.
+                const {IS_OSS} = await import("../../mode/buildMode");
+                if (IS_OSS) {
+                    const {getOssAssetsForProject, unregisterOssAsset} = await import("@stem/network/api/asset");
+                    const projectId = editor.sceneID;
+                    if (projectId) {
+                        const configRegistry = editor.behaviorConfigRegistry;
+                        const scriptRegistry = editor.behaviorScriptRegistry;
+                        const dupes = getOssAssetsForProject(projectId).filter(r =>
+                            r.type === AssetType.Behavior &&
+                            r.name === config.name &&
+                            r.assetId !== survivorAssetId &&
+                            r.assetId !== originalConfigId,
+                        );
+                        for (const dup of dupes) {
+                            unregisterOssAsset(dup.assetId);
+                            configRegistry?.unregisterConfig(dup.assetId, true);
+                            scriptRegistry?.unregisterScript(dup.assetId, true);
+                        }
+                        if (dupes.length) {
+                            console.info(
+                                `[ScriptImport] OSS dedup: collapsed ${dupes.length} duplicate ` +
+                                `"${config.name}" behavior record(s) into ${survivorAssetId}`,
+                            );
+                        }
+                    }
+                }
+
+                return {success: true, message: resultMessage};
             }
 
             case "lambda": {
@@ -485,14 +557,63 @@ export async function processImportedFile(
                     return {success: true, message: `Model "${modelName}" already in scene, skipping re-import`};
                 }
 
+                // Content-addressed dedup. If an identical source file was already
+                // imported in this batch, reuse that asset and just place a new
+                // scene object — skipping the whole load/convert/texture-bake
+                // pipeline AND avoiding a duplicate multi-MB inline asset.
+                let srcHash: string | undefined;
+                if (modelAssetDedupCache) {
+                    try {
+                        srcHash = await sha256Hex(await file.arrayBuffer());
+                    } catch {
+                        srcHash = undefined; // crypto unavailable — fall through to a normal import
+                    }
+                    const cached = srcHash ? modelAssetDedupCache.get(srcHash) : undefined;
+                    if (cached) {
+                        setAssetRevision(scene, cached.id, cached.headRevisionId);
+                        const {loadModel} = await import("../../model/load-util");
+                        const context = scene.userData?.assetResolutionContext || {};
+                        const object = await loadModel(cached.id, context);
+                        if (name) object.name = name;
+                        editor.addObject(object);
+                        app?.call("objectChanged", null, scene);
+                        return {success: true, message: `Model "${modelName}" placed (reused shared asset ${cached.id})`};
+                    }
+                }
+
                 const abortController = new AbortController();
                 const abortSignal = abortController.signal;
 
                 // 1. Load model into Three.js (needed for thumbnail + texture cleanup)
                 let model;
+                let loadedFormat: string | undefined;
+                let loadedRootFile: File | Blob | undefined;
+                let loadedAtlas: unknown;
+                let loadedTextureOverrides: unknown;
                 try {
-                    //all models are ZIP archives
-                    ({model} = await loadModelFromFile(file, abortSignal, companionFiles, "application/zip"));
+                    // Sniff the real container. A model import can be EITHER a
+                    // ZIP archive bundling model + textures (e.g. pirate-ship's
+                    // `.glb` files are actually `PK\x03\x04` zips) OR a raw
+                    // model file (`.glb`/`.gltf`/`.fbx`/`.obj`, e.g. 100-cars,
+                    // 3d-chess). Hardcoding "application/zip" here forced JSZip
+                    // onto raw files, which threw "Can't find end of central
+                    // directory" and silently dropped every non-zipped model
+                    // from the scene. Detect by magic bytes so both shapes work.
+                    const head = new Uint8Array(await file.slice(0, 4).arrayBuffer());
+                    const isZipArchive =
+                        head[0] === 0x50 && head[1] === 0x4b && head[2] === 0x03 && head[3] === 0x04;
+                    ({
+                        model,
+                        format: loadedFormat,
+                        rootFile: loadedRootFile,
+                        atlasData: loadedAtlas,
+                        textureOverrides: loadedTextureOverrides,
+                    } = await loadModelFromFile(
+                        file,
+                        abortSignal,
+                        companionFiles,
+                        isZipArchive ? "application/zip" : "",
+                    ));
                 } catch (loadErr) {
                     if (loadErr instanceof AnimationOnlyModelError) {
                         return {success: true, message: `Skipped "${modelName}": This file contains only animations (no 3D geometry). Animation files should be imported via the Animation Combiner tool.`};
@@ -503,8 +624,23 @@ export async function processImportedFile(
                 // 2. Fix broken textures (especially FBX)
                 await cleanupInvalidTextures(model);
 
-                // 3. Convert to GLB
-                const sourceGlbBuffer = await convertToGlb(model, abortSignal, {});
+                // 3. Produce the GLB buffer to store.
+                // Fast path: a self-contained GLB source (no atlas, no loose
+                // texture remapping) is already a valid GLB — reuse its bytes
+                // and skip the GLTFExporter round-trip. `convertToGlb` here runs
+                // with empty options, so for GLB sources it would only re-encode
+                // the same data. The exporter is the dominant synchronous cost
+                // per model; skipping it for the common all-GLB asset pack case
+                // is what keeps large imports (e.g. 100+ models) from blocking
+                // the main thread for many minutes. FBX/OBJ/gltf-with-loose-
+                // textures/atlas still need the exporter to normalize into one
+                // GLB, so they take the fallback.
+                let sourceGlbBuffer: ArrayBuffer;
+                if (loadedFormat === "glb" && !loadedAtlas && !loadedTextureOverrides && loadedRootFile) {
+                    sourceGlbBuffer = await loadedRootFile.arrayBuffer();
+                } else {
+                    sourceGlbBuffer = await convertToGlb(model, abortSignal, {});
+                }
 
                 // 4. Create LODs with meshopt compression + texture compression (best effort).
                 // Skip in OSS: derivatives don't persist (no upload endpoint), and the
@@ -539,6 +675,9 @@ export async function processImportedFile(
                     lods: modelLods,
                     thumbnail: thumbnailParam,
                 });
+                if (modelAssetDedupCache && srcHash) {
+                    modelAssetDedupCache.set(srcHash, {id: asset.id, headRevisionId: asset.headRevisionId});
+                }
                 setAssetRevision(scene, asset.id, asset.headRevisionId);
                 const {loadModel} = await import("../../model/load-util");
                 const context = scene.userData?.assetResolutionContext || {};

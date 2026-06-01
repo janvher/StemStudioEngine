@@ -7,11 +7,34 @@
  */
 import {useCallback} from "react";
 
+import {saveScene} from "@stem/network/api/scene";
+import {IS_OSS} from "@stem/editor-oss/mode/buildMode";
+
 import {CodeEditor} from "./CodeEditor";
 import type {InitialSelection, CodeEditorPopoutPayload} from "./types";
 import type {InitialDrafts} from "./hooks/useCodeEditorState";
 import {useUpdateSceneBehaviorRevision} from "../../../../behaviors/hooks/behaviors";
 import type {SaveCompleteInfo} from "../BehaviorCreator/hooks";
+
+/**
+ * In OSS the "Behavior saved" toast must mean *persisted to the filesystem*,
+ * not just updated in the in-memory scene registry. `createBehaviorRevision`
+ * only seeds the new content into the session asset registry; nothing reaches
+ * the `ProjectStore` until the scene is saved. So after updating the scene's
+ * behavior registry we route through `saveScene` (→ `ossSaveScene` →
+ * `ProjectStore.save` + `persistProjectAssets`), mirroring `useImportBehaviors`.
+ * No-op in integrated mode, where the asset service already persisted the
+ * revision server-side. Best-effort: a persist failure is logged, not thrown,
+ * so the in-memory edit still stands.
+ */
+const persistOssBehaviorEdit = async () => {
+    if (!IS_OSS) return;
+    try {
+        await saveScene(false, false);
+    } catch (err) {
+        console.error("[CodeEditorShell] failed to persist behavior edit to ProjectStore", err);
+    }
+};
 
 export interface CodeEditorShellProps {
     sceneId: string;
@@ -43,6 +66,7 @@ export const CodeEditorShell: React.FC<CodeEditorShellProps> = ({
     const handleSaveComplete = useCallback(
         async ({assetId, revisionId, code, config}: SaveCompleteInfo) => {
             await updateSceneBehaviorRevision(assetId, revisionId, {code, config});
+            await persistOssBehaviorEdit();
         },
         [updateSceneBehaviorRevision],
     );
@@ -52,6 +76,8 @@ export const CodeEditorShell: React.FC<CodeEditorShellProps> = ({
             for (const {assetId, revisionId, code, config} of infos) {
                 await updateSceneBehaviorRevision(assetId, revisionId, {code, config});
             }
+            // Persist once after all in-memory updates rather than per behavior.
+            await persistOssBehaviorEdit();
         },
         [updateSceneBehaviorRevision],
     );

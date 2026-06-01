@@ -148,18 +148,30 @@ async function loadSceneFromProjectStore(sceneId: string): Promise<DomainSceneDt
     // loader rebuilds the correct map.
     let ossDependencies: Record<string, string> = {};
     let ossLogicalIdToAssetId: Record<string, string> = {};
+    // `showHud` (and the other game flags) live in the persisted scene's
+    // `userData.game`, not in separate metadata. Default to OFF — the HUD is
+    // opt-in (see SceneConfig.showHUD = false). Hardcoding `true` here made the
+    // HUD appear on every reload regardless of the project's actual setting.
+    let ossShowHud = false;
     try {
         const parsed = JSON.parse(body.sceneJson) as Record<string, unknown>;
         for (const part of Object.values(parsed)) {
-            const ctx = (part as {userData?: {assetResolutionContext?: {
-                assetIdToRevisionId?: Record<string, string>;
-                logicalIdToAssetId?: Record<string, string>;
-            }}})?.userData?.assetResolutionContext;
+            const userData = (part as {userData?: {
+                assetResolutionContext?: {
+                    assetIdToRevisionId?: Record<string, string>;
+                    logicalIdToAssetId?: Record<string, string>;
+                };
+                game?: {showHUD?: boolean};
+            }})?.userData;
+            const ctx = userData?.assetResolutionContext;
             if (ctx) {
                 ossDependencies = ctx.assetIdToRevisionId ?? ossDependencies;
                 ossLogicalIdToAssetId = ctx.logicalIdToAssetId ?? ossLogicalIdToAssetId;
-                break;
             }
+            if (typeof userData?.game?.showHUD === "boolean") {
+                ossShowHud = userData.game.showHUD;
+            }
+            if (ctx) break;
         }
     } catch (err) {
         console.warn("[scene/v2] failed to extract asset resolution context from scene JSON", err);
@@ -185,7 +197,7 @@ async function loadSceneFromProjectStore(sceneId: string): Promise<DomainSceneDt
                     maxMultiplayerClientsPerRoom: 0,
                     multiplayerAutoJoin: false,
                     rendering: {} as never,
-                    showHud: true,
+                    showHud: ossShowHud,
                     showMemoryStats: false,
                     showStats: false,
                     useAvatar: false,

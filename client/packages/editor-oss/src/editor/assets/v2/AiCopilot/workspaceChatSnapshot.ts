@@ -78,9 +78,18 @@ const writeSnapshot = (snapshot: StoredWorkspaceChatSnapshot) => {
     if (typeof window === "undefined") return;
     try {
         const serialized = JSON.stringify(snapshot);
-        window.localStorage.setItem(storageKey(snapshot.sceneID), serialized);
         if (snapshot.sessionID) {
+            // Full snapshot under the session key; `:latest` holds only a tiny
+            // pointer to the most recent session — not a second copy of the
+            // (up to ~1.6MB) blob, which is what previously doubled this cache.
             window.localStorage.setItem(storageKey(snapshot.sceneID, snapshot.sessionID), serialized);
+            window.localStorage.setItem(
+                storageKey(snapshot.sceneID),
+                JSON.stringify({latestSessionID: snapshot.sessionID}),
+            );
+        } else {
+            // No session: the `:latest` key holds the snapshot itself.
+            window.localStorage.setItem(storageKey(snapshot.sceneID), serialized);
         }
     } catch (error) {
         console.warn("[workspaceChatSnapshot] Failed to write workspace chat snapshot:", error);
@@ -109,19 +118,10 @@ export const saveWorkspaceChatSnapshot = (input: {
     });
 };
 
-export const readWorkspaceChatSnapshot = (
-    sceneID: string | null | undefined,
-    sessionID?: string | null,
-): WorkspaceChatSnapshot | null => {
-    const normalizedSceneID = sceneID?.trim();
-    if (!normalizedSceneID || typeof window === "undefined") return null;
-
-    const raw = window.localStorage.getItem(storageKey(normalizedSceneID, sessionID));
-    if (!raw) return null;
-
+const parseSnapshot = (raw: string, sceneID: string): WorkspaceChatSnapshot | null => {
     try {
         const parsed = JSON.parse(raw) as Partial<StoredWorkspaceChatSnapshot>;
-        if (parsed.sceneID !== normalizedSceneID) return null;
+        if (parsed.sceneID !== sceneID) return null;
 
         const messages = Array.isArray(parsed.messages)
             ? parsed.messages
@@ -131,7 +131,7 @@ export const readWorkspaceChatSnapshot = (
         if (messages.length === 0) return null;
 
         return {
-            sceneID: normalizedSceneID,
+            sceneID,
             sessionID: typeof parsed.sessionID === "string" ? parsed.sessionID : null,
             updatedAt: typeof parsed.updatedAt === "number" ? parsed.updatedAt : 0,
             messages,
@@ -140,4 +140,32 @@ export const readWorkspaceChatSnapshot = (
         console.warn("[workspaceChatSnapshot] Failed to read workspace chat snapshot:", error);
         return null;
     }
+};
+
+export const readWorkspaceChatSnapshot = (
+    sceneID: string | null | undefined,
+    sessionID?: string | null,
+): WorkspaceChatSnapshot | null => {
+    const normalizedSceneID = sceneID?.trim();
+    if (!normalizedSceneID || typeof window === "undefined") return null;
+
+    if (sessionID) {
+        const raw = window.localStorage.getItem(storageKey(normalizedSceneID, sessionID));
+        return raw ? parseSnapshot(raw, normalizedSceneID) : null;
+    }
+
+    // No session requested: `:latest` is either a small pointer to the most
+    // recent session, or (for session-less saves) the snapshot itself.
+    const latestRaw = window.localStorage.getItem(storageKey(normalizedSceneID));
+    if (!latestRaw) return null;
+    try {
+        const maybePointer = JSON.parse(latestRaw) as {latestSessionID?: unknown};
+        if (typeof maybePointer.latestSessionID === "string") {
+            const raw = window.localStorage.getItem(storageKey(normalizedSceneID, maybePointer.latestSessionID));
+            return raw ? parseSnapshot(raw, normalizedSceneID) : null;
+        }
+    } catch {
+        return null;
+    }
+    return parseSnapshot(latestRaw, normalizedSceneID);
 };

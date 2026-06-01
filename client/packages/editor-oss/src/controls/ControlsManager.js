@@ -50,15 +50,48 @@ class ControlsManager extends BaseControls {
         const target = controls?.target || new THREE.Vector3(0, 0, 0);
         const sceneId = global.app.editor.sceneID;
 
-        const allData = JSON.parse(localStorage.getItem("savedCameras") || "{}");
+        let allData;
+        try {
+            allData = JSON.parse(localStorage.getItem("savedCameras") || "{}");
+        } catch {
+            allData = {};
+        }
 
         allData[sceneId] = {
             position: camera.position.toArray(),
             target: target.toArray(),
+            savedAt: Date.now(),
         };
 
-        localStorage.setItem("savedCameras", JSON.stringify(allData));
-        console.log(`Camera saved for scene ${sceneId}:`, allData[sceneId]);
+        if (this._writeSavedCameras(allData)) {
+            console.log(`Camera saved for scene ${sceneId}:`, allData[sceneId]);
+            return;
+        }
+
+        // localStorage is full (commonly from a large autoSaveData blob). Prune
+        // savedCameras to the most recent entries and retry once. This must
+        // NEVER rethrow: handlePlay() calls saveCamera(), so an uncaught
+        // QuotaExceededError silently breaks the Play button.
+        try {
+            const recent = Object.entries(allData)
+                .sort((a, b) => (b[1]?.savedAt || 0) - (a[1]?.savedAt || 0))
+                .slice(0, 25);
+            const pruned = Object.fromEntries(recent);
+            pruned[sceneId] = allData[sceneId];
+            if (this._writeSavedCameras(pruned)) return;
+        } catch {
+            /* fall through to warn */
+        }
+        console.warn("ControlsManager.saveCamera: localStorage full; skipping camera save");
+    }
+
+    _writeSavedCameras(data) {
+        try {
+            localStorage.setItem("savedCameras", JSON.stringify(data));
+            return true;
+        } catch {
+            return false;
+        }
     }
 
     initCameraPosition() {

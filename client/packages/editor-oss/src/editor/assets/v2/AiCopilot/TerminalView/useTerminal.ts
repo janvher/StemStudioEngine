@@ -17,7 +17,7 @@ import {refreshEditorAssets} from "../../../../../editor/asset-management/hooks/
 import type EngineRuntime from "@stem/editor-oss/EngineRuntime";
 import global from "@stem/editor-oss/global";
 import {queryClient} from "@web-shared/queryClient";
-import {showToast} from "@stem/editor-oss/showToast";
+import {showToast, showLoadingToast, dismissToast} from "@stem/editor-oss/showToast";
 
 const DEFAULT_EXTENSION_BY_TYPE: Record<string, string> = {
     model: ".glb",
@@ -44,6 +44,52 @@ const CONTENT_TYPE_BY_EXT: Record<string, string> = {
 };
 
 const getEngineRuntime = (): EngineRuntime | undefined => global.app as EngineRuntime | undefined;
+
+/**
+ * Per-import safety ceiling. A single asset/behavior import that stalls
+ * indefinitely would hang the entire stemscript run with no surfaced error.
+ * Generous enough that a heavy model (FBX → GLB conversion + texture bake) or a
+ * behavior revision completes well within it; short enough that a true hang
+ * fails the run in seconds, not the 20-minute outer ceiling.
+ */
+const IMPORT_STEP_TIMEOUT_MS = 90_000;
+
+/**
+ * Race a single import against {@link IMPORT_STEP_TIMEOUT_MS}. On timeout, the
+ * import is reported as a failed result (so the run's failCount reflects it and
+ * the named culprit is logged) and the loop continues with the next import —
+ * the run never silently spins forever on one stuck import.
+ */
+async function withImportTimeout(
+    work: Promise<{success: boolean; message: string}>,
+    label: string,
+): Promise<{success: boolean; message: string}> {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<{success: boolean; message: string}>(resolve => {
+        timer = setTimeout(() => {
+            const message = `Import "${label}" timed out after ${IMPORT_STEP_TIMEOUT_MS}ms — skipped so the run can continue. This import hangs; it needs investigation.`;
+            console.error(`[import-timeout] ${message}`);
+            resolve({success: false, message});
+        }, IMPORT_STEP_TIMEOUT_MS);
+    });
+    try {
+        return await Promise.race([work, timeout]);
+    } finally {
+        if (timer) clearTimeout(timer);
+    }
+}
+
+/**
+ * Programmatic result of a full `runScript` pass. `failCount > 0` means at
+ * least one command (including an unresolved import) failed — the run was NOT
+ * clean. Surfaced through `window.__stemRunScript` so a test harness can assert
+ * a complete, error-free import instead of inferring it from console scraping.
+ */
+export type ScriptRunSummary = {
+    executedCommands: number;
+    successCount: number;
+    failCount: number;
+};
 
 type SceneAuditObject = {
     visible?: boolean;
@@ -247,6 +293,9 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
             return aFirst - bFirst;
         });
         const results = new Map<number, {success: boolean; message: string}>();
+        // One dedup cache for the whole batch: identical model source files
+        // import once and every later placement reuses that shared asset.
+        const modelAssetDedupCache = new Map<string, {id: string; headRevisionId: string}>();
         for (const req of sorted) {
             const file = files.get(req.index);
             if (file && hasEditorContext) {
@@ -256,8 +305,33 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
                 const behaviorIdOverride = req.type === "behavior" && req.filepath
                     ? behaviorIdByFilepath?.get(req.filepath)
                     : undefined;
-                const result = await processImportedFile(file, req.type, req.name, companions, behaviorIdOverride);
+                // A single import must never be able to hang the whole run. A
+                // never-resolving await inside processImportedFile (e.g. a
+                // behavior revision call that stalls) would otherwise spin
+                // forever with no error — the exact "failure that never
+                // surfaces" we forbid. Bound each import and, on timeout,
+                // surface it as a named failure and move on to the next.
+                const result = await withImportTimeout(
+                    processImportedFile(file, req.type, req.name, companions, behaviorIdOverride, modelAssetDedupCache),
+                    `${req.type} "${label}"`,
+                );
                 results.set(req.index, result);
+            } else {
+                // Previously this branch dropped the import silently — that is how
+                // raw-glb imports outside the asset folder (e.g. pirate-ship's
+                // skybox_day.glb at models/skybox_day.glb) disappeared with no
+                // trace in the scene or the logs. Surface the skip + its reason.
+                const label = req.name || req.filepath || `${req.type} #${req.index}`;
+                const reason = !hasEditorContext
+                    ? "no active editor/asset context"
+                    : "no source file resolved (filepath not matched in the imported folder)";
+                console.warn(`[import-skip] Skipped "${label}" (${req.type}) — ${reason}`, {
+                    index: req.index,
+                    filepath: req.filepath,
+                    url: req.url,
+                });
+                addEntry(`import ${req.type} ${label}`, `Skipped: ${reason}`, "error");
+                results.set(req.index, {success: false, message: `Skipped: ${reason}`});
             }
         }
         return results;
@@ -300,73 +374,100 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
     // The full runScript flow; exposed below on `window.__stemRunScript` in
     // OSS dev so a Playwright test can drive the `exec` pipeline without
     // going through the OS file picker.
-    const runScript = useCallback(async (content: string, folderFiles?: File[]) => {
+    const runScript = useCallback(async (content: string, folderFiles?: File[]): Promise<ScriptRunSummary | undefined> => {
         let scriptExecutionFinished = false;
+        let runSummary: ScriptRunSummary | undefined;
 
-        // Show persistent toasts for proxy requirements
-        const proxyRequirements = ScriptExecutor.extractProxyRequirements(content);
-        for (const req of proxyRequirements) {
-            const label = req.comment || req.alias;
-            showToast({
-                type: "info",
-                title: `Proxy required: ${label}`,
-                body: `Route "${req.alias}" → ${req.destination}`,
-                duration: 30000,
-            });
-        }
+        // Persistent spinner toast for the *entire* import — asset resolution
+        // (which is the slow part: models are fetched and baked here) through
+        // command execution and the trailing auto-save. Created up front and
+        // dismissed in the single `finally` below so the user always has
+        // feedback that an import is in progress; every early-return path
+        // (cancelled dialog, no imports) flows through that same `finally`.
+        const importSpinnerId = showLoadingToast("Importing scene…", "Loading assets & running stemscript…");
 
-        // Pre-scan for imports and show batch dialog if any found
-        const importRequests = ScriptExecutor.extractImports(content);
-
-        // Pre-resolve URL-based imports (export-mode bundles) by fetching each
-        // URL into a File. These go into the resolved map *before* the batch
-        // dialog / folder auto-resolve, so the user never has to hand-pick a
-        // file for an asset whose URL is already known.
-        const urlResolved = new Map<number, File>();
-        const urlFailures: {req: typeof importRequests[number]; message: string}[] = [];
-        for (const req of importRequests) {
-            if (!req.url) continue;
-            try {
-                const response = await fetch(req.url);
-                if (!response.ok) {
-                    urlFailures.push({req, message: `HTTP ${response.status}`});
-                    continue;
-                }
-                const blob = await response.blob();
-                const filename = filenameForUrlImport(req.url, req.type, req.name);
-                const file = new File([blob], filename, {type: blob.type || inferContentType(filename)});
-                urlResolved.set(req.index, file);
-            } catch (err: unknown) {
-                urlFailures.push({req, message: err instanceof Error ? err.message : String(err)});
+        try {
+            // Show persistent toasts for proxy requirements
+            const proxyRequirements = ScriptExecutor.extractProxyRequirements(content);
+            for (const req of proxyRequirements) {
+                const label = req.comment || req.alias;
+                showToast({
+                    type: "info",
+                    title: `Proxy required: ${label}`,
+                    body: `Route "${req.alias}" → ${req.destination}`,
+                    duration: 30000,
+                });
             }
-        }
-        for (const failure of urlFailures) {
-            const label = failure.req.name || failure.req.type;
-            addEntry(
-                `(prefetch)`,
-                `Failed to fetch asset URL for ${label}: ${failure.message}`,
-                "error",
-            );
-        }
 
-        if (importRequests.length > 0) {
-            let resolvedFiles: Map<number, File> = new Map(urlResolved);
-            let resolvedCompanions: Map<number, File[]> = new Map();
-            // Imports still needing a source (neither a URL we could fetch nor
-            // pre-picked) — these feed into folder auto-resolve / dialog.
-            const unresolvedRequests = importRequests.filter(r => !resolvedFiles.has(r.index));
+            // Pre-scan for imports and show batch dialog if any found
+            const importRequests = ScriptExecutor.extractImports(content);
 
-            if (unresolvedRequests.length === 0) {
-                // All imports resolved from URLs. Skip folder/dialog entirely.
-            } else if (folderFiles && folderFiles.length > 0) {
-                // Auto-resolve imports from the folder
-                const autoResult: AutoResolveResult = autoResolveImports(unresolvedRequests, folderFiles);
-                for (const [idx, file] of autoResult.files) resolvedFiles.set(idx, file);
-                for (const [idx, comps] of autoResult.companionFiles) resolvedCompanions.set(idx, comps);
-                const stillUnresolved = unresolvedRequests.filter(r => !resolvedFiles.has(r.index));
+            // Pre-resolve URL-based imports (export-mode bundles) by fetching each
+            // URL into a File. These go into the resolved map *before* the batch
+            // dialog / folder auto-resolve, so the user never has to hand-pick a
+            // file for an asset whose URL is already known.
+            const urlResolved = new Map<number, File>();
+            const urlFailures: {req: typeof importRequests[number]; message: string}[] = [];
+            for (const req of importRequests) {
+                if (!req.url) continue;
+                try {
+                    const response = await fetch(req.url);
+                    if (!response.ok) {
+                        urlFailures.push({req, message: `HTTP ${response.status}`});
+                        continue;
+                    }
+                    const blob = await response.blob();
+                    const filename = filenameForUrlImport(req.url, req.type, req.name);
+                    const file = new File([blob], filename, {type: blob.type || inferContentType(filename)});
+                    urlResolved.set(req.index, file);
+                } catch (err: unknown) {
+                    urlFailures.push({req, message: err instanceof Error ? err.message : String(err)});
+                }
+            }
+            for (const failure of urlFailures) {
+                const label = failure.req.name || failure.req.type;
+                addEntry(
+                    `(prefetch)`,
+                    `Failed to fetch asset URL for ${label}: ${failure.message}`,
+                    "error",
+                );
+            }
 
-                if (stillUnresolved.length > 0) {
-                    const dialogResult = await showBatchImportDialog(unresolvedRequests, autoResult);
+            if (importRequests.length > 0) {
+                let resolvedFiles: Map<number, File> = new Map(urlResolved);
+                let resolvedCompanions: Map<number, File[]> = new Map();
+                // Imports still needing a source (neither a URL we could fetch nor
+                // pre-picked) — these feed into folder auto-resolve / dialog.
+                const unresolvedRequests = importRequests.filter(r => !resolvedFiles.has(r.index));
+
+                if (unresolvedRequests.length === 0) {
+                    // All imports resolved from URLs. Skip folder/dialog entirely.
+                } else if (folderFiles && folderFiles.length > 0) {
+                    // Auto-resolve imports from the folder
+                    const autoResult: AutoResolveResult = autoResolveImports(unresolvedRequests, folderFiles);
+                    for (const [idx, file] of autoResult.files) resolvedFiles.set(idx, file);
+                    for (const [idx, comps] of autoResult.companionFiles) resolvedCompanions.set(idx, comps);
+                    const stillUnresolved = unresolvedRequests.filter(r => !resolvedFiles.has(r.index));
+
+                    if (stillUnresolved.length > 0) {
+                        const dialogResult = await showBatchImportDialog(unresolvedRequests, autoResult);
+                        if (dialogResult.action === "cancel") {
+                            addEntry("(script)", "Script execution cancelled.", "info");
+                            return;
+                        }
+                        if (dialogResult.action === "import" && dialogResult.files.size > 0) {
+                            for (const [idx, file] of dialogResult.files) resolvedFiles.set(idx, file);
+                            for (const [idx, comps] of dialogResult.companionFiles) resolvedCompanions.set(idx, comps);
+                        } else {
+                            importResultsRef.current = new Map();
+                            importCounterRef.current = 0;
+                            resolvedFiles = new Map();
+                            resolvedCompanions = new Map();
+                        }
+                    }
+                } else {
+                    // No folder files — dialog for the unresolved ones.
+                    const dialogResult = await showBatchImportDialog(unresolvedRequests);
                     if (dialogResult.action === "cancel") {
                         addEntry("(script)", "Script execution cancelled.", "info");
                         return;
@@ -381,73 +482,44 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
                         resolvedCompanions = new Map();
                     }
                 }
-            } else {
-                // No folder files — dialog for the unresolved ones.
-                const dialogResult = await showBatchImportDialog(unresolvedRequests);
-                if (dialogResult.action === "cancel") {
-                    addEntry("(script)", "Script execution cancelled.", "info");
-                    return;
-                }
-                if (dialogResult.action === "import" && dialogResult.files.size > 0) {
-                    for (const [idx, file] of dialogResult.files) resolvedFiles.set(idx, file);
-                    for (const [idx, comps] of dialogResult.companionFiles) resolvedCompanions.set(idx, comps);
-                } else {
+
+                if (resolvedFiles.size > 0) {
+                    const behaviorIdByFilepath = await buildBehaviorIdMap(folderFiles);
+                    const results = await processResolvedImports(
+                        importRequests, resolvedFiles, resolvedCompanions, behaviorIdByFilepath,
+                    );
+                    importResultsRef.current = results;
+                    importCounterRef.current = 0;
+                } else if (!importResultsRef.current) {
                     importResultsRef.current = new Map();
                     importCounterRef.current = 0;
-                    resolvedFiles = new Map();
-                    resolvedCompanions = new Map();
                 }
             }
 
-            if (resolvedFiles.size > 0) {
-                const behaviorIdByFilepath = await buildBehaviorIdMap(folderFiles);
-                const results = await processResolvedImports(
-                    importRequests, resolvedFiles, resolvedCompanions, behaviorIdByFilepath,
-                );
-                importResultsRef.current = results;
-                importCounterRef.current = 0;
-            } else if (!importResultsRef.current) {
-                importResultsRef.current = new Map();
-                importCounterRef.current = 0;
+            // All import-resolution and cancellation paths above have already
+            // returned. Wipe previously-imported content now so the script runs
+            // against the same blank-scene baseline every time. Wrapping the
+            // execute() call in runInScriptImportContext tags every object the
+            // script adds with userData.isImported, which the next exec uses to
+            // wipe these same objects again.
+            const editor = getEngineRuntime()?.editor;
+            if (editor) {
+                try {
+                    editor.clearImportedContent();
+                } catch (error: unknown) {
+                    const message = error instanceof Error ? error.message : String(error);
+                    addEntry("(script)", `Pre-exec wipe failed (continuing): ${message}`, "error");
+                }
             }
-        }
 
-        // All import-resolution and cancellation paths above have already
-        // returned. Wipe previously-imported content now so the script runs
-        // against the same blank-scene baseline every time. Wrapping the
-        // execute() call in runInScriptImportContext tags every object the
-        // script adds with userData.isImported, which the next exec uses to
-        // wipe these same objects again.
-        const editor = getEngineRuntime()?.editor;
-        if (editor) {
-            try {
-                editor.clearImportedContent();
-            } catch (error: unknown) {
-                const message = error instanceof Error ? error.message : String(error);
-                addEntry("(script)", `Pre-exec wipe failed (continuing): ${message}`, "error");
-            }
-        }
-
-        try {
+            const onProgress = (current: number, total: number, line: string) => {
+                addEntry(line, `Executing ${current}/${total}...`, "info");
+            };
             const result = editor
                 ? await editor.runInScriptImportContext(() =>
-                      ScriptExecutor.execute(
-                          content,
-                          executeRegistryCommand,
-                          (current: number, total: number, line: string) => {
-                              addEntry(line, `Executing ${current}/${total}...`, "info");
-                          },
-                          executeScriptBuiltin,
-                      ),
+                      ScriptExecutor.execute(content, executeRegistryCommand, onProgress, executeScriptBuiltin),
                   )
-                : await ScriptExecutor.execute(
-                      content,
-                      executeRegistryCommand,
-                      (current: number, total: number, line: string) => {
-                          addEntry(line, `Executing ${current}/${total}...`, "info");
-                      },
-                      executeScriptBuiltin,
-                  );
+                : await ScriptExecutor.execute(content, executeRegistryCommand, onProgress, executeScriptBuiltin);
 
             const summary = `Script complete: ${result.successCount}/${result.executedCommands} succeeded, ${result.failCount} failed`;
             addEntry("(script)", summary, result.failCount > 0 ? "error" : "success");
@@ -462,6 +534,15 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
             }
 
             scriptExecutionFinished = true;
+            // Programmatic summary so a harness (window.__stemRunScript) can
+            // assert the run was actually clean — failCount > 0 includes any
+            // import that could not be resolved (e.g. a skybox file the folder
+            // didn't supply). An incomplete import must never look successful.
+            runSummary = {
+                executedCommands: result.executedCommands,
+                successCount: result.successCount,
+                failCount: result.failCount,
+            };
         } finally {
             if (scriptExecutionFinished) {
                 try {
@@ -476,9 +557,11 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
                 }
             }
 
+            dismissToast(importSpinnerId);
             importResultsRef.current = null;
             importCounterRef.current = 0;
         }
+        return runSummary;
     }, [executeRegistryCommand, addEntry, executeScriptBuiltin, processResolvedImports, buildBehaviorIdMap]);
 
     const executeInput = useCallback(async (input: string): Promise<TerminalHistoryEntry[]> => {
@@ -584,7 +667,7 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
             __stemRunScript?: (
                 content: string,
                 files?: Array<{name: string; mime?: string; data: string}>,
-            ) => Promise<void>;
+            ) => Promise<ScriptRunSummary | undefined>;
         };
         w.__stemRunScript = async (content, files) => {
             console.log("[__stemRunScript] start", {scriptBytes: content.length, fileCount: (files ?? []).length});
@@ -621,15 +704,21 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
             // the timeout breadcrumb. Generous enough that a full game
             // import (dozens of models, real GLB parsing) completes inside
             // it rather than tripping a spurious timeout.
-            const HARD_TIMEOUT_MS = 240_000;
+            // Bumped from 240s→600s→1200s: the heaviest games (procedural
+            // terrain; cubecity's 32 building GLBs through the per-model
+            // texture-conversion pipeline; 100+ vehicle GLBs) can take many
+            // minutes, and a premature timeout makes the harness save/reload
+            // before every asset is created (a partial import).
+            const HARD_TIMEOUT_MS = 1_200_000;
             try {
-                await Promise.race([
+                const summary = await Promise.race([
                     runScript(content, folderFiles),
-                    new Promise((_, reject) =>
+                    new Promise<never>((_, reject) =>
                         setTimeout(() => reject(new Error(`__stemRunScript timed out after ${HARD_TIMEOUT_MS}ms`)), HARD_TIMEOUT_MS),
                     ),
                 ]);
-                console.log("[__stemRunScript] done");
+                console.log("[__stemRunScript] done", summary);
+                return summary;
             } catch (err) {
                 console.error("[__stemRunScript] threw", err);
                 throw err;
@@ -649,6 +738,7 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
         const w = window as unknown as {
             __stemGetScene?: () => {
                 sceneName: string | null;
+                sceneID: string | null;
                 mode: string | null;
                 isPlaying: boolean;
                 assetCount: number;
@@ -662,6 +752,24 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
                 visibleRenderableCount: number;
                 meshCount: number;
                 visibleMeshCount: number;
+                lights: Array<{type: string; name: string; intensity: number; visible: boolean; parent: string | null}>;
+                rendering: {
+                    ambient: {color: string; intensity: number} | null;
+                    hemisphere: {skyColor: string; groundColor: string; intensity: number} | null;
+                    backgroundType: string | null;
+                    backgroundTexture: string | null;
+                    hasBackgroundTextureAsset: boolean;
+                };
+                sceneEnv: {
+                    background: string | null;
+                    environment: string | null;
+                    backgroundDetail?: unknown;
+                    hasBackgroundNode?: boolean;
+                    hasEnvironmentNode?: boolean;
+                    backgroundIntensity?: number | null;
+                    backgroundBlurriness?: number | null;
+                    backgroundRotationY?: number | null;
+                };
             };
         };
         w.__stemGetScene = () => {
@@ -670,6 +778,7 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
             if (!scene) {
                 return {
                     sceneName: null,
+                    sceneID: null,
                     mode: null,
                     isPlaying: false,
                     assetCount: 0,
@@ -683,6 +792,15 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
                     visibleRenderableCount: 0,
                     meshCount: 0,
                     visibleMeshCount: 0,
+                    lights: [],
+                    rendering: {
+                        ambient: null,
+                        hemisphere: null,
+                        backgroundType: null,
+                        backgroundTexture: null,
+                        hasBackgroundTextureAsset: false,
+                    },
+                    sceneEnv: {background: null, environment: null},
                 };
             }
 
@@ -698,6 +816,45 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
             const getObjectLabel = (object: SceneAuditObject) =>
                 object.name || `${object.type || "Object3D"}:${object.uuid || "unknown"}`;
 
+            // Classifies scene.background / scene.environment into a coarse,
+            // serializable label so Playwright can assert the skybox/IBL is
+            // present (Texture/CubeTexture) vs. lost (a flat Color / null).
+            const classifyEnv = (value: unknown): string | null => {
+                if (!value || typeof value !== "object") return null;
+                const v = value as {isCubeTexture?: boolean; isTexture?: boolean; isColor?: boolean};
+                if (v.isCubeTexture) return "CubeTexture";
+                if (v.isTexture) return "Texture";
+                if (v.isColor) return "Color";
+                return "Unknown";
+            };
+            // Detailed texture description so we can tell a *correctly rendered*
+            // skybox from one that loaded with the wrong mapping/colorSpace or a
+            // missing image (which renders flat/black even though it classifies
+            // as "Texture").
+            const describeTexture = (value: unknown) => {
+                const t = value as {
+                    isTexture?: boolean;
+                    isColor?: boolean;
+                    mapping?: number;
+                    colorSpace?: string;
+                    flipY?: boolean;
+                    image?: {width?: number; height?: number} | null;
+                    source?: {data?: {width?: number; height?: number} | null} | null;
+                } | null;
+                if (!t || typeof t !== "object") return null;
+                if (t.isColor) return {kind: "Color"};
+                if (!t.isTexture) return {kind: "Unknown"};
+                const img = t.image || t.source?.data || null;
+                return {
+                    kind: "Texture",
+                    mapping: t.mapping ?? null,
+                    colorSpace: t.colorSpace ?? null,
+                    flipY: t.flipY ?? null,
+                    width: img?.width ?? null,
+                    height: img?.height ?? null,
+                };
+            };
+
             const names: string[] = [];
             const visibleObjectNames: string[] = [];
             const renderableNames: string[] = [];
@@ -708,10 +865,34 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
             let visibleRenderableCount = 0;
             let meshCount = 0;
             let visibleMeshCount = 0;
+            const lights: Array<{
+                type: string;
+                name: string;
+                intensity: number;
+                visible: boolean;
+                parent: string | null;
+            }> = [];
 
             scene.traverse(object => {
                 objectCount += 1;
                 if (object.name) names.push(object.name);
+
+                if ((object as unknown as {isLight?: boolean}).isLight) {
+                    const light = object as unknown as {
+                        type: string;
+                        name: string;
+                        intensity: number;
+                        visible: boolean;
+                        parent?: {name?: string; type?: string} | null;
+                    };
+                    lights.push({
+                        type: light.type,
+                        name: light.name,
+                        intensity: light.intensity,
+                        visible: light.visible,
+                        parent: light.parent ? light.parent.name || light.parent.type || null : null,
+                    });
+                }
 
                 const visible = isVisibleInHierarchy(object);
                 if (visible) {
@@ -744,6 +925,7 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
             });
             return {
                 sceneName: app?.editor?.sceneName ?? null,
+                sceneID: app?.editor?.sceneID ?? null,
                 mode: app?.mode ?? null,
                 isPlaying: !!app?.isPlaying,
                 assetCount: app?.editor?.assetsCount ?? 0,
@@ -757,10 +939,102 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
                 visibleRenderableCount,
                 meshCount,
                 visibleMeshCount,
+                lights,
+                rendering: {
+                    ambient: app?.editor?.rendering?.ambient ?? null,
+                    hemisphere: app?.editor?.rendering?.hemisphere ?? null,
+                    backgroundType: app?.editor?.rendering?.background?.type ?? null,
+                    backgroundTexture: app?.editor?.rendering?.background?.texture ?? null,
+                    hasBackgroundTextureAsset: !!app?.editor?.rendering?.background?.textureAsset,
+                },
+                sceneEnv: {
+                    background: classifyEnv((scene as {background?: unknown}).background),
+                    environment: classifyEnv((scene as {environment?: unknown}).environment),
+                    backgroundDetail: describeTexture((scene as {background?: unknown}).background),
+                    hasBackgroundNode: !!(scene as {backgroundNode?: unknown}).backgroundNode,
+                    hasEnvironmentNode: !!(scene as {environmentNode?: unknown}).environmentNode,
+                    backgroundIntensity: (scene as {backgroundIntensity?: number}).backgroundIntensity ?? null,
+                    backgroundBlurriness: (scene as {backgroundBlurriness?: number}).backgroundBlurriness ?? null,
+                    backgroundRotationY: (scene as {backgroundRotation?: {y?: number}}).backgroundRotation?.y ?? null,
+                },
             };
+        };
+        // Test affordance: deterministically pin the editor camera so visual
+        // skybox/background regression shots are comparable across reloads
+        // (the camera otherwise resets to a default orientation on reload).
+        const wc = window as unknown as {
+            __stemSetEditorCamera?: (pos: [number, number, number], target: [number, number, number]) => boolean;
+        };
+        wc.__stemSetEditorCamera = (pos, target) => {
+            const app = getEngineRuntime() as unknown as {
+                camera?: {
+                    position?: {set: (x: number, y: number, z: number) => void};
+                    lookAt?: (x: number, y: number, z: number) => void;
+                    updateMatrixWorld?: () => void;
+                };
+                editor?: {controls?: {current?: {controls?: {target?: {set: (x: number, y: number, z: number) => void}; update?: () => void}}}};
+            };
+            const cam = app?.camera;
+            if (!cam?.position) return false;
+            const orbit = app?.editor?.controls?.current?.controls;
+            cam.position.set(pos[0], pos[1], pos[2]);
+            if (orbit?.target?.set) {
+                orbit.target.set(target[0], target[1], target[2]);
+                orbit.update?.();
+            }
+            cam.lookAt?.(target[0], target[1], target[2]);
+            cam.updateMatrixWorld?.();
+            return true;
+        };
+        // Debug affordance: dump the material maps applied to named objects so a
+        // Playwright probe can verify which texture slots actually resolved.
+        (window as unknown as {__stemInspectMaterials?: (names: string[]) => unknown}).__stemInspectMaterials = (
+            names: string[],
+        ) => {
+            const scene = getEngineRuntime()?.editor?.scene;
+            if (!scene) return {error: "no scene"};
+            const tex = (t: any) =>
+                t ? {cs: t.colorSpace, w: t.image?.width ?? null, h: t.image?.height ?? null, hasImg: !!t.image} : null;
+            const mat = (m: any) => ({
+                type: m?.type ?? m?.constructor?.name,
+                isNode: !!(m?.isNodeMaterial || /NodeMaterial/.test(m?.type ?? m?.constructor?.name ?? "")),
+                color: m?.color ? "#" + m.color.getHexString() : null,
+                map: tex(m?.map),
+                normalMap: tex(m?.normalMap),
+                metalnessMap: tex(m?.metalnessMap),
+                roughnessMap: tex(m?.roughnessMap),
+                metalness: m?.metalness,
+                roughness: m?.roughness,
+            });
+            const byName: Record<string, any> = {};
+            scene.traverse((o: any) => {
+                if (o.name && !byName[o.name]) byName[o.name] = o;
+            });
+            const out: Record<string, unknown> = {};
+            for (const name of names) {
+                const obj = byName[name];
+                if (!obj) {
+                    out[name] = {missing: true};
+                    continue;
+                }
+                const meshes: unknown[] = [];
+                obj.traverse((c: any) => {
+                    if (!c.isMesh) return;
+                    const mats = Array.isArray(c.material) ? c.material : [c.material];
+                    mats.forEach((m: any, i: number) => meshes.push({mesh: c.name || "(unnamed)", idx: i, ...mat(m)}));
+                });
+                out[name] = {
+                    meshCount: meshes.length,
+                    hasMaterialSettings: !!obj.userData?.materialSettings,
+                    materials: meshes,
+                };
+            }
+            return out;
         };
         return () => {
             delete (window as unknown as {__stemGetScene?: unknown}).__stemGetScene;
+            delete (window as unknown as {__stemSetEditorCamera?: unknown}).__stemSetEditorCamera;
+            delete (window as unknown as {__stemInspectMaterials?: unknown}).__stemInspectMaterials;
         };
     }, []);
 

@@ -4,6 +4,14 @@ import {useCreateAssetWithData} from "../../asset-management/hooks/assets";
 export const parseMaterialAssetIdWithRevision = (value: string): {assetId: string} | null => {
     if (!value) return null;
 
+    // OSS synthesizes asset ids as `oss-asset-<timestamp>-<rand>` (optionally
+    // with a legacy `:<revisionId>` suffix). The hex/UUID regex below does not
+    // match these, so without this branch a material texture backed by an
+    // imported OSS image asset is never resolved and renders blank.
+    if (value.startsWith("oss-asset-")) {
+        return {assetId: value.split(":")[0] || value};
+    }
+
     const match = value.match(/^([a-f0-9]{24}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
     if (!match) return null;
 

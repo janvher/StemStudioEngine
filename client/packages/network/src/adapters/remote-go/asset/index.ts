@@ -111,6 +111,20 @@ export const lookupOssAsset = (idOrRevisionId: string): OssAssetRecord | undefin
     ossAssetRegistry.get(idOrRevisionId);
 
 /**
+ * Drop a synthesized OSS asset from the registry (both its asset-id and
+ * revision-id keys). Used by the OSS behavior-import de-duplication to collapse
+ * surplus same-named behavior records down to a single latest one — OSS has no
+ * revision history, so duplicates created by earlier imports are pure noise.
+ * After removal the record no longer surfaces in `getOssAssetsForProject`, so it
+ * drops out of the asset list and is not re-persisted on the next project save.
+ */
+export const unregisterOssAsset = (assetId: string): void => {
+    const record = ossAssetRegistry.get(assetId);
+    ossAssetRegistry.delete(assetId);
+    if (record?.revisionId) ossAssetRegistry.delete(record.revisionId);
+};
+
+/**
  * Every synthesized OSS asset created for a given project, de-duplicated.
  * Used by the persistence layer to write a project's binary assets to the
  * ProjectStore so they survive a reload.
@@ -596,13 +610,21 @@ export const createAssetRevision = async ({
         // imports route their payload (`data` is base64) through this and
         // expect a usable revision id back; we encode the inline data as a
         // data: URL so resolvers downstream still read the same shape.
-        const id = `oss-rev-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        //
+        // OSS has NO revision management — there is only ever the latest version
+        // of an asset. So reuse the asset's stable head revision id and overwrite
+        // the registry record in place, instead of minting a fresh
+        // `oss-rev-${Date.now()}` on every save. Minting a new id per save spawned
+        // parallel revision ids and made the scene's pinned `assetId→revisionId`
+        // drift, which surfaced as "multiple revisions of the same behavior".
+        // The stable id matches what `createAsset` assigns (`oss-rev-${assetId}`).
+        const existing = lookupOssAsset(assetId);
+        const id = existing?.revisionId ?? `oss-rev-${assetId}`;
         let dataUrl: string | undefined;
         if (typeof data === "string" && data.length > 0) {
             const mime = format === "json" ? "application/json" : (contentType || "application/octet-stream");
             dataUrl = `data:${mime};base64,${data}`;
         }
-        const existing = lookupOssAsset(assetId);
         registerOssAsset({
             assetId,
             revisionId: id,
@@ -610,8 +632,17 @@ export const createAssetRevision = async ({
             format: format ?? existing?.format ?? "",
             name: existing?.name ?? assetId,
             contentType: contentType ?? existing?.contentType,
-            metadata: options.metadata,
+            metadata: options.metadata ?? existing?.metadata,
             dataUrl,
+            // Carry the existing record's thumbnail + project tag across the
+            // overwrite. Dropping `projectId` here is why the FIRST save after a
+            // behavior edit didn't persist: `getOssAssetsForProject(projectId)`
+            // skips records whose `projectId` no longer matches, so the edited
+            // behavior was excluded from `persistProjectAssets`. Fall back to the
+            // current scene id so a behavior created before the project's first
+            // save (fresh import) still gets tagged on its next revision.
+            thumbnailDataUrl: existing?.thumbnailDataUrl,
+            projectId: existing?.projectId ?? global.app?.editor?.sceneID ?? undefined,
         });
         return {
             id,
