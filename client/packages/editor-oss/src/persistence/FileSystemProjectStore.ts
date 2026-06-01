@@ -42,6 +42,18 @@ const SUFFIX = ".stemscript.json";
 /** Filename for an asset's binary payload inside the project's subdirectory. */
 const ASSET_MANIFEST = "assets.json";
 
+/**
+ * True only for the File System Access API's "this entry does not exist" error
+ * (`getDirectoryHandle`/`getFileHandle` on a missing path). This is the *one*
+ * absence we may treat as "legitimately empty". Every other error (permission
+ * revoked, malformed JSON, truncated binary) is a real failure that must
+ * surface — never be swallowed into an empty result.
+ */
+const isNotFoundError = (err: unknown): boolean =>
+    err instanceof DOMException
+        ? err.name === "NotFoundError"
+        : (err as {name?: string})?.name === "NotFoundError";
+
 const bytesToBase64 = (bytes: Uint8Array): string => {
     let binary = "";
     const chunk = 0x8000;
@@ -146,8 +158,13 @@ export class FileSystemProjectStore implements ProjectStore {
                 const file = await (handle).getFile();
                 const body = JSON.parse(await file.text()) as ProjectBody;
                 if (body?.meta) all.push(body.meta);
-            } catch {
-                // Skip unreadable / malformed files; don't fail the whole list.
+            } catch (err) {
+                // We're iterating files that demonstrably exist, so a failure
+                // here means the file is present but unreadable/corrupt — a real
+                // problem. Keep listing the *other* projects (hiding all of them
+                // behind one bad file would be its own masking fallback), but
+                // make the bad file loud instead of silently dropping it.
+                console.error(`[FileSystemProjectStore] Skipping unreadable project file "${name}":`, err);
             }
         }
 
@@ -302,32 +319,43 @@ export class FileSystemProjectStore implements ProjectStore {
         let projectDir: FsDirectoryHandle;
         try {
             projectDir = await this.dir.getDirectoryHandle(projectId);
-        } catch {
-            // No asset subdirectory (project saved before assets existed,
-            // or has no binary assets).
-            return [];
+        } catch (err) {
+            // The *only* acceptable quiet path: no asset subdirectory at all
+            // (project saved before assets existed, or has no binary assets).
+            // A permission error or anything else is real — surface it.
+            if (isNotFoundError(err)) return [];
+            throw err;
         }
 
         let manifest: AssetManifestEntry[];
         try {
             const manifestFile = await (await projectDir.getFileHandle(ASSET_MANIFEST)).getFile();
             manifest = JSON.parse(await manifestFile.text()) as AssetManifestEntry[];
-        } catch {
-            return [];
+        } catch (err) {
+            // No manifest file → no assets recorded (legit empty). But a manifest
+            // that exists and fails to read/parse means the asset index is
+            // corrupt — returning [] there would silently drop every model on
+            // reload. Surface it instead of pretending the project has no assets.
+            if (isNotFoundError(err)) return [];
+            throw new Error(
+                `Asset manifest for project "${projectId}" is unreadable or malformed: ` +
+                (err instanceof Error ? err.message : String(err)),
+            );
         }
-        if (!Array.isArray(manifest)) return [];
+        if (!Array.isArray(manifest)) {
+            throw new Error(`Asset manifest for project "${projectId}" is not an array`);
+        }
 
         const assets: StoredAsset[] = [];
         for (const entry of manifest) {
-            try {
-                const file = await (await projectDir.getFileHandle(entry.file)).getFile();
-                const bytes = new Uint8Array(await file.arrayBuffer());
-                const {file: _file, ...meta} = entry;
-                assets.push({...meta, data: bytesToBase64(bytes)});
-            } catch {
-                // Skip a missing/unreadable asset file rather than failing
-                // the whole project load.
-            }
+            // The manifest lists this asset, so the file is expected to exist.
+            // A failure here is a real, data-losing problem (a model that won't
+            // appear after reload) — fail the load loudly rather than returning
+            // a half-populated scene that looks fine but is missing geometry.
+            const file = await (await projectDir.getFileHandle(entry.file)).getFile();
+            const bytes = new Uint8Array(await file.arrayBuffer());
+            const {file: _file, ...meta} = entry;
+            assets.push({...meta, data: bytesToBase64(bytes)});
         }
         return assets;
     }

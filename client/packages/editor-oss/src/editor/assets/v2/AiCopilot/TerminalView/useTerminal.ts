@@ -45,6 +45,52 @@ const CONTENT_TYPE_BY_EXT: Record<string, string> = {
 
 const getEngineRuntime = (): EngineRuntime | undefined => global.app as EngineRuntime | undefined;
 
+/**
+ * Per-import safety ceiling. A single asset/behavior import that stalls
+ * indefinitely would hang the entire stemscript run with no surfaced error.
+ * Generous enough that a heavy model (FBX → GLB conversion + texture bake) or a
+ * behavior revision completes well within it; short enough that a true hang
+ * fails the run in seconds, not the 20-minute outer ceiling.
+ */
+const IMPORT_STEP_TIMEOUT_MS = 90_000;
+
+/**
+ * Race a single import against {@link IMPORT_STEP_TIMEOUT_MS}. On timeout, the
+ * import is reported as a failed result (so the run's failCount reflects it and
+ * the named culprit is logged) and the loop continues with the next import —
+ * the run never silently spins forever on one stuck import.
+ */
+async function withImportTimeout(
+    work: Promise<{success: boolean; message: string}>,
+    label: string,
+): Promise<{success: boolean; message: string}> {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<{success: boolean; message: string}>(resolve => {
+        timer = setTimeout(() => {
+            const message = `Import "${label}" timed out after ${IMPORT_STEP_TIMEOUT_MS}ms — skipped so the run can continue. This import hangs; it needs investigation.`;
+            console.error(`[import-timeout] ${message}`);
+            resolve({success: false, message});
+        }, IMPORT_STEP_TIMEOUT_MS);
+    });
+    try {
+        return await Promise.race([work, timeout]);
+    } finally {
+        if (timer) clearTimeout(timer);
+    }
+}
+
+/**
+ * Programmatic result of a full `runScript` pass. `failCount > 0` means at
+ * least one command (including an unresolved import) failed — the run was NOT
+ * clean. Surfaced through `window.__stemRunScript` so a test harness can assert
+ * a complete, error-free import instead of inferring it from console scraping.
+ */
+export type ScriptRunSummary = {
+    executedCommands: number;
+    successCount: number;
+    failCount: number;
+};
+
 type SceneAuditObject = {
     visible?: boolean;
     parent?: SceneAuditObject | null;
@@ -247,6 +293,9 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
             return aFirst - bFirst;
         });
         const results = new Map<number, {success: boolean; message: string}>();
+        // One dedup cache for the whole batch: identical model source files
+        // import once and every later placement reuses that shared asset.
+        const modelAssetDedupCache = new Map<string, {id: string; headRevisionId: string}>();
         for (const req of sorted) {
             const file = files.get(req.index);
             if (file && hasEditorContext) {
@@ -256,8 +305,33 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
                 const behaviorIdOverride = req.type === "behavior" && req.filepath
                     ? behaviorIdByFilepath?.get(req.filepath)
                     : undefined;
-                const result = await processImportedFile(file, req.type, req.name, companions, behaviorIdOverride);
+                // A single import must never be able to hang the whole run. A
+                // never-resolving await inside processImportedFile (e.g. a
+                // behavior revision call that stalls) would otherwise spin
+                // forever with no error — the exact "failure that never
+                // surfaces" we forbid. Bound each import and, on timeout,
+                // surface it as a named failure and move on to the next.
+                const result = await withImportTimeout(
+                    processImportedFile(file, req.type, req.name, companions, behaviorIdOverride, modelAssetDedupCache),
+                    `${req.type} "${label}"`,
+                );
                 results.set(req.index, result);
+            } else {
+                // Previously this branch dropped the import silently — that is how
+                // raw-glb imports outside the asset folder (e.g. pirate-ship's
+                // skybox_day.glb at models/skybox_day.glb) disappeared with no
+                // trace in the scene or the logs. Surface the skip + its reason.
+                const label = req.name || req.filepath || `${req.type} #${req.index}`;
+                const reason = !hasEditorContext
+                    ? "no active editor/asset context"
+                    : "no source file resolved (filepath not matched in the imported folder)";
+                console.warn(`[import-skip] Skipped "${label}" (${req.type}) — ${reason}`, {
+                    index: req.index,
+                    filepath: req.filepath,
+                    url: req.url,
+                });
+                addEntry(`import ${req.type} ${label}`, `Skipped: ${reason}`, "error");
+                results.set(req.index, {success: false, message: `Skipped: ${reason}`});
             }
         }
         return results;
@@ -300,73 +374,100 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
     // The full runScript flow; exposed below on `window.__stemRunScript` in
     // OSS dev so a Playwright test can drive the `exec` pipeline without
     // going through the OS file picker.
-    const runScript = useCallback(async (content: string, folderFiles?: File[]) => {
+    const runScript = useCallback(async (content: string, folderFiles?: File[]): Promise<ScriptRunSummary | undefined> => {
         let scriptExecutionFinished = false;
+        let runSummary: ScriptRunSummary | undefined;
 
-        // Show persistent toasts for proxy requirements
-        const proxyRequirements = ScriptExecutor.extractProxyRequirements(content);
-        for (const req of proxyRequirements) {
-            const label = req.comment || req.alias;
-            showToast({
-                type: "info",
-                title: `Proxy required: ${label}`,
-                body: `Route "${req.alias}" → ${req.destination}`,
-                duration: 30000,
-            });
-        }
+        // Persistent spinner toast for the *entire* import — asset resolution
+        // (which is the slow part: models are fetched and baked here) through
+        // command execution and the trailing auto-save. Created up front and
+        // dismissed in the single `finally` below so the user always has
+        // feedback that an import is in progress; every early-return path
+        // (cancelled dialog, no imports) flows through that same `finally`.
+        const importSpinnerId = showLoadingToast("Importing scene…", "Loading assets & running stemscript…");
 
-        // Pre-scan for imports and show batch dialog if any found
-        const importRequests = ScriptExecutor.extractImports(content);
-
-        // Pre-resolve URL-based imports (export-mode bundles) by fetching each
-        // URL into a File. These go into the resolved map *before* the batch
-        // dialog / folder auto-resolve, so the user never has to hand-pick a
-        // file for an asset whose URL is already known.
-        const urlResolved = new Map<number, File>();
-        const urlFailures: {req: typeof importRequests[number]; message: string}[] = [];
-        for (const req of importRequests) {
-            if (!req.url) continue;
-            try {
-                const response = await fetch(req.url);
-                if (!response.ok) {
-                    urlFailures.push({req, message: `HTTP ${response.status}`});
-                    continue;
-                }
-                const blob = await response.blob();
-                const filename = filenameForUrlImport(req.url, req.type, req.name);
-                const file = new File([blob], filename, {type: blob.type || inferContentType(filename)});
-                urlResolved.set(req.index, file);
-            } catch (err: unknown) {
-                urlFailures.push({req, message: err instanceof Error ? err.message : String(err)});
+        try {
+            // Show persistent toasts for proxy requirements
+            const proxyRequirements = ScriptExecutor.extractProxyRequirements(content);
+            for (const req of proxyRequirements) {
+                const label = req.comment || req.alias;
+                showToast({
+                    type: "info",
+                    title: `Proxy required: ${label}`,
+                    body: `Route "${req.alias}" → ${req.destination}`,
+                    duration: 30000,
+                });
             }
-        }
-        for (const failure of urlFailures) {
-            const label = failure.req.name || failure.req.type;
-            addEntry(
-                `(prefetch)`,
-                `Failed to fetch asset URL for ${label}: ${failure.message}`,
-                "error",
-            );
-        }
 
-        if (importRequests.length > 0) {
-            let resolvedFiles: Map<number, File> = new Map(urlResolved);
-            let resolvedCompanions: Map<number, File[]> = new Map();
-            // Imports still needing a source (neither a URL we could fetch nor
-            // pre-picked) — these feed into folder auto-resolve / dialog.
-            const unresolvedRequests = importRequests.filter(r => !resolvedFiles.has(r.index));
+            // Pre-scan for imports and show batch dialog if any found
+            const importRequests = ScriptExecutor.extractImports(content);
 
-            if (unresolvedRequests.length === 0) {
-                // All imports resolved from URLs. Skip folder/dialog entirely.
-            } else if (folderFiles && folderFiles.length > 0) {
-                // Auto-resolve imports from the folder
-                const autoResult: AutoResolveResult = autoResolveImports(unresolvedRequests, folderFiles);
-                for (const [idx, file] of autoResult.files) resolvedFiles.set(idx, file);
-                for (const [idx, comps] of autoResult.companionFiles) resolvedCompanions.set(idx, comps);
-                const stillUnresolved = unresolvedRequests.filter(r => !resolvedFiles.has(r.index));
+            // Pre-resolve URL-based imports (export-mode bundles) by fetching each
+            // URL into a File. These go into the resolved map *before* the batch
+            // dialog / folder auto-resolve, so the user never has to hand-pick a
+            // file for an asset whose URL is already known.
+            const urlResolved = new Map<number, File>();
+            const urlFailures: {req: typeof importRequests[number]; message: string}[] = [];
+            for (const req of importRequests) {
+                if (!req.url) continue;
+                try {
+                    const response = await fetch(req.url);
+                    if (!response.ok) {
+                        urlFailures.push({req, message: `HTTP ${response.status}`});
+                        continue;
+                    }
+                    const blob = await response.blob();
+                    const filename = filenameForUrlImport(req.url, req.type, req.name);
+                    const file = new File([blob], filename, {type: blob.type || inferContentType(filename)});
+                    urlResolved.set(req.index, file);
+                } catch (err: unknown) {
+                    urlFailures.push({req, message: err instanceof Error ? err.message : String(err)});
+                }
+            }
+            for (const failure of urlFailures) {
+                const label = failure.req.name || failure.req.type;
+                addEntry(
+                    `(prefetch)`,
+                    `Failed to fetch asset URL for ${label}: ${failure.message}`,
+                    "error",
+                );
+            }
 
-                if (stillUnresolved.length > 0) {
-                    const dialogResult = await showBatchImportDialog(unresolvedRequests, autoResult);
+            if (importRequests.length > 0) {
+                let resolvedFiles: Map<number, File> = new Map(urlResolved);
+                let resolvedCompanions: Map<number, File[]> = new Map();
+                // Imports still needing a source (neither a URL we could fetch nor
+                // pre-picked) — these feed into folder auto-resolve / dialog.
+                const unresolvedRequests = importRequests.filter(r => !resolvedFiles.has(r.index));
+
+                if (unresolvedRequests.length === 0) {
+                    // All imports resolved from URLs. Skip folder/dialog entirely.
+                } else if (folderFiles && folderFiles.length > 0) {
+                    // Auto-resolve imports from the folder
+                    const autoResult: AutoResolveResult = autoResolveImports(unresolvedRequests, folderFiles);
+                    for (const [idx, file] of autoResult.files) resolvedFiles.set(idx, file);
+                    for (const [idx, comps] of autoResult.companionFiles) resolvedCompanions.set(idx, comps);
+                    const stillUnresolved = unresolvedRequests.filter(r => !resolvedFiles.has(r.index));
+
+                    if (stillUnresolved.length > 0) {
+                        const dialogResult = await showBatchImportDialog(unresolvedRequests, autoResult);
+                        if (dialogResult.action === "cancel") {
+                            addEntry("(script)", "Script execution cancelled.", "info");
+                            return;
+                        }
+                        if (dialogResult.action === "import" && dialogResult.files.size > 0) {
+                            for (const [idx, file] of dialogResult.files) resolvedFiles.set(idx, file);
+                            for (const [idx, comps] of dialogResult.companionFiles) resolvedCompanions.set(idx, comps);
+                        } else {
+                            importResultsRef.current = new Map();
+                            importCounterRef.current = 0;
+                            resolvedFiles = new Map();
+                            resolvedCompanions = new Map();
+                        }
+                    }
+                } else {
+                    // No folder files — dialog for the unresolved ones.
+                    const dialogResult = await showBatchImportDialog(unresolvedRequests);
                     if (dialogResult.action === "cancel") {
                         addEntry("(script)", "Script execution cancelled.", "info");
                         return;
@@ -381,78 +482,44 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
                         resolvedCompanions = new Map();
                     }
                 }
-            } else {
-                // No folder files — dialog for the unresolved ones.
-                const dialogResult = await showBatchImportDialog(unresolvedRequests);
-                if (dialogResult.action === "cancel") {
-                    addEntry("(script)", "Script execution cancelled.", "info");
-                    return;
-                }
-                if (dialogResult.action === "import" && dialogResult.files.size > 0) {
-                    for (const [idx, file] of dialogResult.files) resolvedFiles.set(idx, file);
-                    for (const [idx, comps] of dialogResult.companionFiles) resolvedCompanions.set(idx, comps);
-                } else {
+
+                if (resolvedFiles.size > 0) {
+                    const behaviorIdByFilepath = await buildBehaviorIdMap(folderFiles);
+                    const results = await processResolvedImports(
+                        importRequests, resolvedFiles, resolvedCompanions, behaviorIdByFilepath,
+                    );
+                    importResultsRef.current = results;
+                    importCounterRef.current = 0;
+                } else if (!importResultsRef.current) {
                     importResultsRef.current = new Map();
                     importCounterRef.current = 0;
-                    resolvedFiles = new Map();
-                    resolvedCompanions = new Map();
                 }
             }
 
-            if (resolvedFiles.size > 0) {
-                const behaviorIdByFilepath = await buildBehaviorIdMap(folderFiles);
-                const results = await processResolvedImports(
-                    importRequests, resolvedFiles, resolvedCompanions, behaviorIdByFilepath,
-                );
-                importResultsRef.current = results;
-                importCounterRef.current = 0;
-            } else if (!importResultsRef.current) {
-                importResultsRef.current = new Map();
-                importCounterRef.current = 0;
+            // All import-resolution and cancellation paths above have already
+            // returned. Wipe previously-imported content now so the script runs
+            // against the same blank-scene baseline every time. Wrapping the
+            // execute() call in runInScriptImportContext tags every object the
+            // script adds with userData.isImported, which the next exec uses to
+            // wipe these same objects again.
+            const editor = getEngineRuntime()?.editor;
+            if (editor) {
+                try {
+                    editor.clearImportedContent();
+                } catch (error: unknown) {
+                    const message = error instanceof Error ? error.message : String(error);
+                    addEntry("(script)", `Pre-exec wipe failed (continuing): ${message}`, "error");
+                }
             }
-        }
 
-        // All import-resolution and cancellation paths above have already
-        // returned. Wipe previously-imported content now so the script runs
-        // against the same blank-scene baseline every time. Wrapping the
-        // execute() call in runInScriptImportContext tags every object the
-        // script adds with userData.isImported, which the next exec uses to
-        // wipe these same objects again.
-        const editor = getEngineRuntime()?.editor;
-        if (editor) {
-            try {
-                editor.clearImportedContent();
-            } catch (error: unknown) {
-                const message = error instanceof Error ? error.message : String(error);
-                addEntry("(script)", `Pre-exec wipe failed (continuing): ${message}`, "error");
-            }
-        }
-
-        // Persistent spinner toast for the duration of execution + auto-save, so
-        // the user has feedback while the stemscript runs (imports can take a
-        // while). Dismissed in the `finally` below — no auto-dismiss.
-        const importSpinnerId = showLoadingToast("Importing scene…", "Running stemscript…");
-
-        try {
+            const onProgress = (current: number, total: number, line: string) => {
+                addEntry(line, `Executing ${current}/${total}...`, "info");
+            };
             const result = editor
                 ? await editor.runInScriptImportContext(() =>
-                      ScriptExecutor.execute(
-                          content,
-                          executeRegistryCommand,
-                          (current: number, total: number, line: string) => {
-                              addEntry(line, `Executing ${current}/${total}...`, "info");
-                          },
-                          executeScriptBuiltin,
-                      ),
+                      ScriptExecutor.execute(content, executeRegistryCommand, onProgress, executeScriptBuiltin),
                   )
-                : await ScriptExecutor.execute(
-                      content,
-                      executeRegistryCommand,
-                      (current: number, total: number, line: string) => {
-                          addEntry(line, `Executing ${current}/${total}...`, "info");
-                      },
-                      executeScriptBuiltin,
-                  );
+                : await ScriptExecutor.execute(content, executeRegistryCommand, onProgress, executeScriptBuiltin);
 
             const summary = `Script complete: ${result.successCount}/${result.executedCommands} succeeded, ${result.failCount} failed`;
             addEntry("(script)", summary, result.failCount > 0 ? "error" : "success");
@@ -467,6 +534,15 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
             }
 
             scriptExecutionFinished = true;
+            // Programmatic summary so a harness (window.__stemRunScript) can
+            // assert the run was actually clean — failCount > 0 includes any
+            // import that could not be resolved (e.g. a skybox file the folder
+            // didn't supply). An incomplete import must never look successful.
+            runSummary = {
+                executedCommands: result.executedCommands,
+                successCount: result.successCount,
+                failCount: result.failCount,
+            };
         } finally {
             if (scriptExecutionFinished) {
                 try {
@@ -485,6 +561,7 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
             importResultsRef.current = null;
             importCounterRef.current = 0;
         }
+        return runSummary;
     }, [executeRegistryCommand, addEntry, executeScriptBuiltin, processResolvedImports, buildBehaviorIdMap]);
 
     const executeInput = useCallback(async (input: string): Promise<TerminalHistoryEntry[]> => {
@@ -590,7 +667,7 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
             __stemRunScript?: (
                 content: string,
                 files?: Array<{name: string; mime?: string; data: string}>,
-            ) => Promise<void>;
+            ) => Promise<ScriptRunSummary | undefined>;
         };
         w.__stemRunScript = async (content, files) => {
             console.log("[__stemRunScript] start", {scriptBytes: content.length, fileCount: (files ?? []).length});
@@ -634,13 +711,14 @@ export function useTerminal(onExit: () => void, options: UseTerminalOptions = {}
             // before every asset is created (a partial import).
             const HARD_TIMEOUT_MS = 1_200_000;
             try {
-                await Promise.race([
+                const summary = await Promise.race([
                     runScript(content, folderFiles),
-                    new Promise((_, reject) =>
+                    new Promise<never>((_, reject) =>
                         setTimeout(() => reject(new Error(`__stemRunScript timed out after ${HARD_TIMEOUT_MS}ms`)), HARD_TIMEOUT_MS),
                     ),
                 ]);
-                console.log("[__stemRunScript] done");
+                console.log("[__stemRunScript] done", summary);
+                return summary;
             } catch (err) {
                 console.error("[__stemRunScript] threw", err);
                 throw err;

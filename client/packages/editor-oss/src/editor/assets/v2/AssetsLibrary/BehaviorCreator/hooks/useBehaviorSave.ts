@@ -8,6 +8,18 @@ import {useGetBehaviorRevisionData} from "../../../../../behaviors/hooks/behavio
 import {createBehaviorRevision} from "../../../../../behaviors/util";
 
 /**
+ * TEMP diagnostics for the "first save loses behavior edits" bug. Logs the
+ * first line of code (the symptom the user reported) plus revision ids at every
+ * decision point in the save/merge path. Remove once the root cause is fixed.
+ */
+const BEHAVIOR_SAVE_DEBUG = true;
+const firstLineOf = (text: string | undefined): string =>
+    (text ?? "").split("\n", 1)[0]?.slice(0, 120) ?? "";
+const bsLog = (...args: unknown[]): void => {
+    if (BEHAVIOR_SAVE_DEBUG) console.log("[behavior-save]", ...args);
+};
+
+/**
  * Recursively validate a behavior's attributes map. Returns the dotted path
  * of the first invalid attribute found, or null if all are valid. Validation
  * requires every entry to have a non-empty object key and a non-empty `name`,
@@ -139,6 +151,15 @@ export function useBehaviorSave(options: UseBehaviorSaveOptions): UseBehaviorSav
             // Check for newer revisions
             const {headRevisionId} = await getAsset(behaviorId);
 
+            bsLog("mergeBehavior", {
+                behaviorId,
+                codeRevisionId,
+                configRevisionId,
+                headRevisionId,
+                baseEqualsHead: codeRevisionId === headRevisionId,
+                localFirstLine: firstLineOf(code),
+            });
+
             // If no newer revisions, we're done
             if (codeRevisionId === headRevisionId && configRevisionId === headRevisionId) {
                 return {
@@ -154,6 +175,13 @@ export function useBehaviorSave(options: UseBehaviorSaveOptions): UseBehaviorSav
             // If there's a newer revision of the code, request merge
             if (codeRevisionId !== headRevisionId) {
                 let mergedCode = code;
+
+                bsLog("code branch (base behind head)", {
+                    behaviorId,
+                    localEqualsLatest: code === latestRevision.code,
+                    localFirstLine: firstLineOf(code),
+                    latestFirstLine: firstLineOf(latestRevision.code),
+                });
 
                 // Only display the merge dialog if the code is different from the
                 // latest revision
@@ -209,6 +237,13 @@ export function useBehaviorSave(options: UseBehaviorSaveOptions): UseBehaviorSav
         async (params: SaveBehaviorParams): Promise<boolean> => {
             const {behaviorId, revisionId, code, config, name, description, tags} = params;
 
+            bsLog("save() called", {
+                behaviorId,
+                baseRevisionId: revisionId,
+                localFirstLine: firstLineOf(code),
+                configName: config?.name,
+            });
+
             setIsSaving(true);
 
             try {
@@ -254,6 +289,15 @@ export function useBehaviorSave(options: UseBehaviorSaveOptions): UseBehaviorSav
 
                 // If a merge happened, notify caller and stop (user must save again)
                 const didMergeHappen = mergeRevisionId !== revisionId;
+                bsLog("merge decision", {
+                    behaviorId,
+                    baseRevisionId: revisionId,
+                    mergeRevisionId,
+                    didMergeHappen,
+                    note: didMergeHappen
+                        ? "FIRST SAVE WILL BE SKIPPED — returning false without persisting (base revision was behind head)"
+                        : "no merge — proceeding to persist",
+                });
                 if (didMergeHappen && onMergeComplete) {
                     onMergeComplete({
                         behaviorId,
@@ -306,6 +350,14 @@ export function useBehaviorSave(options: UseBehaviorSaveOptions): UseBehaviorSav
 
                 const saveResult = await Promise.all(savePromises);
                 const newRevisionId = saveResult[0]!.id;
+
+                bsLog("persisted new revision", {
+                    behaviorId,
+                    parentRevisionId: mergeRevisionId,
+                    newRevisionId,
+                    unchanged: newRevisionId === mergeRevisionId,
+                    persistedFirstLine: firstLineOf(mergedCode),
+                });
 
                 // Notify caller of successful save - caller handles registry updates and scene dependencies
                 await onSaveComplete?.({

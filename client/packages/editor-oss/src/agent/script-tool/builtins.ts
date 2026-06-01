@@ -24,8 +24,10 @@ export interface BuiltinContext {
     commandBuffer: string[];
     /** Callback to clear terminal output */
     clearOutput: () => void;
-    /** Callback to run a .stemscript file, optionally with folder files for auto-resolve */
-    runScript?: (content: string, folderFiles?: File[]) => Promise<void>;
+    /** Callback to run a .stemscript file, optionally with folder files for auto-resolve.
+     *  Resolves to a run summary (`{executedCommands, successCount, failCount}`) or
+     *  `undefined` for early-return paths (cancelled / no imports). */
+    runScript?: (content: string, folderFiles?: File[]) => Promise<{executedCommands: number; successCount: number; failCount: number} | undefined>;
     /** Last script executed through the terminal, if any */
     getLastScript?: () => {content: string; label?: string} | null;
     /** Callback to validate a script against current scene state */

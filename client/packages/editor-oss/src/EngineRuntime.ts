@@ -285,7 +285,11 @@ export class EngineRuntime extends AppRuntime implements RuntimeContext {
 
         global.app = this;
         global.three$1 = THREE;
-        
+        // TEMP debug: mirror the engine onto window so it can be inspected from
+        // the browser console (`global` is a module export, not window.app).
+        // Lets us read e.g. `app.scene.userData._matchStarted`. Remove later.
+        (window as unknown as {app?: unknown}).app = this;
+
         this.viewport = undefined;
         this.width = this.container.clientWidth;
         this.height = this.container.clientHeight;

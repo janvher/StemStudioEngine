@@ -860,7 +860,7 @@ class GameManager {
             const promises: Promise<void>[] = [];
             for (const behavior of behaviors) {
                 const target = behaviorToTargetMap.get(behavior.uuid)!;
-                console.log(
+                console.debug(
                     `[GameManager] About to add behavior "${behavior.id}" (uuid: ${behavior.uuid}) to object "${target.name}" (uuid: ${target.uuid})`,
                 );
 
@@ -871,7 +871,7 @@ class GameManager {
                 };
                 const promise = this.addBehaviorToObject(target, behavior.id, options)
                     .then(() => {
-                        console.log(
+                        console.debug(
                             `[GameManager] ✓ Successfully added behavior "${behavior.id}" to object "${target.name}"`,
                         );
                     })
@@ -1504,7 +1504,7 @@ class GameManager {
         behaviorId: string,
         behaviorOptions?: CreateBehaviorOptions,
     ): Promise<Behavior> {
-        console.log(
+        console.debug(
             `[GameManager] addBehaviorToObject called with behaviorId: "${behaviorId}", target: "${target.name || target.uuid}", options:`,
             behaviorOptions,
         );
@@ -1540,7 +1540,7 @@ class GameManager {
                 }
             }
 
-            console.log(`[GameManager] BehaviorManager exists, calling createBehavior for "${behaviorKey}"`);
+            console.debug(`[GameManager] BehaviorManager exists, calling createBehavior for "${behaviorKey}"`);
             const behavior = await this.behaviorManager.createBehavior(target, behaviorKey, behaviorOptions);
 
             if (!behavior) {
@@ -1549,7 +1549,7 @@ class GameManager {
                 return Promise.reject(error);
             }
 
-            console.log(
+            console.debug(
                 `[GameManager] Successfully created behavior "${behaviorKey}" for object "${target.name || target.uuid}"`,
             );
 
@@ -1557,7 +1557,7 @@ class GameManager {
             const enableAtStart =
                 typeof target.userData.enableAtStart === "boolean" ? target.userData.enableAtStart : true; // default to true if not set
 
-            console.log(`[GameManager] Object "${target.name || target.uuid}" enableAtStart: ${enableAtStart}`);
+            console.debug(`[GameManager] Object "${target.name || target.uuid}" enableAtStart: ${enableAtStart}`);
             if (!enableAtStart) {
                 this.pauseObject(target, false); // Pause behaviors without cascading to children
             }

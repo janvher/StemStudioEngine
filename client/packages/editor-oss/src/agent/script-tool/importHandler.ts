@@ -265,6 +265,14 @@ export function getSupportedImportTypes(): string[] {
  * @param name
  * @param companionFiles
  */
+/** Hex SHA-256 of a byte buffer, used to content-address imported model files. */
+async function sha256Hex(buffer: ArrayBuffer): Promise<string> {
+    const digest = await crypto.subtle.digest("SHA-256", buffer);
+    return Array.from(new Uint8Array(digest))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
+}
+
 export async function processImportedFile(
     file: File,
     type: string,
@@ -279,6 +287,16 @@ export async function processImportedFile(
      * the behavior is imported but never attached to any object.
      */
     behaviorIdOverride?: string,
+    /**
+     * Run-scoped cache keyed by source-file content hash → the asset created for
+     * it. A stemscript that places the same model many times (e.g. pirate-ship's
+     * 77 `import model … filepath=models/rocks-a.glb`) otherwise creates a fresh
+     * multi-MB inline asset per placement. With this cache, identical source
+     * bytes import once and every later placement reuses that one asset (a new
+     * scene object still gets created per placement). Pass the same Map for an
+     * entire import batch; omit it for one-off imports.
+     */
+    modelAssetDedupCache?: Map<string, {id: string; headRevisionId: string}>,
 ): Promise<{success: boolean; message: string}> {
     // Dynamic imports to keep module resolution lightweight for tests
     const [{default: global}, {setAssetRevision, resolveAssetRevisionId, getAssetResolutionContext}, {AssetType, ModelFormat, createAssetRevisionWithData, isNoChangesError, getAsset}, {createAsset}] = await Promise.all([
@@ -339,8 +357,19 @@ export async function processImportedFile(
                     let headRevisionId: string;
                     try {
                         headRevisionId = (await getAsset(assetId)).headRevisionId;
-                    } catch {
-                        // Fall back to scene-pinned revision if getAsset fails
+                    } catch (err) {
+                        // We matched this asset in the scene's behavior configs, so
+                        // it exists — a getAsset failure here is unexpected. Falling
+                        // back to the scene-pinned revision silently risks building
+                        // a revision on a STALE parent (the merge-on-stale path can
+                        // then drop the user's first edit). Surface it loudly; the
+                        // pinned revision is only a last resort, not a quiet default.
+                        console.error(
+                            `[ScriptImport] getAsset("${assetId}") failed while resolving HEAD for ` +
+                            `behavior "${config.name}"; falling back to scene-pinned revision. ` +
+                            `A stale parent here can drop the next edit.`,
+                            err,
+                        );
                         const context = getAssetResolutionContext(scene);
                         headRevisionId = (context ? resolveAssetRevisionId(assetId, context) : undefined) as string;
                     }
@@ -528,6 +557,30 @@ export async function processImportedFile(
                     return {success: true, message: `Model "${modelName}" already in scene, skipping re-import`};
                 }
 
+                // Content-addressed dedup. If an identical source file was already
+                // imported in this batch, reuse that asset and just place a new
+                // scene object — skipping the whole load/convert/texture-bake
+                // pipeline AND avoiding a duplicate multi-MB inline asset.
+                let srcHash: string | undefined;
+                if (modelAssetDedupCache) {
+                    try {
+                        srcHash = await sha256Hex(await file.arrayBuffer());
+                    } catch {
+                        srcHash = undefined; // crypto unavailable — fall through to a normal import
+                    }
+                    const cached = srcHash ? modelAssetDedupCache.get(srcHash) : undefined;
+                    if (cached) {
+                        setAssetRevision(scene, cached.id, cached.headRevisionId);
+                        const {loadModel} = await import("../../model/load-util");
+                        const context = scene.userData?.assetResolutionContext || {};
+                        const object = await loadModel(cached.id, context);
+                        if (name) object.name = name;
+                        editor.addObject(object);
+                        app?.call("objectChanged", null, scene);
+                        return {success: true, message: `Model "${modelName}" placed (reused shared asset ${cached.id})`};
+                    }
+                }
+
                 const abortController = new AbortController();
                 const abortSignal = abortController.signal;
 
@@ -622,6 +675,9 @@ export async function processImportedFile(
                     lods: modelLods,
                     thumbnail: thumbnailParam,
                 });
+                if (modelAssetDedupCache && srcHash) {
+                    modelAssetDedupCache.set(srcHash, {id: asset.id, headRevisionId: asset.headRevisionId});
+                }
                 setAssetRevision(scene, asset.id, asset.headRevisionId);
                 const {loadModel} = await import("../../model/load-util");
                 const context = scene.userData?.assetResolutionContext || {};

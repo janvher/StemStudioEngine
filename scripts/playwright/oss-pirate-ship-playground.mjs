@@ -152,6 +152,27 @@ const dismissTutorial = async () => {
     }
 };
 
+// The batch-import dialog ("Import Assets (N required)") only appears when an
+// import could NOT auto-resolve. In a headless run nobody clicks it, so it
+// hangs runScript forever. A clean import (all files resolved) never shows it.
+// We assert it does NOT appear; if it ever does, that's a real auto-resolution
+// failure — record it (so the run fails loudly) and dismiss it so the harness
+// doesn't hang for 20 minutes instead of reporting the problem.
+const batchImportDialogAppeared = async () =>
+    page.evaluate(() => /Import Assets \(/.test(document.body?.innerText || "")).catch(() => false);
+const dismissBatchImportDialogIfPresent = async () => {
+    if (!(await batchImportDialogAppeared())) return false;
+    // Skip All → continue the script; the skipped imports show up in failCount.
+    const skip = page.locator('button:has-text("Skip All")').first();
+    if (await skip.count() && await skip.isVisible().catch(() => false)) {
+        await skip.click({timeout: 3000, force: true}).catch(() => {});
+    } else {
+        await page.keyboard.press("Escape").catch(() => {});
+    }
+    await page.waitForTimeout(500);
+    return true;
+};
+
 try {
     // === Activate playground mode, then seed the filesystem store. ===
     await page.goto(baseUrl + "/dashboard?mode=playground", {waitUntil: "domcontentloaded", timeout: 30000});
@@ -183,22 +204,60 @@ try {
     if (!hookPresent) throw new Error("no stemRunScript");
 
     // === Run the import. ===
+    // Fire WITHOUT awaiting the whole import inside evaluate: that would block
+    // this flow and, if the batch-import dialog ever opened, hang forever. We
+    // poll for completion and dismiss the dialog if it appears.
     const execStartUrl = page.url();
     try {
-        await page.evaluate(({content, fileList}) =>
+        await page.evaluate(({content, fileList}) => {
+            window.__stemRunScriptDone = null;
+            window.__stemRunScriptSummary = null;
             window.__stemRunScript(content, fileList).then(
-                () => { window.__stemRunScriptDone = "ok"; },
+                summary => { window.__stemRunScriptDone = "ok"; window.__stemRunScriptSummary = summary ?? null; },
                 err => { window.__stemRunScriptDone = String(err && err.message ? err.message : err); },
-            ), {content: scriptContent, fileList: folderFiles});
+            );
+        }, {content: scriptContent, fileList: folderFiles});
     } catch (e) {
-        logStep("exec evaluate detached (likely navigation)", "warn", {error: e.message.slice(0, 120)});
+        logStep("exec fire detached (likely navigation)", "warn", {error: e.message.slice(0, 120)});
     }
-    await page.waitForLoadState("networkidle", {timeout: 120000}).catch(() => {});
-    await page.waitForTimeout(6000);
+    // Poll until the run resolves (a full game import takes a few minutes).
+    let importDialogSeen = false;
+    const importDeadline = Date.now() + 15 * 60 * 1000;
+    let execResult = null;
+    while (Date.now() < importDeadline) {
+        execResult = await page.evaluate(() => window.__stemRunScriptDone ?? null).catch(() => null);
+        if (execResult) break;
+        if (await dismissBatchImportDialogIfPresent()) importDialogSeen = true;
+        await page.waitForTimeout(3000);
+    }
+    await page.waitForLoadState("networkidle", {timeout: 60000}).catch(() => {});
     await dismissTutorial();
-    const execResult = await page.evaluate(() => window.__stemRunScriptDone ?? null).catch(() => null);
     const execOk = execResult === "ok" || page.url() !== execStartUrl;
-    assert("exec-completed", execOk, execResult ?? "no completion signal");
+    assert("exec-completed", execOk, execResult ?? "no completion signal (timed out)");
+    // The dialog must NOT have appeared — if it did, an import failed to
+    // auto-resolve (the exact bug that hung this game's import headlessly).
+    assert("no-batch-import-dialog", !importDialogSeen,
+        "batch-import dialog appeared — an import failed to auto-resolve");
+
+    // The import must be COMPLETE, not merely "finished". A non-zero failCount
+    // means at least one command (including an unresolved asset import) failed —
+    // exactly the silent-skip class of bug (skybox_day.glb) we refuse to let
+    // masquerade as a clean import.
+    const runSummary = await page.evaluate(() => window.__stemRunScriptSummary ?? null).catch(() => null);
+    report.runSummary = runSummary;
+    assert("import-no-failed-commands", !!runSummary && runSummary.failCount === 0,
+        `summary=${JSON.stringify(runSummary)}`);
+
+    // The skybox is an imported model object; assert it actually landed in the
+    // scene rather than being silently dropped during resolution.
+    const sceneAudit = await page.evaluate(() => (window.__stemGetScene ? window.__stemGetScene() : null)).catch(() => null);
+    const objectNames = sceneAudit?.objectNames ?? [];
+    report.importedObjectCount = objectNames.length;
+    assert("skybox-object-present", objectNames.some(n => /skybox/i.test(n)),
+        `no object matching /skybox/ in ${objectNames.length} objects`);
+    // A real game import lands many models — guard against an empty/partial scene.
+    assert("scene-has-models", (sceneAudit?.meshCount ?? 0) > 0, `meshCount=${sceneAudit?.meshCount ?? 0}`);
+
     await page.screenshot({path: resolve(outDir, "01-after-import.png")}).catch(() => {});
 
     // No "Image derivative missing dataUrl" while the OceanSurface base map loads.

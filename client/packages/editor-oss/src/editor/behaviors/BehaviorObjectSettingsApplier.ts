@@ -64,13 +64,24 @@ class BehaviorObjectSettingsApplier {
     private static applyPhysicsSettings(object: THREE.Object3D, physicsSettings: ObjectSettings['physics']): void {
         if (!physicsSettings) return;
 
+        // Did the object already carry an explicit `enabled` choice (set by the
+        // user, or by an import's `physics set`) BEFORE this behavior's default
+        // physics was applied? A behavior's default physics is a convenience for
+        // objects that have none — it must NOT silently override a deliberate
+        // `enabled` value. Without this guard, attaching a behavior whose
+        // default physics is `enabled:true` (e.g. the character controller's
+        // dynamic capsule) onto an object whose physics was intentionally turned
+        // off re-enables a body that then hijacks the object's transform — which
+        // is exactly how a "disabled" character behavior froze the pirate ship.
+        const hadExplicitEnabled = object.userData.physics?.enabled !== undefined;
+
         if (!object.userData.physics) {
             object.userData.physics = {
                 enabled: false,
             };
         }
 
-        if (physicsSettings.enabled !== undefined) {
+        if (physicsSettings.enabled !== undefined && !hadExplicitEnabled) {
             object.userData.physics.enabled = physicsSettings.enabled;
         }
         

@@ -391,6 +391,14 @@ export const createBehaviorRevision = async ({
         }
     };
 
+    // TEMP diagnostics for "first save loses behavior edits" — remove with the
+    // matching [behavior-save] logs in useBehaviorSave.ts.
+    console.log("[behavior-save] createBehaviorRevision", {
+        assetId,
+        parentRevisionId,
+        codeFirstLine: (code ?? "").split("\n", 1)[0]?.slice(0, 120) ?? "",
+    });
+
     try {
         const revision = await createAssetRevision({
                 assetId,
@@ -408,6 +416,10 @@ export const createBehaviorRevision = async ({
         // Still apply scene sync to ensure aliases (e.g. imported YAML config.id) are
         // re-registered in the current editor session after reload.
         if (isNoChangesError(err)) {
+            console.log("[behavior-save] createBehaviorRevision: server reports NO CHANGES — data matches head, returning parent", {
+                assetId,
+                parentRevisionId,
+            });
             applyScene(parentRevisionId);
             return {id: parentRevisionId};
         }

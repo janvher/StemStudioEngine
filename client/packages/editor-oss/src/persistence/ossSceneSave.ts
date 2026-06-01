@@ -28,41 +28,39 @@ import type {ProjectBody, ProjectMeta, StoredAsset} from "./types";
  * Persist the binary OSS assets (models, images, audio) a project depends
  * on into the active ProjectStore. OSS synthesizes these as in-memory
  * `data:` URLs with no asset service behind them; without this the scene
- * JSON's model references would dangle after a reload. Best-effort: a
- * failure here is logged but doesn't fail the scene save.
+ * JSON's model references would dangle after a reload. A failure here means
+ * the scene was saved but its binary assets were NOT — a reload would show a
+ * scene with missing models. That is a real save failure, so this throws and
+ * the caller surfaces it instead of reporting a clean "Saved".
  */
 async function persistProjectAssets(projectId: string): Promise<void> {
-    try {
-        const splitDataUrl = (url: string): {contentType?: string; base64: string} => {
-            // `data:<mime>;base64,<payload>` → {mime, payload}
-            const comma = url.indexOf(",");
-            if (comma < 0) return {base64: url};
-            const header = url.slice(5, comma); // skip "data:"
-            const semi = header.indexOf(";");
-            const mime = semi >= 0 ? header.slice(0, semi) : header;
-            return {contentType: mime || undefined, base64: url.slice(comma + 1)};
-        };
-        const assets: StoredAsset[] = getOssAssetsForProject(projectId)
-            .filter(record => record.dataUrl)
-            .map(record => {
-                const main = splitDataUrl(record.dataUrl!);
-                const thumb = record.thumbnailDataUrl ? splitDataUrl(record.thumbnailDataUrl) : undefined;
-                return {
-                    assetId: record.assetId,
-                    revisionId: record.revisionId,
-                    type: record.type,
-                    format: record.format,
-                    name: record.name,
-                    contentType: record.contentType,
-                    metadata: record.metadata,
-                    data: main.base64,
-                    ...(thumb ? {thumbnailData: thumb.base64, thumbnailContentType: thumb.contentType} : {}),
-                };
-            });
-        await getProjectStore().saveAssets(projectId, assets);
-    } catch (err) {
-        console.warn("[ossSaveScene] failed to persist project assets", err);
-    }
+    const splitDataUrl = (url: string): {contentType?: string; base64: string} => {
+        // `data:<mime>;base64,<payload>` → {mime, payload}
+        const comma = url.indexOf(",");
+        if (comma < 0) return {base64: url};
+        const header = url.slice(5, comma); // skip "data:"
+        const semi = header.indexOf(";");
+        const mime = semi >= 0 ? header.slice(0, semi) : header;
+        return {contentType: mime || undefined, base64: url.slice(comma + 1)};
+    };
+    const assets: StoredAsset[] = getOssAssetsForProject(projectId)
+        .filter(record => record.dataUrl)
+        .map(record => {
+            const main = splitDataUrl(record.dataUrl!);
+            const thumb = record.thumbnailDataUrl ? splitDataUrl(record.thumbnailDataUrl) : undefined;
+            return {
+                assetId: record.assetId,
+                revisionId: record.revisionId,
+                type: record.type,
+                format: record.format,
+                name: record.name,
+                contentType: record.contentType,
+                metadata: record.metadata,
+                data: main.base64,
+                ...(thumb ? {thumbnailData: thumb.base64, thumbnailContentType: thumb.contentType} : {}),
+            };
+        });
+    await getProjectStore().saveAssets(projectId, assets);
 }
 
 /**
@@ -159,8 +157,18 @@ export async function ossSaveScene(_createThumbnail: boolean, shouldShowToast: b
     }
 
     // Persist binary assets (models/images/audio) alongside the project so
-    // the scene's asset references resolve after a reload.
-    await persistProjectAssets(saved.id);
+    // the scene's asset references resolve after a reload. If this fails the
+    // scene JSON is saved but its assets are not — a reload would render a
+    // scene with missing models. Surface that as a save failure rather than
+    // reporting a clean "Saved".
+    try {
+        await persistProjectAssets(saved.id);
+    } catch (err) {
+        console.error("ossSaveScene: failed to persist project assets", err);
+        if (shouldShowToast) showToast({type: "error", title: "Save failed — could not persist assets."});
+        app.call("sceneSaveFailed");
+        return;
+    }
 
     if (shouldShowToast) {
         showToast({type: "success", title: "Saved"});

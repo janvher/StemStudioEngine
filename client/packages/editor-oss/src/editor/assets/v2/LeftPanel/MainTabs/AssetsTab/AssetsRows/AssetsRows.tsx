@@ -137,9 +137,18 @@ export const AssetsRows = () => {
     useEffect(() => {
         if (!sceneID) return setExpandedPanels([PANEL_TYPES.PRIMITIVES]);
 
-        const savedPanels = localStorage.getItem(`expandedPanels_${sceneID}`);
+        let savedPanels: string | null = null;
+        try {
+            savedPanels = localStorage.getItem(`expandedPanels_${sceneID}`);
+        } catch {
+            savedPanels = null;
+        }
         if (savedPanels) {
-            setExpandedPanels(JSON.parse(savedPanels));
+            try {
+                setExpandedPanels(JSON.parse(savedPanels));
+            } catch {
+                setExpandedPanels([PANEL_TYPES.PRIMITIVES]);
+            }
         } else {
             setExpandedPanels([PANEL_TYPES.PRIMITIVES]);
         }
@@ -148,7 +157,14 @@ export const AssetsRows = () => {
 
     useEffect(() => {
         if (!sceneID || !isLoaded) return;
-        localStorage.setItem(`expandedPanels_${sceneID}`, JSON.stringify(expandedPanels));
+        // Persisting expanded-panel UI state is best-effort. localStorage can be
+        // full (e.g. a bloated project), and a QuotaExceededError here must not
+        // crash the asset panel — swallow it.
+        try {
+            localStorage.setItem(`expandedPanels_${sceneID}`, JSON.stringify(expandedPanels));
+        } catch {
+            /* storage full or unavailable — ignore, this is non-critical UI state */
+        }
     }, [expandedPanels, sceneID]);
 
     const handleImportButton = useCallback(

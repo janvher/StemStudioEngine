@@ -64,7 +64,11 @@ vi.mock("../serialization/Converter", () => {
     };
 });
 
-const stubStore = (kind: "indexeddb" | "filesystem" | "remote", save?: ProjectStore["save"]): ProjectStore => ({
+const stubStore = (
+    kind: "indexeddb" | "filesystem" | "remote",
+    save?: ProjectStore["save"],
+    saveAssets?: ProjectStore["saveAssets"],
+): ProjectStore => ({
     kind,
     list: vi.fn(async () => ({projects: [], page: 1, hasMore: false, totalCount: 0})),
     load: vi.fn(async () => ({meta: {id: "", name: "", updatedAt: "", createdAt: ""}, sceneJson: "{}"})),
@@ -72,7 +76,7 @@ const stubStore = (kind: "indexeddb" | "filesystem" | "remote", save?: ProjectSt
     delete: vi.fn(async () => undefined),
     exportToBlob: vi.fn(async () => new Blob([])),
     importFromBlob: vi.fn(async (): Promise<ProjectMeta> => ({id: "", name: "", updatedAt: "", createdAt: ""})),
-    saveAssets: vi.fn(async () => undefined),
+    saveAssets: saveAssets ?? vi.fn(async () => undefined),
     loadAssets: vi.fn(async () => []),
 });
 
@@ -216,6 +220,30 @@ describe("ossSaveScene", () => {
         expect(app.call).toHaveBeenCalledWith("sceneSaveFailed");
 
         converterMod.default = original;
+    });
+
+    it("reports a save FAILURE (not success) when binary asset persistence throws", async () => {
+        // The scene JSON saves fine, but persisting its binary assets fails.
+        // Reporting "Saved" here would be a masking fallback: a reload would
+        // render a scene with missing models. The save must surface as failed.
+        const saveSpy = vi.fn(async (body: ProjectBody): Promise<ProjectMeta> => body.meta);
+        const saveAssetsSpy = vi.fn(async () => {
+            throw new Error("asset disk write failed");
+        });
+        setProjectStore(stubStore("filesystem", saveSpy, saveAssetsSpy));
+
+        const app = buildApp({sceneID: "proj-assets"});
+        const globalMod = await import("../global");
+        // @ts-expect-error mutate for test
+        globalMod.default.app = app;
+
+        await ossSaveScene(false, false);
+
+        expect(saveSpy).toHaveBeenCalledTimes(1); // scene JSON did persist
+        expect(saveAssetsSpy).toHaveBeenCalledTimes(1);
+        expect(app.call).toHaveBeenCalledWith("sceneSaveFailed");
+        // Must NOT have falsely announced success.
+        expect(app.call).not.toHaveBeenCalledWith("sceneSaved", expect.anything(), expect.anything());
     });
 
     it("short-circuits in read-only mode", async () => {

@@ -69,7 +69,16 @@ export function autoResolveImports(
         // hung headless / automated imports. So resolve filepath against the
         // full file list, not the claimed-filtered subset.
         if (req.filepath) {
-            match = findByFilepath(folderFiles.filter(extOf), req.filepath);
+            // Match an explicit filepath against the FULL file list, not the
+            // extension-filtered subset. A generator can emit a source file
+            // whose name carries a non-standard extension — e.g. duplicate
+            // textures saved as `PIR_Water.png-2`, `…-3`. Gating filepath
+            // resolution by `extOf` silently drops those files, leaving the
+            // import "unresolved", which pops the blocking batch-import dialog
+            // and hangs any headless/automated run forever (no user to click).
+            // The explicit filepath is already precise (exact path / basename),
+            // so it does not need — and is actively harmed by — the ext guard.
+            match = findByFilepath(folderFiles, req.filepath);
         }
 
         if (!match) {
