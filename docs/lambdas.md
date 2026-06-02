@@ -223,11 +223,254 @@ the manager registers the object with the lambda instance on load.
 
 ---
 
-## Authoring a custom lambda
+## Authoring custom lambdas
 
-The **Lambda Creator** (Assets panel → new lambda) scaffolds a script + a
-manifest. The template (`LambdaScriptTemplate.ts`) gives you the lifecycle
-hooks to fill in:
+There are two authoring paths:
+
+- **In the editor** — use this for project/game systems. The Lambda Creator
+  saves the code, config JSON, documentation, and revisions as a project asset.
+- **In engine source** — use this when you are adding a reusable built-in pack
+  that should ship with the engine.
+
+For most gameplay work, start in the editor.
+
+### Create one in the editor: `OrbitLane`
+
+1. Open the **Assets** sidebar.
+2. Click the **New** menu and choose **New Lambda**.
+3. Name it `OrbitLane`.
+4. Open the code editor details/config panel for the lambda.
+5. Paste this config:
+
+```jsonc
+{
+  "id": "orbit-lane",
+  "name": "Orbit Lane",
+  "description": "Moves registered objects around configurable orbit centers.",
+  "attributes": {
+    "speed": {"name": "Speed", "type": "number", "default": 1.25, "min": 0},
+    "heightScale": {"name": "Height Scale", "type": "number", "default": 1}
+  },
+  "componentSchema": {
+    "centerX": {"name": "Center X", "type": "number", "default": 0},
+    "centerY": {"name": "Center Y", "type": "number", "default": 0},
+    "centerZ": {"name": "Center Z", "type": "number", "default": 0},
+    "radius": {"name": "Radius", "type": "number", "default": 2, "min": 0},
+    "phase": {"name": "Phase", "type": "number", "default": 0},
+    "heightAmp": {"name": "Height Amplitude", "type": "number", "default": 0}
+  },
+  "readComponents": ["centerX", "centerY", "centerZ", "radius", "phase", "heightAmp"],
+  "writeComponents": []
+}
+```
+
+Paste this into the lambda code editor:
+
+```js
+function init(game) {
+    this._game = game;
+    this._time = 0;
+}
+
+function update(deltaTime) {
+    this._time += deltaTime;
+
+    const speed = Number(this.attributes.speed ?? 1.25);
+    const heightScale = Number(this.attributes.heightScale ?? 1);
+
+    this.processObjects(deltaTime, (object, data, dt) => {
+        const angle = this._time * speed + Number(data.phase ?? 0);
+        const radius = Number(data.radius ?? 2);
+        const centerX = Number(data.centerX ?? 0);
+        const centerY = Number(data.centerY ?? 0);
+        const centerZ = Number(data.centerZ ?? 0);
+        const heightAmp = Number(data.heightAmp ?? 0) * heightScale;
+
+        object.position.x = centerX + Math.cos(angle) * radius;
+        object.position.y = centerY + Math.sin(angle * 2) * heightAmp;
+        object.position.z = centerZ + Math.sin(angle) * radius;
+    });
+}
+
+function dispose() {
+    this._game = null;
+}
+```
+
+Then select every object that should orbit, open the **Lambda Components** tab
+in the right panel, add `OrbitLane`, fill in per-object component values, leave
+**Auto Apply** on, and press **Play**. One lambda instance now drives all
+registered objects in a scheduler-aware pass.
+
+Use instance **attributes** for values shared by the whole system (`speed`), and
+`componentSchema` for values each object owns (`radius`, `phase`, `centerX`).
+Use `readComponents` and `writeComponents` when lambdas exchange component
+fields. If your lambda only changes the Three.js transform directly and no
+other lambda reads a component field from it, `writeComponents` can stay empty.
+
+### Worker-backed lambda: `FlockOffsets`
+
+A lambda still runs on the main thread, because it owns Object3D mutation and
+component writes. Move only pure computation into a worker: steering solves,
+heatmaps, grid searches, offline scoring, or large array transforms. Workers
+must receive plain data; do not send Three.js objects, DOM nodes, lambdas,
+behaviors, or `GameManager`.
+
+Create a lambda named `FlockOffsets` with this config:
+
+```jsonc
+{
+  "id": "flock-offsets",
+  "name": "Flock Offsets",
+  "description": "Computes lightweight wandering offsets in a background worker.",
+  "attributes": {
+    "solveRate": {"name": "Solve Rate", "type": "number", "default": 8, "min": 1}
+  },
+  "componentSchema": {
+    "homeX": {"name": "Home X", "type": "number", "default": 0},
+    "homeZ": {"name": "Home Z", "type": "number", "default": 0},
+    "wanderRadius": {"name": "Wander Radius", "type": "number", "default": 1.5, "min": 0},
+    "seed": {"name": "Seed", "type": "number", "default": 1},
+    "offsetX": {"name": "Offset X", "type": "number", "default": 0},
+    "offsetZ": {"name": "Offset Z", "type": "number", "default": 0}
+  },
+  "readComponents": ["homeX", "homeZ", "wanderRadius", "seed", "offsetX", "offsetZ"],
+  "writeComponents": ["offsetX", "offsetZ"]
+}
+```
+
+Paste this code:
+
+```js
+function init() {
+    const workerSource = `
+        self.onmessage = function (event) {
+            const message = event.data || {};
+            if (message.type !== "solve") return;
+
+            const time = Number(message.time || 0);
+            const rows = Array.isArray(message.rows) ? message.rows : [];
+            const offsets = rows.map((row) => {
+                const seed = Number(row.seed || 0);
+                const radius = Number(row.wanderRadius || 0);
+                const angle = time * 0.9 + seed * 12.9898;
+                return {
+                    id: row.id,
+                    x: Math.cos(angle) * radius,
+                    z: Math.sin(angle * 0.73) * radius
+                };
+            });
+
+            self.postMessage({type: "solved", offsets});
+        };
+    `;
+
+    const blob = new window.Blob([workerSource], {type: "application/javascript"});
+    this._workerUrl = window.URL.createObjectURL(blob);
+    this._worker = new window.Worker(this._workerUrl);
+    this._busy = false;
+    this._time = 0;
+    this._lastPost = 0;
+    this._offsets = new Map();
+
+    this._worker.onmessage = (event) => {
+        const message = event.data || {};
+        if (message.type !== "solved") return;
+
+        this._busy = false;
+        this._offsets.clear();
+        for (const offset of message.offsets || []) {
+            this._offsets.set(offset.id, offset);
+        }
+    };
+}
+
+function update(deltaTime) {
+    this._time += deltaTime;
+    const rows = [];
+
+    this.processObjects(deltaTime, (object, data) => {
+        const offset = this._offsets.get(object.uuid);
+        if (offset) {
+            this.setComponentData(object, "offsetX", offset.x);
+            this.setComponentData(object, "offsetZ", offset.z);
+            object.position.x = Number(data.homeX ?? 0) + offset.x;
+            object.position.z = Number(data.homeZ ?? 0) + offset.z;
+        }
+
+        rows.push({
+            id: object.uuid,
+            seed: Number(data.seed ?? 1),
+            wanderRadius: Number(data.wanderRadius ?? 1.5)
+        });
+    });
+
+    const solveRate = Math.max(1, Number(this.attributes.solveRate ?? 8));
+    if (!this._busy && rows.length > 0 && this._time - this._lastPost >= 1 / solveRate) {
+        this._busy = true;
+        this._lastPost = this._time;
+        this._worker.postMessage({type: "solve", time: this._time, rows});
+    }
+}
+
+function dispose() {
+    this._worker?.terminate();
+    if (this._workerUrl) window.URL.revokeObjectURL(this._workerUrl);
+}
+```
+
+This pattern keeps the scheduler contract intact: the lambda still calls
+`processObjects()`, component writes happen on the main thread, and the worker
+only returns serializable results that can be applied on a later frame.
+
+### Import, export, revisions, and managed files
+
+Lambda assets are portable YAML documents with the same export envelope as
+behaviors, but `meta.type` is `lambda`:
+
+```yaml
+meta:
+  tool: StemStudio
+  type: lambda
+  exportVersion: 1
+config:
+  id: orbit-lane
+  name: Orbit Lane
+  componentSchema: {}
+  readComponents: []
+  writeComponents: []
+code: |
+  function update(deltaTime) {}
+```
+
+To import a lambda, open **Assets → Lambdas**, click the import/upload icon on
+that row, and choose one or more `.yaml`/`.yml` lambda exports. The editor
+parses `config` and `code`, checks for duplicate names, creates a lambda asset,
+registers it with the local lambda registry, and updates the Lambda Components
+picker immediately. When a current user handle is available, imported lambda IDs
+are normalized so another author's ID does not collide with yours.
+
+Full scene exports include lambda YAML files under `lambdas/`, plus a scene
+binding file when object attachments need to be reconstructed outside the
+editor. Use that bundle path when you need to move a scene and all of its
+lambda/import dependencies together.
+
+When you use a visual designer, AI generator, or other higher-level authoring
+surface, let that surface manage the lambda file set. It owns the lambda config,
+component schema, helper imports, and any generated files needed to keep the
+visual model and code model synchronized. Edit the generated code directly only
+when you are deliberately taking over maintenance.
+
+In the OSS playground, lambda edits are latest-only: the local adapter keeps a
+single effective version for each lambda asset. In a server-backed install,
+each save creates an immutable asset revision; the history icon on lambda cards
+opens revision history, lets you diff, switch, or roll back, and the selected
+revision is pinned in the scene's asset resolution context.
+
+### Lifecycle reference
+
+The **Lambda Creator** template (`LambdaScriptTemplate.ts`) gives you the same
+lifecycle hooks:
 
 ```js
 // Available: this.registeredObjects, this.attributes, this._game,

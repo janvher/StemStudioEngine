@@ -180,13 +180,197 @@ helpers.)
 
 ---
 
-## Authoring a custom behavior
+## Authoring custom behaviors
 
-When no built-in fits, write your own. Use `genericSound` as the reference for
-the shape — load in `init`, apply config in `onStart`/`onAttributesUpdated`,
-release in `onStop`.
+There are two authoring paths:
 
-### 1. The shape
+- **In the editor** — use this for project/game logic. The Behavior Creator
+  saves a behavior asset with code, attributes, documentation, and revisions.
+- **In engine source** — use this only when you are adding a reusable built-in
+  pack that should ship with every project.
+
+For gameplay authors, start in the editor. Source-code packs are covered after
+the editor examples.
+
+### Create one in the editor: `SpinPickup`
+
+1. Open the **Assets** sidebar.
+2. Click the **New** menu and choose **New Behavior**.
+3. Name it `SpinPickup`.
+4. Add these attributes in the right-hand settings panel:
+
+| Key | Type | Default | Purpose |
+|---|---|---:|---|
+| `spinSpeed` | number | `2` | Radians per second around the Y axis. |
+| `bobHeight` | number | `0.2` | Vertical bob distance in world units. |
+| `bobSpeed` | number | `3` | Bob cycles per second-ish. |
+
+Paste this into the behavior code editor:
+
+```js
+this.applyConfig = function () {
+    this._spinSpeed = Number(this.getAttribute("spinSpeed") ?? 2);
+    this._bobHeight = Number(this.getAttribute("bobHeight") ?? 0.2);
+    this._bobSpeed = Number(this.getAttribute("bobSpeed") ?? 3);
+};
+
+this.onStart = function () {
+    this.applyConfig();
+    this._time = 0;
+    this._baseY = this.target.position.y;
+};
+
+this.onAttributesUpdated = function () {
+    this.applyConfig();
+};
+
+this.update = function (deltaTime) {
+    this._time += deltaTime;
+    this.target.rotation.y += this._spinSpeed * deltaTime;
+    this.target.position.y = this._baseY + Math.sin(this._time * this._bobSpeed) * this._bobHeight;
+};
+```
+
+Then select a coin, gem, or pickup object in the scene, open the **Behaviors**
+section in the right panel, add `SpinPickup`, and press **Play**. The behavior
+asset is saved with the project; it does not require a repo change.
+
+### Worker-backed behavior: `ThreatHeatmap`
+
+Use a worker when a behavior needs pure computation that might stall the main
+thread: path scoring, terrain sampling, procedural placement, visibility
+queries, or large array transforms. Workers cannot access Three.js objects, the
+DOM, `this.stem`, or behavior attributes directly. Send plain JSON or
+transferable buffers in, then apply the result on the main thread.
+
+Create a **Script** asset named `threat-heatmap-worker`:
+
+```js
+self.onmessage = function (event) {
+    const message = event.data || {};
+    if (message.type !== "sample") return;
+
+    const data = message.data || {};
+    const origin = data.origin || {x: 0, z: 0};
+    const points = Array.isArray(data.points) ? data.points : [];
+    const radius = Math.max(0.001, Number(data.radius || 12));
+    let nearestSq = radius * radius;
+
+    for (const p of points) {
+        const dx = Number(p.x || 0) - origin.x;
+        const dz = Number(p.z || 0) - origin.z;
+        nearestSq = Math.min(nearestSq, dx * dx + dz * dz);
+    }
+
+    const danger = Math.max(0, 1 - Math.sqrt(nearestSq) / radius);
+    self.postMessage({type: "danger", data: {danger}});
+};
+```
+
+Create a behavior named `ThreatHeatmap` with these attributes:
+
+| Key | Type | Default | Purpose |
+|---|---|---:|---|
+| `radius` | number | `12` | Distance where threat fades to zero. |
+| `sampleRate` | number | `6` | Worker samples per second. |
+| `points` | object | `[]` | Array like `[{x: 5, z: 1}, {x: -3, z: 8}]`. |
+
+Paste this into the behavior code editor:
+
+```js
+this.init = async function () {
+    this._danger = 0;
+    this._elapsed = 0;
+    this._pending = false;
+
+    const url = await this.erth.asset.script.getUrlByName("threat-heatmap-worker");
+    this._worker = new window.Worker(url);
+    this._worker.onmessage = (event) => {
+        const message = event.data || {};
+        if (message.type !== "danger") return;
+        this._danger = Number(message.data?.danger || 0);
+        this._pending = false;
+    };
+};
+
+this.update = function (deltaTime) {
+    this._elapsed += deltaTime;
+
+    const rate = Math.max(1, Number(this.getAttribute("sampleRate") ?? 6));
+    if (this._worker && !this._pending && this._elapsed >= 1 / rate) {
+        this._elapsed = 0;
+        this._pending = true;
+        this._worker.postMessage({
+            type: "sample",
+            data: {
+                origin: {x: this.target.position.x, z: this.target.position.z},
+                radius: Number(this.getAttribute("radius") ?? 12),
+                points: this.getAttribute("points") || [],
+            },
+        });
+    }
+
+    // Main-thread application stays small: read the last worker result and
+    // apply it to a real scene object.
+    this.target.scale.y = 1 + this._danger * 2;
+};
+
+this.dispose = function () {
+    if (this._worker) {
+        this._worker.terminate();
+        this._worker = null;
+    }
+};
+```
+
+This pattern keeps the worker stateless and disposable. For heavier jobs, send
+typed arrays and transfer their buffers in `postMessage` so the browser does
+not clone large payloads every frame.
+
+### Import, export, revisions, and managed files
+
+Behavior assets are portable YAML documents with three sections:
+
+```yaml
+meta:
+  tool: StemStudio
+  type: behavior
+  exportVersion: 1
+config:
+  id: spin-pickup
+  name: Spin Pickup
+  attributes: {}
+code: |
+  this.update = function (deltaTime) {};
+```
+
+To import a behavior, open **Assets → Behaviors**, click the import/upload icon
+on that row, and choose one or more `.yaml`/`.yml` behavior exports. The editor
+parses the `config` and `code`, checks for duplicate names/ids, creates a new
+behavior asset, and registers it so it appears in the behavior picker.
+
+The export helper in the codebase emits the same YAML shape, and full scene
+exports include behavior YAML files under `behaviors/` when the scene bundle is
+dumped. Use that format when you need to move a behavior between projects,
+review a behavior in Git, or seed a project from a scripted import.
+
+When you use a visual designer, AI generator, or other higher-level authoring
+surface, treat the files it creates as managed artifacts. The designer is
+responsible for creating the behavior asset, matching config fields to the UI,
+and keeping associated helper files/imports in sync. Edit through the designer
+unless you intentionally switch that asset to hand-authored code.
+
+In the OSS playground, behavior edits are latest-only: the local adapter keeps a
+single effective version for each behavior asset. In a server-backed install,
+each save creates an immutable asset revision; the history icon on behavior
+cards opens revision history, lets you diff, switch, or roll back, and stores
+the selected revision in the scene's asset resolution context.
+
+### Source-code behavior packs
+
+Edit engine source only when the behavior should become a built-in pack. Use
+`genericSound` as the reference for shape: load in `init`, apply config in
+`onStart`/`onAttributesUpdated`, release in `onStop`.
 
 ```ts
 import {BehaviorBase} from "../../Behavior";
@@ -195,7 +379,6 @@ import GameManager from "../../game/GameManager";
 class SpinBehavior extends BehaviorBase {
     private speed = 1;
 
-    // Read attributes here; works in both editor and play paths.
     private applyConfig() {
         this.speed = Number(this.getAttribute("speed") ?? 1);
     }
@@ -209,11 +392,10 @@ class SpinBehavior extends BehaviorBase {
     }
 
     onAttributesUpdated() {
-        this.applyConfig();          // react to live edits in the editor
+        this.applyConfig();
     }
 
     update(deltaTime: number) {
-        // gameObject is always valid; do NOT assume init() ran.
         this.gameObject.rotation.y += this.speed * deltaTime;
     }
 
@@ -225,15 +407,8 @@ class SpinBehavior extends BehaviorBase {
 export default SpinBehavior;
 ```
 
-> Read engine handles from `this.stem` / `this.gameObject` directly inside each
-> hook. Re-deriving config in `onStart` *and* `onAttributesUpdated` (here via
-> `applyConfig`) keeps editor edits and play mode in sync.
-
-### 2. Declare attributes
-
 A `behavior.json` next to the class declares the editor-editable fields and
-their defaults. These become the controls in the properties panel and the
-fallback values when a saved scene omits an override.
+their defaults:
 
 ```jsonc
 {
@@ -245,12 +420,9 @@ fallback values when a saved scene omits an override.
 }
 ```
 
-### 3. In-editor authoring
-
-The editor's **Behavior Creator** (Assets panel → new behavior) scaffolds a
-behavior + its attribute schema and saves it as a project asset, so you don't
-have to touch the repo for game-specific logic. Built-in packs (the table
-above) are the ones that live in-tree and ship with the engine.
+> Read engine handles from `this.stem` / `this.gameObject` directly inside each
+> hook. Re-deriving config in `onStart` and `onAttributesUpdated` keeps editor
+> edits and play mode in sync.
 
 ---
 

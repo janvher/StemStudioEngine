@@ -250,7 +250,7 @@ Pause and ask before:
 | Import packs / reusable scripts | `editor/scripts/builtinPacks/`, then `docs/import-packs.md` |
 | Runtime / engine API (`this.stem.*`) | `EngineRuntime.ts`, then `docs/runtime-api.md` |
 | GameObject / GameManager API | `object/`, `behaviors/game/GameManager.ts`, then `docs/gameobject-and-game-manager-api.md` |
-| Scheduler / frame loop / quality | `scheduler/`, `core/quality/` (no dedicated doc; code is source of truth) |
+| Scheduler / frame loop / quality | `scheduler/`, `core/quality/`, then `docs/scheduler-and-editor-settings.md` |
 | Physics | `physics/`, `behaviors/stem/physics/`, then `docs/gameobject-and-game-manager-api.md` (PhysicsSettings / RigidBodyHandle) |
 | Editor UI / import / camera | `editor/`, `controls/`, `serialization/` (no dedicated doc) |
 | Runtime UI / HUD / UIKit | `behaviors/uikit/`, `behaviors/hud/`, then `docs/uikit-api.md` |
