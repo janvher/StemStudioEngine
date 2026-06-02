@@ -89,7 +89,7 @@ describe("dashboardCopilotBootstrap", () => {
         expect(greeting).toContain("Original game: Bullet Bloom");
         expect(greeting).toContain("Creator: Stem Studio");
         expect(greeting).toContain("12 scene objects, 1 camera");
-        expect(greeting).toContain("temporary preview");
+        expect(greeting).toContain("apply it directly to the scene");
     });
 
     it("builds MVP-first prompt context for create-from-prompt entries", () => {

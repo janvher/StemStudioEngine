@@ -121,6 +121,20 @@ export const STEMSCRIPT_COMMAND_CONTRACTS: StemScriptCommandContract[] = [
         sample: "get_player",
     },
     {
+        command: "list_scene_assets",
+        effect: "read-only",
+        area: "asset",
+        verification: "read-only",
+        sample: "list_scene_assets type=models filter=*",
+    },
+    {
+        command: "get_scene_asset",
+        effect: "read-only",
+        area: "asset",
+        verification: "read-only",
+        sample: "get_scene_asset assetId=asset-model",
+    },
+    {
         command: "set_material",
         effect: "setter",
         area: "material",
@@ -154,6 +168,20 @@ export const STEMSCRIPT_COMMAND_CONTRACTS: StemScriptCommandContract[] = [
         area: "behavior",
         verification: "read-only",
         sample: "get_behavior behaviorId=contract.behavior",
+    },
+    {
+        command: "list_lambdas",
+        effect: "read-only",
+        area: "lambda",
+        verification: "read-only",
+        sample: "list_lambdas filter=*",
+    },
+    {
+        command: "get_lambda",
+        effect: "read-only",
+        area: "lambda",
+        verification: "read-only",
+        sample: "get_lambda lambdaId=contract.lambda includeCode=true",
     },
     {
         command: "add_behavior",

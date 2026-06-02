@@ -59,6 +59,8 @@ The fix routes Meshy through the **polling flow** instead
 ## Out of scope
 
 - `ObjectHandlers.handleGenerate3DModel` (copilot tool) still uses the job
-  flow. The playground copilot (`DirectCopilotProvider`) is plain chat with
-  no tool-calling, so it never reaches that handler — not a playground path.
+  flow. The playground copilot (`DirectCopilotProvider`) now runs constrained
+  StemScript through the browser command registry and explicitly rejects
+  `generate_3d_model`, `add_model_to_scene`, and external asset search, so it
+  still never reaches that model-generation handler.
 - Image generation still routes through the Go server.

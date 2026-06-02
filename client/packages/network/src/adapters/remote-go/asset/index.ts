@@ -79,10 +79,41 @@ export type OssAssetRecord = {
     projectId?: string;
 };
 
-const ossAssetRegistry = new Map<string, OssAssetRecord>();
+export type OssAssetRegistry = Map<string, OssAssetRecord>;
+
+const OSS_ASSET_REGISTRY_GLOBAL_KEY = "__STEM_OSS_ASSET_REGISTRY__";
+
+type OssAssetRegistryGlobal = typeof globalThis & {
+    [OSS_ASSET_REGISTRY_GLOBAL_KEY]?: OssAssetRegistry;
+};
+
+export const createOssAssetRegistry = (): OssAssetRegistry => new Map<string, OssAssetRecord>();
+
+const getGlobalOssAssetRegistry = (): OssAssetRegistry => {
+    const host = globalThis as OssAssetRegistryGlobal;
+    if (!host[OSS_ASSET_REGISTRY_GLOBAL_KEY]) {
+        host[OSS_ASSET_REGISTRY_GLOBAL_KEY] = createOssAssetRegistry();
+    }
+    return host[OSS_ASSET_REGISTRY_GLOBAL_KEY];
+};
+
+let activeOssAssetRegistry: OssAssetRegistry = getGlobalOssAssetRegistry();
+
+export const getOssAssetRegistry = (): OssAssetRegistry => activeOssAssetRegistry;
+
+export const setOssAssetRegistry = (registry: OssAssetRegistry): void => {
+    activeOssAssetRegistry = registry;
+    (globalThis as OssAssetRegistryGlobal)[OSS_ASSET_REGISTRY_GLOBAL_KEY] = registry;
+};
+
+export const resetOssAssetRegistryForTests = (): void => {
+    const registry = createOssAssetRegistry();
+    setOssAssetRegistry(registry);
+};
 
 /** Record a synthesized OSS asset so the read paths can recover its payload. */
 export const registerOssAsset = (record: OssAssetRecord): void => {
+    const ossAssetRegistry = getOssAssetRegistry();
     ossAssetRegistry.set(record.assetId, record);
     ossAssetRegistry.set(record.revisionId, record);
 };
@@ -96,6 +127,7 @@ export const registerOssAsset = (record: OssAssetRecord): void => {
  * derivative for an asset created outside the OSS synth path.
  */
 export const setOssAssetThumbnail = (assetId: string, thumbnailDataUrl: string): void => {
+    const ossAssetRegistry = getOssAssetRegistry();
     const existing = ossAssetRegistry.get(assetId);
     if (!existing) {
         console.warn(`[ossAssetRegistry] setOssAssetThumbnail: no record for ${assetId}`);
@@ -108,7 +140,7 @@ export const setOssAssetThumbnail = (assetId: string, thumbnailDataUrl: string):
 
 /** Look up a synthesized OSS asset by either its asset id or revision id. */
 export const lookupOssAsset = (idOrRevisionId: string): OssAssetRecord | undefined =>
-    ossAssetRegistry.get(idOrRevisionId);
+    getOssAssetRegistry().get(idOrRevisionId);
 
 /**
  * Drop a synthesized OSS asset from the registry (both its asset-id and
@@ -119,6 +151,7 @@ export const lookupOssAsset = (idOrRevisionId: string): OssAssetRecord | undefin
  * drops out of the asset list and is not re-persisted on the next project save.
  */
 export const unregisterOssAsset = (assetId: string): void => {
+    const ossAssetRegistry = getOssAssetRegistry();
     const record = ossAssetRegistry.get(assetId);
     ossAssetRegistry.delete(assetId);
     if (record?.revisionId) ossAssetRegistry.delete(record.revisionId);
@@ -130,6 +163,7 @@ export const unregisterOssAsset = (assetId: string): void => {
  * ProjectStore so they survive a reload.
  */
 export const getOssAssetsForProject = (projectId: string): OssAssetRecord[] => {
+    const ossAssetRegistry = getOssAssetRegistry();
     const seen = new Set<string>();
     const out: OssAssetRecord[] = [];
     for (const record of ossAssetRegistry.values()) {

@@ -20,6 +20,7 @@ import global from "../../../global";
 import {useRewardReferralTracking} from "../../../hooks/useRewardReferralTracking";
 import i18n from "../../../i18n/config";
 import {ROUTES} from "@web-shared/routes";
+import {isPlaygroundMode} from "@web-shared/playgroundMode";
 import {showToast} from "../../../showToast";
 import {StemStudioLoader} from "../../../ui";
 import {isSceneInaccessibleError} from "../../../utils/SceneLoadErrorUtils";
@@ -344,7 +345,7 @@ export const Create = () => {
         // the pending/project-level advanced-mode preference has already been
         // set by the dashboard before navigation.
         const sceneName = app.editor?.sceneName;
-        if (sceneName) {
+        if (sceneName && !IS_OSS && !isPlaygroundMode()) {
             setSceneAiPromptMode(projectID, sceneName, true).catch(err => {
                 console.warn("[Create] Failed to set AiPromptMode on scene", err);
             });

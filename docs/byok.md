@@ -50,6 +50,8 @@ If a key is configured both ways, the **environment variable wins**. This makes 
 
 ## How requests flow
 
+In the hosted/local editor path, BYOK requests go through the AI server:
+
 ```
 Editor                AI server                Provider (Anthropic, etc.)
   |                       |                              |
@@ -68,6 +70,13 @@ Editor                AI server                Provider (Anthropic, etc.)
 ```
 
 The AI server is a thin proxy. It does not modify prompts or responses (apart from provider-specific request shaping). Run `bun run dev:ai` and `curl http://localhost:8081/api/AI/Capabilities` to inspect its state.
+
+In playground mode, the Copilot panel uses the browser-direct path instead:
+the selected Anthropic, OpenAI/Codex, or Gemini key is read from the local BYOK
+store, the browser calls the provider directly, and the returned StemScript is
+applied through the in-editor command registry. The playground copilot rejects
+file/import/export commands so generation stays live in the browser instead of
+creating filesystem bundles.
 
 ## Key storage details
 

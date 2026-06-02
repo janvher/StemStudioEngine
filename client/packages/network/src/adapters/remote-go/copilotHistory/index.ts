@@ -66,6 +66,20 @@ export const getCopilotHistoryList = async (
 };
 
 export const getSessionExtras = async (id: string): Promise<CopilotHistoryData> => {
+    if (IS_OSS) {
+        return {
+            ID: id,
+            SessionID: "",
+            UserID: "",
+            SceneID: "",
+            Title: "",
+            MessageExtras: [],
+            UsedCredits: 0,
+            AddTime: "",
+            UpdateTime: "",
+        };
+    }
+
     try {
         const params = new URLSearchParams();
         params.append("ID", id);
@@ -91,6 +105,8 @@ export const createCopilotSession = async (
     sceneID: string,
     title: string,
 ): Promise<void> => {
+    if (IS_OSS) return;
+
     try {
         const response = await Ajax.post({
             url: backendUrlFromPath(`/api/CopilotHistory/Add`),
@@ -114,6 +130,8 @@ export const addMessageExtra = async (
     attachedObjects?: string[],
     interactiveResult?: InteractiveResult,
 ): Promise<void> => {
+    if (IS_OSS) return;
+
     try {
         const data: Record<string, string> = {
             SessionID: sessionID,
@@ -145,6 +163,8 @@ export const addMessageExtra = async (
 };
 
 export const deleteCopilotHistory = async (id?: string, sessionID?: string): Promise<unknown> => {
+    if (IS_OSS) return {};
+
     try {
         if (!id && !sessionID) {
             throw new Error("Either ID or SessionID is required.");
@@ -173,6 +193,8 @@ export const deleteCopilotHistory = async (id?: string, sessionID?: string): Pro
 };
 
 export const updateCopilotHistoryCredits = async (sessionID: string, delta: number): Promise<void> => {
+    if (IS_OSS) return;
+
     try {
         const response = await Ajax.post({
             url: backendUrlFromPath(`/api/CopilotHistory/UpdateCredits`),

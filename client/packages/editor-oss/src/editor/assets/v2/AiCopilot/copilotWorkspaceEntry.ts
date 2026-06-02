@@ -129,11 +129,11 @@ export const buildCopilotEntryGreeting = (
             `Detected context: ${systems}.`,
             [
                 "Detailed remix directions to try:",
-                "- Keep the core loop, add one new objective, rebalance the first challenge, and apply it as a temporary preview.",
+                "- Keep the core loop, add one new objective, rebalance the first challenge, and apply it directly to the scene.",
                 "- Add a new enemy or hazard that fits the existing level layout and explain the systems you touched.",
                 "- Turn this into a short 2-6 player mode with clear spawn, scoring, and sync rules.",
             ].join("\n"),
-            "I will apply changes as a temporary preview before you accept a new version.",
+            "I will apply requested changes directly to this remix.",
         ].filter(Boolean).join("\n\n");
     }
 
@@ -142,7 +142,7 @@ export const buildCopilotEntryGreeting = (
             "This game is open in the Copilot workspace.",
             `Current game: ${sourceName}`,
             `Detected context: ${systems}.`,
-            "Ask for a concrete change and I will keep it in a temporary preview until you accept it as a new version.",
+            "Ask for a concrete change and I will apply it directly to the scene.",
         ].join("\n\n");
     }
 

@@ -163,7 +163,6 @@ export const SceneListItem = React.memo(
         // affordance doesn't apply.
         const showRemixButton = !IS_OSS && !isDashboardRoute;
         const showEngagementStats = !isPlayground;
-        const showPlayButton = !isPlayground;
 
         const handleFork = async (e: React.MouseEvent) => {
             e.stopPropagation();
@@ -375,17 +374,15 @@ export const SceneListItem = React.memo(
                                     <CardActionCount>{formatMetricValue(remixCount)}</CardActionCount>
                                 </CardActionForkButton>
                             )}
-                            {showPlayButton && (
-                                <CardActionPlayButton
-                                    onClick={handlePlay}
-                                    aria-label="Play this game"
-                                    data-testid="game-card-play"
-                                >
-                                    <img src={playStatIcon} alt="" />
-                                    <CardActionLabel>Play</CardActionLabel>
-                                    <CardActionCount>{formatMetricValue(playCount)}</CardActionCount>
-                                </CardActionPlayButton>
-                            )}
+                            <CardActionPlayButton
+                                onClick={handlePlay}
+                                aria-label="Play this game"
+                                data-testid="game-card-play"
+                            >
+                                <img src={playStatIcon} alt="" />
+                                <CardActionLabel>Play</CardActionLabel>
+                                <CardActionCount>{formatMetricValue(playCount)}</CardActionCount>
+                            </CardActionPlayButton>
                         </CardActionRow>
                     </CardInfoSection>
                 )}

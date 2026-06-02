@@ -1,5 +1,6 @@
 import Ajax from "@web-shared/utils/Ajax";
 import {backendUrlFromPath} from "@web-shared/utils/UrlUtils";
+import {IS_OSS} from "../../../buildMode";
 
 /**
  * Uploads an image file and updates the scene's Thumbnail metadata.
@@ -92,6 +93,8 @@ export async function setSceneAiPromptMode(
     sceneName: string,
     enabled: boolean,
 ): Promise<void> {
+    if (IS_OSS) return;
+
     const response = await Ajax.post({
         url: backendUrlFromPath(`/api/Scene/Edit`),
         data: {

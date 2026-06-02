@@ -114,8 +114,56 @@ export type StructuredSceneSummary = {
     physicsCount: number;
 };
 
+export type StructuredBehaviorAttributeSummary = {
+    key: string;
+    type?: string;
+    default?: unknown;
+};
+
+export type StructuredBehaviorSummary = {
+    id: string;
+    name?: string;
+    description?: string;
+    isScript?: boolean;
+    isSingleton?: boolean;
+    isHidden?: boolean;
+    attributes: StructuredBehaviorAttributeSummary[];
+};
+
+export type StructuredLambdaSummary = {
+    id: string;
+    name?: string;
+    description?: string;
+    attributes: StructuredBehaviorAttributeSummary[];
+    componentSchema: StructuredBehaviorAttributeSummary[];
+};
+
+type BehaviorConfigLike = {
+    id?: string;
+    name?: string;
+    description?: string;
+    isScript?: boolean;
+    isSingleton?: boolean;
+    isHidden?: boolean;
+    attributes?: Record<string, unknown>;
+};
+
+type LambdaConfigLike = {
+    id?: string;
+    name?: string;
+    description?: string;
+    attributes?: Record<string, unknown>;
+    componentSchema?: Record<string, unknown>;
+};
+
 type EditorSceneApp = {
     editor?: {
+        behaviorConfigRegistry?: {
+            getAllConfigs?: () => BehaviorConfigLike[];
+        };
+        lambdaConfigRegistry?: {
+            getAllConfigs?: () => LambdaConfigLike[];
+        };
         scene?: Scene;
         selected?: Object3D | Object3D[] | null;
     };
@@ -125,6 +173,112 @@ type EditorSceneApp = {
 function getEditorSceneApp(): EditorSceneApp | undefined {
     return global.app as unknown as EditorSceneApp | undefined;
 }
+
+function compactText(value: unknown, maxLength = 180): string | undefined {
+    if (typeof value !== "string") return undefined;
+    const normalized = value.replace(/\s+/g, " ").trim();
+    if (!normalized) return undefined;
+    return normalized.length > maxLength ? `${normalized.slice(0, maxLength - 3)}...` : normalized;
+}
+
+function compactDefaultValue(value: unknown): unknown {
+    if (value === undefined) return undefined;
+    if (
+        value === null ||
+        typeof value === "string" ||
+        typeof value === "number" ||
+        typeof value === "boolean"
+    ) {
+        return value;
+    }
+    try {
+        const serialized = JSON.stringify(value);
+        if (!serialized || serialized.length > 100) return undefined;
+        return value;
+    } catch {
+        return undefined;
+    }
+}
+
+function summarizeBehaviorAttribute([key, value]: [string, unknown]): StructuredBehaviorAttributeSummary | null {
+    if (!value || typeof value !== "object") return null;
+    const record = value as Record<string, unknown>;
+    const type = typeof record.type === "string" ? record.type : undefined;
+    if (!type || type === "separator" || type === "label" || type === "button") return null;
+
+    const summary: StructuredBehaviorAttributeSummary = {key, type};
+    const defaultValue = compactDefaultValue(record.default);
+    if (defaultValue !== undefined) {
+        summary.default = defaultValue;
+    }
+    return summary;
+}
+
+/**
+ * Build a compact behavior registry snapshot for the direct playground copilot.
+ * This includes built-in behaviors and any imported/custom behavior configs
+ * already registered in the scene, but intentionally omits behavior code.
+ */
+export const buildBehaviorRegistrySummary = (limit = Number.POSITIVE_INFINITY): StructuredBehaviorSummary[] => {
+    const app = getEditorSceneApp();
+    const configs = app?.editor?.behaviorConfigRegistry?.getAllConfigs?.() ?? [];
+    const seen = new Set<string>();
+    const summaries: StructuredBehaviorSummary[] = [];
+
+    for (const config of configs) {
+        const id = typeof config.id === "string" ? config.id.trim() : "";
+        if (!id || seen.has(id)) continue;
+        seen.add(id);
+
+        summaries.push({
+            id,
+            name: compactText(config.name, 80),
+            description: compactText(config.description),
+            isScript: config.isScript,
+            isSingleton: config.isSingleton,
+            isHidden: config.isHidden,
+            attributes: Object.entries(config.attributes ?? {})
+                .map(summarizeBehaviorAttribute)
+                .filter((item): item is StructuredBehaviorAttributeSummary => item !== null)
+                .slice(0, 16),
+        });
+
+        if (summaries.length >= limit) break;
+    }
+
+    return summaries;
+};
+
+export const buildLambdaRegistrySummary = (limit = Number.POSITIVE_INFINITY): StructuredLambdaSummary[] => {
+    const app = getEditorSceneApp();
+    const configs = app?.editor?.lambdaConfigRegistry?.getAllConfigs?.() ?? [];
+    const seen = new Set<string>();
+    const summaries: StructuredLambdaSummary[] = [];
+
+    for (const config of configs) {
+        const id = typeof config.id === "string" ? config.id.trim() : "";
+        if (!id || seen.has(id)) continue;
+        seen.add(id);
+
+        summaries.push({
+            id,
+            name: compactText(config.name, 80),
+            description: compactText(config.description),
+            attributes: Object.entries(config.attributes ?? {})
+                .map(summarizeBehaviorAttribute)
+                .filter((item): item is StructuredBehaviorAttributeSummary => item !== null)
+                .slice(0, 16),
+            componentSchema: Object.entries(config.componentSchema ?? {})
+                .map(summarizeBehaviorAttribute)
+                .filter((item): item is StructuredBehaviorAttributeSummary => item !== null)
+                .slice(0, 16),
+        });
+
+        if (summaries.length >= limit) break;
+    }
+
+    return summaries;
+};
 
 function getObjectBehaviorCount(object: Object3D): number {
     const behaviorValues = [
