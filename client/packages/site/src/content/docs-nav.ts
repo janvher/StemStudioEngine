@@ -21,8 +21,17 @@ export const DOC_SECTIONS: DocSection[] = [
         label: "Engine",
         entries: [
             {slug: "architecture", title: "Architecture", source: "repo-docs", file: "architecture.md"},
+            {slug: "scheduler-and-editor-settings", title: "Scheduler & editor settings", source: "repo-docs", file: "scheduler-and-editor-settings.md"},
             {slug: "exporting-a-game", title: "Exporting a game", source: "repo-docs", file: "exporting-a-game.md"},
             {slug: "server-side-storage", title: "Server-side storage & version control", source: "repo-docs", file: "server-side-storage.md"},
+        ],
+    },
+    {
+        label: "Scripting",
+        entries: [
+            {slug: "built-in-behaviors", title: "Built-in behaviors", source: "repo-docs", file: "built-in-behaviors.md"},
+            {slug: "lambdas", title: "Lambdas (ECS)", source: "repo-docs", file: "lambdas.md"},
+            {slug: "import-packs", title: "Import packs", source: "repo-docs", file: "import-packs.md"},
         ],
     },
     {

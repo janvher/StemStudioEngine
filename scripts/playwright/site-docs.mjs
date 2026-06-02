@@ -75,6 +75,13 @@ try {
     const archUrl = page.url();
     assert("URL is /docs/architecture", /\/docs\/architecture$/.test(archUrl), archUrl);
 
+    // Scheduler/settings page added for editor performance controls.
+    await page.locator('.docs-sidebar a:has-text("Scheduler & editor settings")').first().click();
+    await page.waitForURL(/\/docs\/scheduler-and-editor-settings/, {timeout: 5000});
+    await page.waitForSelector('.docs-content h1:has-text("Scheduler and Editor Performance Settings")', {timeout: 6000});
+    const schedulerImages = await page.locator(".docs-content img").count();
+    assert("scheduler page renders screenshots", schedulerImages >= 9, `<img> count=${schedulerImages}`);
+
     // BYOK page — confirm at least one heading rendered + GitHub-rewritten link
     await page.locator('.docs-sidebar a:has-text("BYOK")').first().click();
     await page.waitForURL(/\/docs\/byok/, {timeout: 5000});

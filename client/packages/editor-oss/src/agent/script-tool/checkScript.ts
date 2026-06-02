@@ -537,7 +537,7 @@ function deriveProbeForCommand(
     return probes;
 }
 
-function isReadOnlyCommand(command: string): boolean {
+export function isReadOnlyCommand(command: string): boolean {
     return READ_ONLY_PREFIXES.some(prefix => command.startsWith(prefix)) || command === "player" || command === "select";
 }
 

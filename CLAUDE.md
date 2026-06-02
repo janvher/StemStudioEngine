@@ -116,13 +116,13 @@ When you add a new feature that needs to write data, route it through
   `uuid`/`position`/`rotation`/`scale`/`visible`/`physics`/`_internal.three`
   only — there is **no** `gameObject.game`; in the editor `game` is
   typically `undefined`, so guard any `game.renderer.*` access.
-- Lifecycle docs: `docs/behaviors/`.
+- Lifecycle docs, catalog, and authoring guide: `docs/built-in-behaviors.md`.
 
 ## Lambdas (ECS)
 
 `client/packages/editor-oss/src/lambdas/` — archetype-driven systems on
 top of behaviors. Use when you need batched, dependency-scheduled work.
-See `docs/lambdas/` for the architecture internals.
+See `docs/lambdas.md` for the architecture internals.
 
 ## Scheduler, rendering, quality
 
@@ -135,8 +135,10 @@ lambda systems directly.
 
 Two engines, one adapter surface:
 `client/packages/editor-oss/src/physics/` plus the per-behavior glue in
-`behaviors/erth/physics/`. Memory management for Ammo and shape-system
-conventions are non-obvious — read `docs/physics/` before touching either.
+`behaviors/stem/physics/`. Memory management for Ammo and shape-system
+conventions are non-obvious — read the physics helper / `PhysicsSettings` /
+`RigidBodyHandle` sections of `docs/gameobject-and-game-manager-api.md` and the
+code itself before touching either.
 
 ## Editor UI
 
@@ -243,19 +245,24 @@ Pause and ask before:
 
 | You're touching... | Read first |
 |---|---|
-| Behaviors / game logic | `behaviors/Behavior.ts`, then `docs/behaviors/` |
-| Lambdas / ECS | `lambdas/`, then `docs/lambdas/` |
-| Scheduler / frame loop / quality | `scheduler/`, `core/quality/`, `docs/engine-core/` |
-| Physics | `physics/`, `behaviors/erth/physics/`, `docs/physics/` |
-| Editor UI / import / camera | `editor/`, `controls/`, `serialization/`, `docs/editor/` |
-| Runtime UI / HUD / UIKit | `behaviors/uikit/`, `behaviors/hud/`, `docs/ui/` |
-| Multiplayer | `multiplayer/`, `multiplayer/worker/`, `docs/multiplayer/` |
-| AI integration | `copilot/`, `agent/`, `server/server/controllers/tools/ai/`, `docs/ai/` |
-| AI server | `server/main.go`, `server/server/server.go`, `docs/infrastructure/` |
-| Persistence | `persistence/`, `docs/editor/` (asset-management.md) |
-| Scene serialization | `object/`, `serialization/`, `docs/ARCHITECTURE.md` |
-| Three.js conventions | `EngineRuntime.ts`, `render/`, `docs/engine-core/threejs-conventions.md` |
-| Art budgets | `docs/art-specs/ART_SPECS.md` |
+| Behaviors / game logic | `behaviors/Behavior.ts`, then `docs/built-in-behaviors.md` |
+| Lambdas / ECS | `lambdas/`, then `docs/lambdas.md` |
+| Import packs / reusable scripts | `editor/scripts/builtinPacks/`, then `docs/import-packs.md` |
+| Runtime / engine API (`this.stem.*`) | `EngineRuntime.ts`, then `docs/runtime-api.md` |
+| GameObject / GameManager API | `object/`, `behaviors/game/GameManager.ts`, then `docs/gameobject-and-game-manager-api.md` |
+| Scheduler / frame loop / quality | `scheduler/`, `core/quality/`, then `docs/scheduler-and-editor-settings.md` |
+| Physics | `physics/`, `behaviors/stem/physics/`, then `docs/gameobject-and-game-manager-api.md` (PhysicsSettings / RigidBodyHandle) |
+| Editor UI / import / camera | `editor/`, `controls/`, `serialization/` (no dedicated doc) |
+| Runtime UI / HUD / UIKit | `behaviors/uikit/`, `behaviors/hud/`, then `docs/uikit-api.md` |
+| Multiplayer | `multiplayer/`, `multiplayer/worker/`, then `docs/multiplayer.md` |
+| AI integration (client) | `copilot/`, `agent/`, `server/server/controllers/tools/ai/` |
+| AI server (Go) | `server/cmd/ai-server/`, `server/server/server.go`, then `docs/architecture.md` |
+| BYOK / provider keys | `docs/byok.md` |
+| Persistence | `persistence/`, then `docs/server-side-storage.md` |
+| Scene serialization | `object/`, `serialization/`, then `docs/architecture.md` |
+| Three.js conventions | `EngineRuntime.ts`, `render/` (no dedicated doc) |
+| Exporting a game | `scripts/`, then `docs/exporting-a-game.md` |
+| Art budgets | `blog/docs/assets/10-art-specs.md` |
 
 ## Axis conventions
 
