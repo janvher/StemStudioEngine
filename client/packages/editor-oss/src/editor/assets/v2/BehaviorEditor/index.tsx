@@ -553,13 +553,14 @@ const BehaviorEditor: React.FC<BehaviorEditorProps> = ({
             editor.updateOptions({glyphMargin: true});
         }
 
+        //FIX: this code block is causing editor content changes to be reverted
         // Update content if model already existed but has stale content
         // (This handles switching back to a previously-viewed file)
-        if (!modelChanged && isUsableModel(newModel) && newModel.getValue() !== selectedFile.content) {
-            isProgrammaticChangeRef.current = true;
-            applyServerContent(newModel, selectedFile.content);
-            isProgrammaticChangeRef.current = false;
-        }
+        // if (!modelChanged && isUsableModel(newModel) && newModel.getValue() !== selectedFile.content) {
+        //     isProgrammaticChangeRef.current = true;
+        //     applyServerContent(newModel, selectedFile.content);
+        //     isProgrammaticChangeRef.current = false;
+        // }
 
         // Track that we've applied content for this file
         lastAppliedFileIdRef.current = selectedFile.id;
