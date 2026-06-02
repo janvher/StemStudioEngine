@@ -14,6 +14,7 @@ import {AppRouter} from "./AppRouter";
 import AppGlobalContextProvider from "./context/AppGlobalContext";
 import AuthorizationContextProvider from "./context/AuthorizationContext";
 import HomepageContextProvider from "./context/HomepageContext";
+import {OssAssetRegistryProvider} from "./context/OssAssetRegistryContext";
 import {OSSBootstrapModal} from "./editor/assets/v2/OSSBootstrapModal/OSSBootstrapModal";
 import {ensureProjectStoreRehydrated, isOSSBootstrapped} from "./persistence";
 import {applyPlaygroundModeAttribute} from "./playgroundMode";
@@ -41,13 +42,15 @@ export const PublicAppContainerLite = () => {
     return (
         <AuthorizationContextProvider>
             <QueryClientProvider client={queryClient}>
-                <AppGlobalContextProvider>
-                    <HomepageContextProvider>
-                        <AppRouter />
-                        {IS_OSS ? <OSSPersistenceBootstrapper /> : null}
-                        <OSSBootstrapModal />
-                    </HomepageContextProvider>
-                </AppGlobalContextProvider>
+                <OssAssetRegistryProvider>
+                    <AppGlobalContextProvider>
+                        <HomepageContextProvider>
+                            <AppRouter />
+                            {IS_OSS ? <OSSPersistenceBootstrapper /> : null}
+                            <OSSBootstrapModal />
+                        </HomepageContextProvider>
+                    </AppGlobalContextProvider>
+                </OssAssetRegistryProvider>
             </QueryClientProvider>
         </AuthorizationContextProvider>
     );

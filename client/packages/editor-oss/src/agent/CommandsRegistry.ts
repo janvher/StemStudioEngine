@@ -1,7 +1,9 @@
 import AIWorldController from "../controls/AiWorldController/AiWorldController";
 import EngineRuntime from "../EngineRuntime";
 import global from "../global";
+import {AssetHandlers} from "./handlers/AssetHandlers";
 import {BehaviorHandlers} from "./handlers/BehaviorHandlers";
+import {LambdaHandlers} from "./handlers/LambdaHandlers";
 import {LightHandlers} from "./handlers/LightHandlers";
 import {ObjectHandlers} from "./handlers/ObjectHandlers";
 import {PhysicsHandlers} from "./handlers/PhysicsHandlers";
@@ -27,8 +29,10 @@ export class CommandsRegistry {
     private aiWorldController = AIWorldController.getInstance(this.engine);
 
     // Handler instances
+    private assetHandlers: AssetHandlers;
     private objectHandlers: ObjectHandlers;
     private behaviorHandlers: BehaviorHandlers;
+    private lambdaHandlers: LambdaHandlers;
     private prefabHandlers: PrefabHandlers;
     private physicsHandlers: PhysicsHandlers;
     private vfxHandlers: VFXHandlers;
@@ -37,8 +41,10 @@ export class CommandsRegistry {
     private taskHandlers: TaskHandlers;
 
     constructor(options: CommandsRegistryOptions = {}) {
+        this.assetHandlers = new AssetHandlers(this.engine);
         this.objectHandlers = new ObjectHandlers(this.engine, this.aiWorldController);
         this.behaviorHandlers = new BehaviorHandlers(this.engine);
+        this.lambdaHandlers = new LambdaHandlers(this.engine);
         this.prefabHandlers = new PrefabHandlers(this.engine);
         this.physicsHandlers = new PhysicsHandlers(this.engine);
         this.vfxHandlers = new VFXHandlers(this.engine);
@@ -329,6 +335,54 @@ export class CommandsRegistry {
             description: "Get the player object data",
             parameters: [],
             handler: () => Promise.resolve(this.objectHandlers.handleGetPlayer()),
+        });
+
+        this.registerCommand({
+            name: SupportedCommands.ListSceneAssets,
+            description:
+                "List imported scene/stem assets such as models, behavior packs, lambda packs, script imports, files, media, VFX, and prefabs",
+            parameters: [
+                {
+                    name: "type",
+                    type: "string",
+                    description:
+                        "Optional asset type filter: all, model/models, import/imports/script/scripts, file/files, behavior/behaviors, lambda/lambdas, pack/packs, media, image, audio, video, vfx, prefab/stem",
+                    required: false,
+                },
+                {name: "filter", type: "string", description: "Optional filter by id, name, description, tag, or type", required: false},
+                {name: "limit", type: "number", description: "Maximum assets to return (default 80, max 200)", required: false},
+            ],
+            handler: params => this.assetHandlers.handleListSceneAssets(params),
+        });
+
+        this.registerCommand({
+            name: SupportedCommands.GetSceneAsset,
+            description: "Get compact metadata for one imported scene/stem asset by assetId, revisionId, or name",
+            parameters: [
+                {name: "assetId", type: "string", description: "Asset id, revision id, or exact name", required: false},
+                {name: "name", type: "string", description: "Asset name when assetId is omitted", required: false},
+                {name: "type", type: "string", description: "Optional asset type filter", required: false},
+            ],
+            handler: params => this.assetHandlers.handleGetSceneAsset(params),
+        });
+
+        this.registerCommand({
+            name: SupportedCommands.ListLambdas,
+            description: "List all available lambdas with optional filtering",
+            parameters: [
+                {name: "filter", type: "string", description: "Optional filter by id or name pattern", required: false},
+            ],
+            handler: params => Promise.resolve(this.lambdaHandlers.handleListLambdas(params)),
+        });
+
+        this.registerCommand({
+            name: SupportedCommands.GetLambda,
+            description: "Get detailed information about a specific lambda by ID, optionally including code when available",
+            parameters: [
+                {name: "lambdaId", type: "string", description: "ID of the lambda", required: true},
+                {name: "includeCode", type: "boolean", description: "Try to include lambda source code", required: false},
+            ],
+            handler: params => this.lambdaHandlers.handleGetLambda(params),
         });
 
         // ===== MATERIAL & TEXTURE COMMANDS =====
@@ -1408,6 +1462,10 @@ export enum SupportedCommands {
     GetBehaviorSettings = "get_behavior_settings",
     GetSelectedObject = "get_selected_object",
     GetPlayer = "get_player",
+    ListSceneAssets = "list_scene_assets",
+    GetSceneAsset = "get_scene_asset",
+    ListLambdas = "list_lambdas",
+    GetLambda = "get_lambda",
     SetMaterial = "set_material",
     SetTexture = "set_texture",
     SetExternalTexture = "set_external_texture",

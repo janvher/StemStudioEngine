@@ -21,7 +21,11 @@ vi.mock("../asset", () => ({
 
 vi.mock("@web-shared/global", () => ({ default: { app: null } }));
 
-import { sceneSettingsToCreateRequest } from "./v2";
+vi.mock("../../../buildMode", () => ({
+    IS_OSS: true,
+}));
+
+import {listSceneRevisionCaptures, sceneSettingsToCreateRequest, upsertSceneRevisionCapture} from "./v2";
 import type { SceneSettings } from "./index";
 
 beforeEach(() => {
@@ -144,5 +148,26 @@ describe("sceneSettingsToCreateRequest", () => {
         };
         const result = sceneSettingsToCreateRequest({Rendering: rendering as any}, "n");
         expect(result.rendering).toBe(rendering);
+    });
+});
+
+describe("scene revision capture OSS guards", () => {
+    it("returns an empty capture list without a hosted endpoint", async () => {
+        await expect(listSceneRevisionCaptures("scene-1")).resolves.toEqual([]);
+    });
+
+    it("returns a local capture shape without saving to a hosted endpoint", async () => {
+        await expect(
+            upsertSceneRevisionCapture("scene-1", "rev-1", {
+                name: "Version name",
+                source: "copilot",
+            }),
+        ).resolves.toMatchObject({
+            id: "oss-capture-rev-1",
+            sceneId: "scene-1",
+            revisionId: "rev-1",
+            name: "Version name",
+            source: "copilot",
+        });
     });
 });

@@ -1,6 +1,22 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
-import { processWithConcurrencyLimit } from './index';
+import {
+    AssetType,
+    createOssAssetRegistry,
+    getOssAssetRegistry,
+    getOssAssetsForProject,
+    lookupOssAsset,
+    processWithConcurrencyLimit,
+    registerOssAsset,
+    resetOssAssetRegistryForTests,
+    setOssAssetRegistry,
+    setOssAssetThumbnail,
+    unregisterOssAsset,
+} from './index';
+
+afterEach(() => {
+    resetOssAssetRegistryForTests();
+});
 
 describe('processWithConcurrencyLimit', () => {
     it('should respect the provided concurrency limit', async () => {
@@ -50,5 +66,41 @@ describe('processWithConcurrencyLimit', () => {
     it('should run with at least one worker when concurrency is zero', async () => {
         const result = await processWithConcurrencyLimit([1, 2], 0, async (item) => item + 1);
         expect(result).toEqual([2, 3]);
+    });
+});
+
+describe('OSS asset registry', () => {
+    it('uses the active registry object instead of recreating storage across calls', () => {
+        const registry = createOssAssetRegistry();
+        setOssAssetRegistry(registry);
+
+        registerOssAsset({
+            assetId: 'asset-1',
+            revisionId: 'revision-1',
+            type: AssetType.Model,
+            format: 'glb',
+            name: 'Stable model',
+            dataUrl: 'data:model/gltf-binary;base64,AAAA',
+            projectId: 'project-1',
+        });
+
+        expect(getOssAssetRegistry()).toBe(registry);
+        expect(lookupOssAsset('asset-1')).toBe(registry.get('asset-1'));
+        expect(lookupOssAsset('revision-1')).toBe(registry.get('revision-1'));
+        expect(getOssAssetsForProject('project-1')).toHaveLength(1);
+
+        setOssAssetThumbnail('asset-1', 'data:image/png;base64,thumb');
+        expect(lookupOssAsset('revision-1')?.thumbnailDataUrl).toBe('data:image/png;base64,thumb');
+
+        unregisterOssAsset('asset-1');
+        expect(registry.has('asset-1')).toBe(false);
+        expect(registry.has('revision-1')).toBe(false);
+    });
+
+    it('keeps a single fallback registry reference when no provider installs one', () => {
+        const first = getOssAssetRegistry();
+        const second = getOssAssetRegistry();
+
+        expect(second).toBe(first);
     });
 });

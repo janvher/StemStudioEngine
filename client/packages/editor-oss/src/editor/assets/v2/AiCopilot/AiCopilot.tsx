@@ -25,11 +25,6 @@ import {
     PermissionButtons,
     PermissionContainer,
     PermissionMessage,
-    ProjectTaskItem,
-    ProjectTaskList,
-    ProjectTaskMeta,
-    ProjectTasksPanel,
-    ProjectTasksTitle,
     ProcessingMainText,
     ProcessingStatusContainer,
     ProcessingSubText,
@@ -41,7 +36,6 @@ import {
     SuggestedObjectChip,
 } from "./AiCopilot.styles";
 import {AiKeysModal} from "./AiKeysModal";
-import {ChatHistory} from "./chatHistory/ChatHistory";
 import {buildCopilotEntryGreeting, buildCopilotEntryPromptContext} from "./copilotWorkspaceEntry";
 import {
     clearDashboardCopilotBootstrap,
@@ -55,50 +49,25 @@ import {InteractiveResults} from "./InteractiveResults/InteractiveResults";
 import {TerminalView} from "./TerminalView/TerminalView";
 import {TerminalBadge} from "./TerminalView/TerminalView.styles";
 import {useTerminal, type TerminalHistoryEntry} from "./TerminalView/useTerminal";
-import {generateTitle, Message, resolveObjectsByUuids} from "./utils/history";
+import {Message} from "./utils/history";
 import * as InteractionHandlers from "./utils/interaction";
 import * as PromptUtils from "./utils/prompt";
 import {
     readWorkspaceChatSnapshot,
     saveWorkspaceChatSnapshot,
 } from "./workspaceChatSnapshot";
-import {
-    CopilotActivityFeed,
-    type CopilotActivityFeedItem,
-    type CopilotActivityFeedRow,
-} from "./workflow/CopilotActivityFeed";
-import {CopilotConfirmationCard} from "./workflow/CopilotConfirmationCard";
-import {CopilotVersionTimeline} from "./workflow/CopilotVersionTimeline";
 import {getCopilotProvider, type ICopilotProvider} from "../../../../copilot";
 import {IS_OSS} from "@stem/editor-oss/mode/buildMode";
 import {isPlaygroundMode} from "@web-shared/playgroundMode";
-import {runWithCopilotPreviewSceneSaveAllowed} from "@stem/editor-oss/agent/copilotPreviewPersistence";
 import {ConnectionState, InteractiveResult, InteractiveSelectionEvent} from "@stem/editor-oss/agent/types/ACPTypes";
 import {serializeObjectSummaryForPrompt} from "@stem/editor-oss/agent/utils/serialization";
-import {
-    addMessageExtra,
-    createCopilotSession,
-    getCopilotHistoryList,
-    getSessionExtras,
-    MessageExtra,
-    updateCopilotHistoryCredits,
-} from "@stem/network/api/copilotHistory";
-import {listCopilotTasks, type CopilotTask} from "@stem/network/api/copilotTasks";
-import {saveScene} from "@stem/network/api/scene";
-import {upsertSceneRevisionCapture} from "@stem/network/api/scene/v2";
-import {setSceneAiPromptMode} from "@stem/network/api/scene/thumbnail";
 import {getAiCreditsConfig} from "@stem/network/api/user";
 import {useAppGlobalContext, useAuthorizationContext} from "@stem/editor-oss/context";
-import EngineRuntime, {ApplicationMode} from "@stem/editor-oss/EngineRuntime";
+import EngineRuntime from "@stem/editor-oss/EngineRuntime";
 import global from "@stem/editor-oss/global";
 import {showToast} from "@stem/editor-oss/showToast";
 import {EDITOR_TOP_NAV_HALF_HEIGHT, PANEL_FULL_HEIGHT} from "@stem/editor-oss/types/editor";
 import {ResizableWrapper} from "../common/ResizableWrapper/ResizableWrapper";
-import {useCopilotPreview} from "../CopilotWorkspace/CopilotPreviewContext";
-import {
-    isCopilotPreviewMutationCommand,
-} from "../CopilotWorkspace/copilotPreviewSession";
-import {runCopilotPreviewValidation} from "../CopilotWorkspace/copilotPreviewValidation";
 import {CreditsBar} from "../CreditsBar/CreditsBar";
 
 enum AI_COPILOT_STATE {
@@ -182,6 +151,7 @@ type PromptHistoryItem = {
 const PROMPT_HISTORY_KEY = "ai_copilot_prompt_history";
 const MAX_PROMPT_HISTORY = 10;
 const MAX_INLINE_COMMAND_OUTPUT_CHARS = 4000;
+const MAX_WORKFLOW_LINE_CHARS = 260;
 
 type ModeCommandTarget = "advanced" | "default";
 
@@ -193,6 +163,13 @@ type ParsedModeCommand = {
 type WorkspaceSlashCommand = {
     prompt?: string;
     error?: string;
+};
+
+const compactWorkflowLine = (value: string): string => {
+    const normalized = value.replace(/\s+/g, " ").trim();
+    return normalized.length > MAX_WORKFLOW_LINE_CHARS
+        ? `${normalized.slice(0, MAX_WORKFLOW_LINE_CHARS - 3)}...`
+        : normalized;
 };
 
 const parseModeCommand = (value: string): ParsedModeCommand | null => {
@@ -216,30 +193,31 @@ const parseModeCommand = (value: string): ParsedModeCommand | null => {
 };
 
 const parseWorkspaceSlashCommand = (value: string): WorkspaceSlashCommand | null => {
-    const match = value.trim().match(/^\/(add|change|balance|explain|debug|version|publish)(?:\s+([\s\S]+))?$/i);
+    const match = value.trim().match(/^\/(add|change|balance|explain|debug)(?:\s+([\s\S]+))?$/i);
     if (!match) return null;
 
     const command = match[1]?.toLowerCase();
     const detail = match[2]?.trim();
+    const applyInstruction = "Apply the change directly to the scene.";
 
     switch (command) {
         case "add":
             return {
                 prompt: detail
-                    ? `Add ${detail}. Keep the result in a temporary preview.`
-                    : "Add a concrete playable element that fits this game. Keep the result in a temporary preview.",
+                    ? `Add ${detail}. ${applyInstruction}`
+                    : `Add a concrete playable element that fits this game. ${applyInstruction}`,
             };
         case "change":
             return {
                 prompt: detail
-                    ? `Change ${detail}. Keep the result in a temporary preview.`
+                    ? `Change ${detail}. ${applyInstruction}`
                     : "Change the selected or most relevant game system. Ask a concise clarifying question if the target is ambiguous.",
             };
         case "balance":
             return {
                 prompt: detail
-                    ? `Rebalance ${detail}. Keep the result in a temporary preview.`
-                    : "Review the current gameplay balance and propose one small playable rebalance in a temporary preview.",
+                    ? `Rebalance ${detail}. ${applyInstruction}`
+                    : "Review the current gameplay balance and apply one small playable rebalance directly to the scene.",
             };
         case "explain":
             return {
@@ -250,20 +228,8 @@ const parseWorkspaceSlashCommand = (value: string): WorkspaceSlashCommand | null
         case "debug":
             return {
                 prompt: detail
-                    ? `Debug ${detail}. Inspect the scene first, then apply any fix as a temporary preview.`
-                    : "Debug the current game state. Inspect likely causes first, then apply any fix as a temporary preview.",
-            };
-        case "version":
-            return {
-                prompt: detail
-                    ? `Version task: ${detail}. Explain what version or preview state is involved before acting.`
-                    : "Explain the current version, preview state, and recent changes. Do not create a new version unless I accept a preview.",
-            };
-        case "publish":
-            return {
-                prompt: detail
-                    ? `Prepare this game to publish: ${detail}. Validate readiness before asking me to publish.`
-                    : "Check whether this game is ready to publish and list any blocking issues. Do not publish without explicit confirmation.",
+                    ? `Debug ${detail}. Inspect the scene first, then apply any fix directly to the scene.`
+                    : "Debug the current game state. Inspect likely causes first, then apply any fix directly to the scene.",
             };
         default:
             return {error: "Unknown slash command."};
@@ -291,15 +257,6 @@ const formatTerminalEntriesForChat = (entries: TerminalHistoryEntry[]): string =
     }).join("\n\n");
 };
 
-const isProjectTaskCommand = (command: unknown): boolean => {
-    return typeof command === "string" && (
-        command === "list_project_tasks" ||
-        command === "create_project_task" ||
-        command === "update_project_task" ||
-        command === "delete_project_task"
-    );
-};
-
 export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, onOpenCodeEditor}: Props) => {
     const [mode, setMode] = useState<"chat" | "terminal">("chat");
     const [prompt, setPrompt] = useState("");
@@ -313,16 +270,13 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
     const [connectionError, setConnectionError] = useState<string | null>(null);
     const [permissionRequest, setPermissionRequest] = useState<any>(null);
     const [isLoadingSession, setIsLoadingSession] = useState(false);
-    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const [isKeysOpen, setIsKeysOpen] = useState(false);
     const [promptHistoryIndex, setPromptHistoryIndex] = useState<number>(-1);
     const [currentPromptDraft, setCurrentPromptDraft] = useState<string>("");
     const [sceneID, setSceneID] = useState<string | null>(null);
     const [hasContext, setHasContext] = useState(false);
     const [serializedObjectsCache, setSerializedObjectsCache] = useState<unknown[]>([]);
-    const [projectTasks, setProjectTasks] = useState<CopilotTask[]>([]);
     const [insufficientCredits, setInsufficientCredits] = useState(false);
-    const [acceptingPreview, setAcceptingPreview] = useState(false);
     const messagesRef = React.createRef<HTMLDivElement>();
     const promptRef = useRef<HTMLTextAreaElement>(null);
     const acpClientRef = useRef<ICopilotProvider | null>(null);
@@ -341,22 +295,15 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
         sessionId: null,
         counter: 0,
     });
-    const lastPreviewSaveBlockedToastRef = useRef(0);
-    const isReplayingRef = useRef<boolean>(false);
-    const pendingInteractivesRef = useRef<MessageExtra[]>([]);
-    const attachedObjectsExtrasRef = useRef<Map<number, string[]>>(new Map());
-    const sessionCreatedRef = useRef<boolean>(false);
     const pendingDashboardPromptRef = useRef<DashboardCopilotBootstrap | null>(null);
-    const previewSessionStartedForPromptRef = useRef<boolean>(false);
     const dashboardPromptSubmittingRef = useRef<boolean>(false);
     const sceneSessionInitInFlightRef = useRef<boolean>(false);
     const app = global.app as EngineRuntime;
     const {aiCredits, refreshAiCredits, dbUser, isAdmin} = useAuthorizationContext();
     const {advancedMode, setAdvancedMode} = useAppGlobalContext();
+    const isPlayground = isPlaygroundMode();
     const isWorkspaceMode = !advancedMode;
     const workspaceModeRef = useRef(isWorkspaceMode);
-    const copilotPreview = useCopilotPreview();
-    const copilotPreviewRef = useRef(copilotPreview);
     const inlineTerminal = useTerminal(() => setMode("chat"), {isAdmin});
 
     useEffect(() => {
@@ -375,31 +322,8 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
     }, [isWorkspaceMode, sceneID, aiMessages]);
 
     useEffect(() => {
-        const handlePreviewSaveBlocked = () => {
-            const now = Date.now();
-            if (now - lastPreviewSaveBlockedToastRef.current < 2500) return;
-            lastPreviewSaveBlockedToastRef.current = now;
-            showToast({
-                type: "info",
-                title: "Temporary preview is active",
-                body: "Accept the preview to create a version, or reject/reset it before saving normally.",
-            });
-        };
-
-        app.on("copilotPreviewSaveBlocked.AiCopilot", handlePreviewSaveBlocked);
-
-        return () => {
-            app.on("copilotPreviewSaveBlocked.AiCopilot", null);
-        };
-    }, [app]);
-
-    useEffect(() => {
         workspaceModeRef.current = isWorkspaceMode;
     }, [isWorkspaceMode]);
-
-    useEffect(() => {
-        copilotPreviewRef.current = copilotPreview;
-    }, [copilotPreview]);
 
     const markMessagesForCurrentScene = () => {
         messageSceneIDRef.current = sceneIDRef.current;
@@ -418,27 +342,6 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
         setProcessingStatus({main: "", subTasks: []});
         processingEventRef.current = null;
         return true;
-    }, []);
-
-    const refreshProjectTasks = useCallback(async () => {
-        const activeSceneID = sceneIDRef.current;
-        if (!activeSceneID) {
-            setProjectTasks([]);
-            return;
-        }
-
-        const activeSessionID = acpClientRef.current?.getSessionId() || sessionSeqCounterRef.current.sessionId || undefined;
-        try {
-            const tasks = await listCopilotTasks({
-                sceneID: activeSceneID,
-                sessionID: activeSessionID || undefined,
-                limit: 100,
-            });
-            setProjectTasks(tasks);
-        } catch (error) {
-            console.warn("[AiCopilot] Failed to refresh project tasks:", error);
-            setProjectTasks([]);
-        }
     }, []);
 
     // In AI-focused layout (advancedMode === false), the copilot stays as a
@@ -521,12 +424,6 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
         }
         const seqNum = sessionSeqCounterRef.current.counter++;
         return `${sessionId}-${seqNum}`;
-    };
-
-    const resolveAttachedObjects = (seqNum: number): THREE.Object3D[] | undefined => {
-        const uuids = attachedObjectsExtrasRef.current.get(seqNum);
-        if (!uuids || uuids.length === 0) return undefined;
-        return resolveObjectsByUuids(uuids);
     };
 
     // Load prompt history from localStorage
@@ -687,24 +584,13 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
     const handleSessionLoadCompleted = () => setIsLoadingSession(false);
 
     const updateCreditsUsage = () => {
-        const prevCredits = aiCreditsRef.current;
-        const sessionId = acpClientRef.current?.getSessionId() || null;
         if (creditsRefetchingRef.current) {
             return;
         }
         creditsRefetchingRef.current = true;
         setTimeout(async () => {
-            const newCredits = await refreshAiCredits();
+            await refreshAiCredits();
             creditsRefetchingRef.current = false;
-            if (sessionId && sceneIDRef.current && prevCredits !== null && newCredits !== null) {
-                const delta = prevCredits - newCredits;
-                if (delta > 0) {
-                    console.log(`Credits used: ${delta}. Updating server...`);
-                    void updateCopilotHistoryCredits(sessionId, delta).catch(e =>
-                        console.error("Failed to update session credits:", e),
-                    );
-                }
-            }
         }, 1000);
     };
 
@@ -746,14 +632,57 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
         }
     };
 
+    const appendProcessMessage = (
+        content: string,
+        eventName: string,
+        {append = true}: {append?: boolean} = {},
+    ) => {
+        const normalized = content.trim();
+        if (!normalized) return;
+
+        markMessagesForCurrentScene();
+        setAiMessages(prev => {
+            const lastMsg = prev[prev.length - 1];
+            if (
+                append &&
+                lastMsg &&
+                lastMsg.type === "thought" &&
+                processingEventRef.current === eventName
+            ) {
+                return [
+                    ...prev.slice(0, -1),
+                    {
+                        ...lastMsg,
+                        content: `${lastMsg.content.trimEnd()}\n${normalized}`,
+                    },
+                ];
+            }
+
+            const sessionId = sessionSeqCounterRef.current.sessionId || acpClientRef.current?.getSessionId() || null;
+            const msgId = sessionId ? getNextMessageId(sessionId) : Date.now().toString();
+
+            return [
+                ...prev,
+                {
+                    id: msgId,
+                    type: "thought" as const,
+                    content: normalized,
+                    timestamp: Date.now(),
+                },
+            ];
+        });
+        processingEventRef.current = eventName;
+    };
+
     const handleToolCall = (event: any) => {
         setCopilotState(AI_COPILOT_STATE.PROCESSING);
+        const title = event?.data?.toolCall?.title || "Tool call";
         setProcessingStatus(prev => ({
             ...prev,
-            main: `Calling tool: ${event.data.toolCall.title}`,
+            main: `Calling tool: ${title}`,
         }));
+        appendProcessMessage(`**${title}**`, "workflow", {append: false});
         updateCreditsUsage();
-        processingEventRef.current = "toolCall";
     };
 
     const handleAgentThinking = () => {
@@ -799,10 +728,14 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
         });
     };
 
-    const handleToolCallUpdate = () => {
+    const handleToolCallUpdate = (event: any) => {
         setCopilotState(AI_COPILOT_STATE.PROCESSING);
         updateCreditsUsage();
-        processingEventRef.current = "toolCallUpdate";
+        const line = typeof event?.data?.line === "string" ? compactWorkflowLine(event.data.line) : "";
+        const index = typeof event?.data?.index === "number" ? event.data.index + 1 : undefined;
+        const total = typeof event?.data?.total === "number" ? event.data.total : undefined;
+        const prefix = index && total ? `${index}/${total}` : "step";
+        appendProcessMessage(line ? `- ${prefix}: \`${line}\`` : "- Tool progress updated", "workflow");
     };
 
     const handleToolCallError = (error: any) => {
@@ -811,24 +744,18 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
             ...prev,
             main: `Tool error: ${error.message}`,
         }));
-        processingEventRef.current = "toolCallError";
+        appendProcessMessage(`- Error: ${error?.message || "Tool call failed"}`, "workflow");
     };
 
     const handlePromptStarted = useCallback(
         (event: any) => {
-            // Clear replay mode — first live user message after a session load ends replay
-            isReplayingRef.current = false;
             markMessagesForCurrentScene();
-            previewSessionStartedForPromptRef.current = false;
 
             setCopilotState(AI_COPILOT_STATE.PROCESSING);
             const currentAttachedObjects = [...attachedObjectsRef.current];
             const sessionId = sessionSeqCounterRef.current.sessionId || acpClientRef.current?.getSessionId() || null;
 
-            // Compute msgId and seqNum BEFORE setAiMessages so API calls can be made
-            // outside the updater — React may invoke updaters more than once (StrictMode).
             const msgId = sessionId ? getNextMessageId(sessionId) : Date.now().toString();
-            const seqNum = sessionSeqCounterRef.current.counter - 1;
 
             setAiMessages(prev => {
                 const newMessages = [
@@ -851,102 +778,24 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
 
                 return newMessages;
             });
-
-            // Fire-and-forget API calls OUTSIDE setAiMessages to prevent double-invocation
-            if (sessionId && sceneIDRef.current && !sessionCreatedRef.current) {
-                sessionCreatedRef.current = true;
-                const title = generateTitle(event.data.prompt);
-                void createCopilotSession(sessionId, sceneIDRef.current, title).catch(e =>
-                    console.error("[History] Failed to create copilot session:", e),
-                );
-            }
-
-            if (sessionId && sceneIDRef.current && currentAttachedObjects.length > 0) {
-                const uuids = currentAttachedObjects.map(obj => obj.uuid);
-                void addMessageExtra(sessionId, seqNum, uuids, undefined).catch(e =>
-                    console.error("[History] Failed to save attachedObjects extra:", e),
-                );
-            }
         },
-        [aiMessages],
+        [],
     );
 
     const handlePromptCompleted = useCallback(() => {
         setCopilotState(AI_COPILOT_STATE.READY);
         setProcessingStatus({main: "", subTasks: []});
         updateCreditsUsage();
-        void refreshProjectTasks();
         processingEventRef.current = null;
-        // NOTE: do NOT clear isReplayingRef here — promptCompleted does NOT fire during
-        // loadSession replay. isReplayingRef is cleared in handlePromptStarted (the first
-        // live user message after replay) to avoid it staying true permanently.
-    }, [refreshProjectTasks]);
-
-    const handleCommandWillExecute = (event: any) => {
-        if (!workspaceModeRef.current) return;
-
-        const command = event.data?.command;
-        if (!isCopilotPreviewMutationCommand(command)) return;
-        if (isReplayingRef.current) {
-            return;
-        }
-
-        if (copilotPreviewRef.current.isPreviewActive) {
-            app.call("workspaceStatusRequested", app, {state: "applying-temporary-changes"});
-            copilotPreviewRef.current.markPreviewStatus("applying");
-            copilotPreviewRef.current.updatePreviewSummary(
-                `Copilot is revising the temporary preview with ${command}.`,
-            );
-            copilotPreviewRef.current.updateValidationResults([
-                {
-                    id: "revision-applying",
-                    label: "Preview revision",
-                    status: "pending",
-                    detail: "Copilot is applying requested changes to the active preview.",
-                },
-            ]);
-            processingEventRef.current = "commandWillExecute";
-            return;
-        }
-
-        if (previewSessionStartedForPromptRef.current) {
-            return;
-        }
-
-        previewSessionStartedForPromptRef.current = true;
-        app.call("workspaceStatusRequested", app, {state: "preparing-preview"});
-        copilotPreviewRef.current.startPreviewFromCurrentScene({
-            summary: `Copilot is applying ${command} in a temporary preview.`,
-            affectedSystems: [String(command)],
-        });
-        app.call("workspaceStatusRequested", app, {state: "applying-temporary-changes"});
-        copilotPreviewRef.current.markPreviewStatus("applying");
-        processingEventRef.current = "commandWillExecute";
-    };
+    }, []);
 
     const handleCommandExecuted = (event: any) => {
         setProcessingStatus(prev => ({
             ...prev,
             main: `Executed command: ${event.data.command}`,
         }));
-        const isLastCommand = typeof event.data.total !== "number" || event.data.index >= event.data.total - 1;
-        if (
-            workspaceModeRef.current &&
-            isLastCommand &&
-            isCopilotPreviewMutationCommand(event.data.command) &&
-            (copilotPreviewRef.current.isPreviewActive || previewSessionStartedForPromptRef.current)
-        ) {
-            copilotPreviewRef.current.updateValidationResults(
-                runCopilotPreviewValidation(app, copilotPreviewRef.current.session),
-            );
-            copilotPreviewRef.current.markPreviewStatus("ready");
-            app.call("workspaceStatusRequested", app, {state: "preview-ready", autoHideMs: 1800});
-        }
-        if (isProjectTaskCommand(event.data.command)) {
-            void refreshProjectTasks();
-        }
         updateCreditsUsage();
-        processingEventRef.current = "commandExecuted";
+        appendProcessMessage(`- Completed \`${event.data.command}\``, "workflow");
     };
 
     const handleCommandExecutionFailed = (event: any) => {
@@ -954,18 +803,7 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
             ...prev,
             main: `Command failed: ${event.data.command} - ${event.data.error}`,
         }));
-        if (
-            workspaceModeRef.current &&
-            isCopilotPreviewMutationCommand(event.data.command) &&
-            (copilotPreviewRef.current.isPreviewActive || previewSessionStartedForPromptRef.current)
-        ) {
-            copilotPreviewRef.current.markPreviewStatus("failed");
-            app.call("workspaceStatusRequested", app, {state: "preview-failed", autoHideMs: 2200});
-        }
-        if (isProjectTaskCommand(event.data.command)) {
-            void refreshProjectTasks();
-        }
-        processingEventRef.current = "commandExecutionFailed";
+        appendProcessMessage(`- Failed \`${event.data.command}\`: ${event.data.error}`, "workflow");
     };
 
     const handleToolOutput = (event: any) => {
@@ -1001,10 +839,7 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
         });
         processingEventRef.current = "interactiveResult";
 
-        // Compute msgId and seqNum BEFORE setAiMessages so the API call can be made
-        // outside the updater — React may invoke updaters more than once (StrictMode).
         const msgId = sessionId ? getNextMessageId(sessionId) : Date.now().toString();
-        const seqNum = sessionSeqCounterRef.current.counter - 1;
 
         setAiMessages(prev => [
             ...prev,
@@ -1016,63 +851,7 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
                 interactiveResult: interactiveResult,
             },
         ]);
-
-        // Save interactiveResult to MongoDB OUTSIDE setAiMessages to prevent double-invocation
-        if (sessionId && sceneIDRef.current) {
-            void addMessageExtra(sessionId, seqNum, undefined, interactiveResult).catch(e =>
-                console.error("[History] Failed to save interactiveResult extra:", e),
-            );
-        }
     };
-
-    const handleUserMessage = useCallback((event: any) => {
-        if (!isReplayingRef.current) return; // no-op during live session
-        markMessagesForCurrentScene();
-
-        // Reset processingEventRef between replay turns. Without this, the next
-        // agent_message_chunk would see processingEventRef === "agentMessage" and
-        // append to the previous agent message instead of starting a new one.
-        processingEventRef.current = null;
-
-        const content = event.data.message;
-        // Use sessionSeqCounterRef instead of getCurrentSessionId() because currentSessionId
-        // is only updated AFTER loadSession() completes, but replay events fire during it.
-        const sessionId = sessionSeqCounterRef.current.sessionId;
-        if (!sessionId) return;
-
-        setAiMessages(prev => {
-            const newMessages = [...prev];
-            const counter = sessionSeqCounterRef.current;
-
-            // Inject any pending interactive results that belong before this user message
-            while (
-                pendingInteractivesRef.current.length > 0 &&
-                pendingInteractivesRef.current[0]!.SeqNum === counter.counter
-            ) {
-                const extra = pendingInteractivesRef.current.shift()!;
-                newMessages.push({
-                    id: `${sessionId}-${extra.SeqNum}`,
-                    type: "interactive",
-                    content: extra.InteractiveResult!.title,
-                    timestamp: 0,
-                    interactiveResult: extra.InteractiveResult,
-                });
-                counter.counter++;
-            }
-
-            const seqNum = counter.counter++;
-
-            newMessages.push({
-                id: `${sessionId}-${seqNum}`,
-                type: "user",
-                content,
-                timestamp: 0,
-                attachedObjects: resolveAttachedObjects(seqNum),
-            });
-
-            return newMessages;
-        });
-    }, []);
 
     const handleInteractiveSelection = async (
         selection: InteractiveSelectionEvent,
@@ -1156,7 +935,6 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
         acpClientRef.current?.on("toolCall", handleToolCall);
         acpClientRef.current?.on("toolCallUpdate", handleToolCallUpdate);
         acpClientRef.current?.on("toolCallError", handleToolCallError);
-        acpClientRef.current?.on("commandWillExecute", handleCommandWillExecute);
         acpClientRef.current?.on("commandExecuted", handleCommandExecuted);
         acpClientRef.current?.on("commandExecutionFailed", handleCommandExecutionFailed);
         acpClientRef.current?.on("toolOutput", handleToolOutput);
@@ -1165,7 +943,6 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
         acpClientRef.current?.on("permissionRequested", handlePermissionRequested);
         acpClientRef.current?.on("taskCancelled", handleTaskCancelled);
         acpClientRef.current?.on("interactiveResult", handleInteractiveResult);
-        acpClientRef.current?.on("userMessage", handleUserMessage);
         acpClientRef.current?.on("sessionLoadStarted", handleSessionLoadStarted);
         acpClientRef.current?.on("sessionLoadCompleted", handleSessionLoadCompleted);
         acpClientRef.current?.on("sessionRestoreFailed", () => {
@@ -1215,7 +992,8 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
         }
     }, [isOpen]);
 
-    // Auto-connect to last session for scene (with race-condition guard)
+    // Create a fresh local copilot session for each scene. OSS copilot does
+    // not replay hosted chat sessions or call server-backed history APIs.
     useEffect(() => {
         if (!sceneID) return;
         if (connectionState !== ConnectionState.CONNECTED && !insufficientCredits) return;
@@ -1232,7 +1010,10 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
                 const bootstrap = pendingDashboardPromptRef.current;
                 if (!bootstrap?.entryMode || bootstrap.autoSubmit) return;
 
-                const greeting = buildCopilotEntryGreeting(bootstrap, getDetectedWorkspaceSystems(app));
+                const greeting = buildCopilotEntryGreeting(
+                    bootstrap,
+                    getDetectedWorkspaceSystems(app),
+                );
                 if (greeting) {
                     markMessagesForCurrentScene();
                     processingEventRef.current = null;
@@ -1251,47 +1032,27 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
                 clearDashboardCopilotBootstrap();
             };
 
-            // Default workspace should not resume the last Claude session just
-            // because the scene opened. Keep Copilot idle until a user prompt.
             const shouldStartIdleWorkspace =
                 workspaceModeRef.current || Boolean(pendingDashboardPromptRef.current?.entryMode);
-            if (shouldStartIdleWorkspace) {
-                await handleResetThread();
-                if (sceneLoadGeneration.current === generation) {
-                    if (!pendingDashboardPromptRef.current?.autoSubmit) {
-                        restoreWorkspaceChatSnapshotForScene(sceneID);
-                    }
-                    postPendingEntryGreeting();
-                }
-                return;
-            }
-
-            // Advanced mode keeps the historical auto-load behavior.
-            try {
-                const historyList = await getCopilotHistoryList(sceneID, 1, 1);
-                if (sceneLoadGeneration.current !== generation) return;
-
-                if (historyList.items.length > 0) {
-                    const lastSession = historyList.items[0];
-                    if (lastSession) {
-                        await handleLoadHistory(lastSession.ID, lastSession.SessionID);
-                    }
-                } else {
-                    await handleResetThread();
-                }
-            } catch (error) {
-                if (sceneLoadGeneration.current !== generation) return;
-                console.error("Failed to load last session:", error);
-                await handleResetThread();
-            } finally {
+            const finishSceneSessionInit = () => {
                 if (sceneLoadGeneration.current === generation) {
                     sceneSessionInitInFlightRef.current = false;
                     setIsLoadingSession(false);
                 }
-            }
-
-            if (sceneLoadGeneration.current === generation) {
-                postPendingEntryGreeting();
+            };
+            try {
+                await handleResetThread();
+                if (sceneLoadGeneration.current === generation) {
+                    if (shouldStartIdleWorkspace && !pendingDashboardPromptRef.current?.autoSubmit) {
+                        restoreWorkspaceChatSnapshotForScene(sceneID);
+                    }
+                    postPendingEntryGreeting();
+                }
+            } catch (error) {
+                if (sceneLoadGeneration.current !== generation) return;
+                console.error("Failed to start copilot session:", error);
+            } finally {
+                finishSceneSessionInit();
             }
         };
 
@@ -1327,18 +1088,6 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
             };
 
             delete context.metadata; // Remove metadata from context to save tokens, we can log it instead
-            const activePreview = copilotPreviewRef.current.session;
-            if (workspaceModeRef.current && activePreview && copilotPreviewRef.current.isPreviewActive) {
-                context.copilotPreview = {
-                    previewId: activePreview.previewId,
-                    status: activePreview.status,
-                    baseVersionLabel: activePreview.baseVersionLabel,
-                    summary: activePreview.summary,
-                    affectedSystems: activePreview.affectedSystems,
-                    instruction:
-                        "Revise the existing temporary preview branch. Do not treat this as a new confirmed version and do not ask to save or publish.",
-                };
-            }
 
             // Send prompt to agent using new API
             await acpClient.prompt(prompt, context);
@@ -1389,17 +1138,6 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
 
             const isAdvancedMode = modeCommand.target === "advanced";
             setAdvancedMode(isAdvancedMode);
-            if (
-                isAdvancedMode
-                && app?.editor?.aiPromptMode
-                && app.editor.sceneID
-                && app.editor.sceneName
-            ) {
-                setSceneAiPromptMode(app.editor.sceneID, app.editor.sceneName, false).catch(err => {
-                    console.warn("[AiCopilot] Failed to clear AiPromptMode", err);
-                });
-                app.editor.aiPromptMode = false;
-            }
             setMode("chat");
             setPrompt("");
             const title = isAdvancedMode ? "Advanced mode enabled" : "Default mode enabled";
@@ -1549,116 +1287,12 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
 
             // Reset the sequence counter for the new session
             sessionSeqCounterRef.current = {sessionId: null, counter: 0};
-            sessionCreatedRef.current = false;
-            pendingInteractivesRef.current = [];
-            attachedObjectsExtrasRef.current = new Map();
 
             setAiMessages([]);
-            setProjectTasks([]);
             setCopilotState(AI_COPILOT_STATE.READY);
         } catch (error) {
             console.error("Failed to reset copilot thread:", error);
         }
-    };
-
-    const handleLoadHistory = async (historyId: string, sessionId: string) => {
-        try {
-            // 1. Load MessageExtras from MongoDB
-            let messageExtras: MessageExtra[] = [];
-            try {
-                const historyData = await getSessionExtras(historyId);
-                messageExtras = historyData.MessageExtras || [];
-            } catch (extrasError) {
-                console.warn("[AiCopilot] Failed to load message extras, continuing without:", extrasError);
-            }
-
-            // 2. Build lookup structures for deferred injection during replay
-            pendingInteractivesRef.current = messageExtras
-                .filter(e => e.InteractiveResult !== null && e.InteractiveResult !== undefined)
-                .sort((a, b) => a.SeqNum - b.SeqNum);
-
-            attachedObjectsExtrasRef.current = new Map(
-                messageExtras
-                    .filter(e => e.AttachedObjects && e.AttachedObjects.length > 0)
-                    .map(e => [e.SeqNum, e.AttachedObjects!]),
-            );
-
-            // 3. Reset sequence counter for this session
-            sessionSeqCounterRef.current = {sessionId, counter: 0};
-            sessionCreatedRef.current = false;
-
-            // 4. Clear current messages and mark as replaying
-            setAiMessages([]);
-            isReplayingRef.current = true;
-
-            // 5. Load ACP session → replay starts (emits user_message_chunk + agent_message_chunk)
-            if (acpClientRef.current) {
-                const currentSessionId = acpClientRef.current.getCurrentSessionId();
-                const shouldCancelCurrentTask =
-                    Boolean(currentSessionId) && Boolean(sessionId) && currentSessionId !== sessionId;
-
-                if (shouldCancelCurrentTask) {
-                    try {
-                        await acpClientRef.current.cancelCurrentTask();
-                    } catch (error: any) {
-                        console.warn("Failed to cancel current task before loading history", error);
-                    }
-                }
-
-                try {
-                    await acpClientRef.current.loadSession(sessionId);
-                    // Clear replay mode — if the session had no messages, no events fired and
-                    // isReplayingRef would stay true forever without this.
-                    isReplayingRef.current = false;
-                    void refreshProjectTasks();
-                } catch (loadError: any) {
-                    // Session expired on Claude backend — create fresh session
-                    console.warn("[AiCopilot] loadSession failed, creating fresh session:", loadError);
-                    isReplayingRef.current = false;
-                    try {
-                        await acpClientRef.current.createSession();
-                        void refreshProjectTasks();
-                        setAiMessages(prev => [
-                            ...prev,
-                            {
-                                id: `system_${Date.now()}`,
-                                type: "agent" as const,
-                                content:
-                                    "Previous session expired. A new session has been created. " +
-                                    "Your conversation history is shown above for reference, but the AI does not have memory of it.",
-                                timestamp: Date.now(),
-                            },
-                        ]);
-                    } catch (createError) {
-                        console.error("Failed to create fallback session:", createError);
-                        showToast({type: "error", title: "Failed to restore or create session"});
-                    }
-                }
-            }
-        } catch (error: any) {
-            isReplayingRef.current = false;
-            console.error("Failed to load chat history:", error);
-            showToast({type: "error", title: "Failed to load chat history"});
-        }
-    };
-
-    const handleSelectHistory = async (historyId: string, sessionId: string) => {
-        if (workspaceModeRef.current) {
-            const restored = restoreWorkspaceChatSnapshotForScene(sceneIDRef.current, sessionId);
-            if (restored) {
-                showToast({type: "success", title: "Restored local Copilot transcript"});
-                return;
-            }
-
-            appendLocalChatMessage(
-                "agent",
-                "This history item does not have a local transcript snapshot. I kept Copilot idle so old work does not resume automatically. Switch to advanced mode if you need to replay the original ACP session.",
-            );
-            showToast({type: "info", title: "No local transcript snapshot"});
-            return;
-        }
-
-        await handleLoadHistory(historyId, sessionId);
     };
 
     const handleAbort = async () => {
@@ -1807,9 +1441,6 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
 
         const syncEditorContext = () => {
             const nextSceneID = app.editor?.sceneID || null;
-            if (sceneIDRef.current !== nextSceneID) {
-                setProjectTasks([]);
-            }
             setSceneID(nextSceneID);
             sceneIDRef.current = nextSceneID;
             setHasContext(Boolean(nextSceneID) || app.editor?.assetSource?.kind === "stem");
@@ -1829,16 +1460,11 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
     }, [app]);
 
     useEffect(() => {
-        if (!isOpen || connectionState !== ConnectionState.CONNECTED) return;
-        void refreshProjectTasks();
-    }, [isOpen, sceneID, connectionState, refreshProjectTasks]);
-
-    useEffect(() => {
         messagesRef.current?.scrollTo({
             top: messagesRef.current.scrollHeight,
             behavior: "smooth",
         });
-    }, [aiMessages, permissionRequest, copilotPreview.session?.status]);
+    }, [aiMessages, permissionRequest]);
 
     useEffect(() => {
         attachedObjectsRef.current = attachedObjects;
@@ -1868,258 +1494,6 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
     }, [prompt]);
 
     const selectedObjectsToDisplay = selectedObjects.filter(obj => !attachedObjects.find(o => o.uuid === obj.uuid));
-    const previewStatus = copilotPreview.session?.status;
-    const formattedPreviewStatus = previewStatus?.replace("-", " ");
-    const previewWorking = previewStatus === "capturing-base" ||
-        previewStatus === "previewing" ||
-        previewStatus === "applying";
-    const previewActivityLabel = copilotPreview.isPreviewActive
-        ? `${copilotPreview.previewLabel}: ${formattedPreviewStatus ?? "active"}`
-        : previewStatus === "failed"
-          ? "Preview branch failed"
-          : previewStatus === "rejected"
-            ? "Preview branch rejected"
-            : previewStatus === "accepted"
-              ? "Preview accepted"
-              : "Preview branch not active";
-    const previewActivityState: CopilotActivityFeedItem["state"] = previewStatus === "failed"
-        ? "error"
-        : previewStatus === "ready" || previewStatus === "accepted"
-          ? "done"
-          : previewWorking
-            ? "active"
-            : "idle";
-    const validationResults = copilotPreview.session?.validationResults ?? [];
-    const connectionActivityLabel = connectionState === ConnectionState.CONNECTED
-        ? "Copilot connected"
-        : connectionState === ConnectionState.ERROR
-          ? "Copilot connection failed"
-          : "Connecting Copilot";
-    const connectionActivityState: CopilotActivityFeedItem["state"] = connectionState === ConnectionState.CONNECTED
-        ? "done"
-        : connectionState === ConnectionState.ERROR
-          ? "error"
-          : "active";
-    const promptActivityLabel = copilotState === AI_COPILOT_STATE.PROCESSING
-        ? "Working on request"
-        : "Waiting for prompt";
-    const promptActivityState: CopilotActivityFeedItem["state"] = copilotState === AI_COPILOT_STATE.PROCESSING
-        ? "active"
-        : connectionState === ConnectionState.CONNECTED
-          ? "done"
-          : "idle";
-    const projectTaskActivityLabel = projectTasks.length > 0
-        ? `${projectTasks.length} project task${projectTasks.length === 1 ? "" : "s"}`
-        : "No active project tasks";
-    const projectTaskActivityState: CopilotActivityFeedItem["state"] = projectTasks.length > 0 ? "active" : "idle";
-    const validationFailed = validationResults.some(result => result.status === "fail");
-    const validationPending = validationResults.some(result => result.status === "pending");
-    const validationWarned = validationResults.some(result => result.status === "warn");
-    const validationActivityLabel = copilotPreview.isPreviewActive
-        ? validationFailed
-            ? "Validation failed"
-            : validationPending
-              ? "Validation pending"
-              : validationWarned
-                ? "Validation warnings"
-                : validationResults.length > 0
-                  ? "Validation passed"
-                  : "Validation not run"
-        : "Validation idle";
-    const validationActivityState: CopilotActivityFeedItem["state"] = validationFailed
-        ? "error"
-        : validationPending
-          ? "active"
-          : copilotPreview.isPreviewActive && validationResults.length > 0
-            ? "done"
-            : "idle";
-    const affectedSystemsForActivity = copilotPreview.session?.affectedSystems.length
-        ? copilotPreview.session.affectedSystems.join(", ")
-        : "No affected systems classified yet";
-    const activityDetail = copilotState === AI_COPILOT_STATE.PROCESSING
-        ? processingStatus.main || "Understanding request"
-        : copilotPreview.session?.status === "ready"
-          ? `Waiting for confirmation. Affected: ${affectedSystemsForActivity}.`
-          : copilotPreview.session?.status === "failed"
-            ? "Preview failed. Reject changes or revise the request."
-            : copilotPreview.isPreviewActive
-              ? `Current step: ${formattedPreviewStatus ?? "previewing"}. Affected: ${affectedSystemsForActivity}.`
-              : "No temporary preview is active.";
-    const activityRows = [
-        {
-            title: copilotPreview.session?.summary || "Copilot task",
-            detail: activityDetail,
-            items: [
-                {label: connectionActivityLabel, state: connectionActivityState},
-                {label: promptActivityLabel, state: promptActivityState},
-                {label: previewActivityLabel, state: previewActivityState},
-                {label: validationActivityLabel, state: validationActivityState},
-                {label: projectTaskActivityLabel, state: projectTaskActivityState},
-            ],
-        },
-    ] as CopilotActivityFeedRow[];
-    const showPreviewConfirmation = copilotPreview.session?.status === "ready";
-    const previewSummary = copilotPreview.session?.summary || "Copilot applied temporary scene changes.";
-    const previewAffectedSystems = copilotPreview.session?.affectedSystems.length
-        ? copilotPreview.session.affectedSystems.join(", ")
-        : "Pending classification";
-    const enableDefaultWorkspaceGameMode = () => {
-        const scene = app.editor?.scene ?? app.scene;
-        if (!scene) return;
-        scene.userData.game = {
-            ...(scene.userData.game || {}),
-            enabled: true,
-        };
-    };
-    const handleKeepTestingPreview = () => {
-        showToast({type: "info", title: "Keep testing this temporary preview."});
-    };
-    const handleRevisePreview = () => {
-        const session = copilotPreview.session;
-        const revisePrompt = [
-            "Revise the current temporary preview branch. Keep the changes in preview and do not create or accept a new version yet.",
-            session?.summary ? `Current preview summary: ${session.summary}` : null,
-            session?.affectedSystems.length ? `Affected systems so far: ${session.affectedSystems.join(", ")}` : null,
-            "Requested adjustment: ",
-        ].filter(Boolean).join("\n");
-
-        setPrompt(revisePrompt);
-        requestAnimationFrame(() => {
-            promptRef.current?.focus();
-            promptRef.current?.setSelectionRange(revisePrompt.length, revisePrompt.length);
-        });
-    };
-    const handleAcceptPreview = async () => {
-        const session = copilotPreview.session;
-        if (!session || acceptingPreview) return;
-
-        if (app.editor?.isReadOnly) {
-            showToast({type: "warning", title: "Read-only scenes cannot create versions."});
-            return;
-        }
-
-        const fatalValidation = session.validationResults.find(result => result.status === "fail");
-        if (fatalValidation) {
-            showToast({
-                type: "error",
-                title: "Resolve validation failures before accepting.",
-                body: fatalValidation.label,
-            });
-            return;
-        }
-
-        const shouldRestartPlaytest = app.isPlaying || app.isPaused;
-
-        setAcceptingPreview(true);
-        setCopilotState(AI_COPILOT_STATE.PROCESSING);
-        setProcessingStatus({
-            main: "Creating version from temporary preview...",
-            subTasks: ["Saving the preview through the existing scene revision path.", "Reloading the accepted version."],
-        });
-        app.call("workspaceStatusRequested", app, {state: "new-version-created-restarting"});
-
-        try {
-            if (shouldRestartPlaytest) {
-                await app.setMode(ApplicationMode.EDIT);
-            }
-
-            await runWithCopilotPreviewSceneSaveAllowed(() => saveScene(false, false));
-
-            const sceneId = app.editor?.sceneID;
-            const revisionId = app.editor?.sceneRevisionId;
-            if (sceneId && revisionId) {
-                try {
-                    await upsertSceneRevisionCapture(sceneId, revisionId, {
-                        name: session.summary?.trim()
-                            ? session.summary.trim().slice(0, 80)
-                            : "Copilot version",
-                        summary: session.summary || "Accepted Copilot preview.",
-                        source: "copilot",
-                        baseRevisionId: session.baseRevisionId ?? undefined,
-                        previewId: session.previewId,
-                        affectedSystems: session.affectedSystems,
-                        changedAssets: session.changedAssetRefs.map(ref => ({
-                            assetId: ref.assetId,
-                            revisionId: ref.revisionId ?? undefined,
-                            kind: ref.kind,
-                        })),
-                        validation: session.validationResults.map(result => ({
-                            id: result.id,
-                            label: result.label,
-                            status: result.status,
-                            detail: result.detail,
-                        })),
-                    });
-                } catch (captureError) {
-                    console.warn("[AiCopilot] Failed to capture version metadata", captureError);
-                    showToast({
-                        type: "warning",
-                        title: "Version created, but capture metadata was not saved.",
-                    });
-                }
-            }
-            if (sceneId) {
-                await app.setUpScene(sceneId, revisionId ? {revisionId} : undefined);
-            }
-
-            enableDefaultWorkspaceGameMode();
-            copilotPreview.acceptPreviewAsConfirmed();
-
-            if (shouldRestartPlaytest) {
-                await app.setMode(ApplicationMode.PLAY);
-            }
-
-            appendLocalChatMessage(
-                "agent",
-                "New version created. The game has been reset using your accepted changes.",
-            );
-            showToast({type: "success", title: "Version created"});
-        } catch (error: any) {
-            console.error("[AiCopilot] Failed to accept preview", error);
-            showToast({type: "error", title: error?.message || "Failed to create version"});
-        } finally {
-            setAcceptingPreview(false);
-            setProcessingStatus({main: "", subTasks: []});
-            setCopilotState(AI_COPILOT_STATE.READY);
-        }
-    };
-    const handleRejectPreview = async () => {
-        if (!copilotPreview.session) return;
-
-        const shouldRestartPlaytest = app.isPlaying || app.isPaused;
-        setCopilotState(AI_COPILOT_STATE.PROCESSING);
-        setProcessingStatus({
-            main: "Rejecting temporary preview...",
-            subTasks: ["Restoring the base scene snapshot without saving."],
-        });
-
-        try {
-            if (shouldRestartPlaytest) {
-                await app.setMode(ApplicationMode.EDIT);
-            }
-
-            await copilotPreview.rejectPreviewAndRestore();
-
-            if (shouldRestartPlaytest) {
-                enableDefaultWorkspaceGameMode();
-                await app.setMode(ApplicationMode.PLAY);
-            }
-
-            appendLocalChatMessage(
-                "agent",
-                shouldRestartPlaytest
-                    ? "Preview rejected. The base scene has been restored and playtest restarted from that state."
-                    : "Preview rejected. The base scene has been restored.",
-            );
-            showToast({type: "success", title: "Preview rejected"});
-        } catch (error: any) {
-            console.error("[AiCopilot] Failed to reject preview", error);
-            showToast({type: "error", title: error?.message || "Failed to reject preview"});
-        } finally {
-            setProcessingStatus({main: "", subTasks: []});
-            setCopilotState(AI_COPILOT_STATE.READY);
-        }
-    };
     const showContent = (connectionState === ConnectionState.CONNECTED && !isLoadingSession) || insufficientCredits;
     return (
         <ResizableWrapper
@@ -2153,15 +1527,7 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
                                         Code
                                     </ResetBt>
                                 )}
-                                {sceneID && (
-                                    <ResetBt
-                                        onClick={() => setIsHistoryOpen(prev => !prev)}
-                                        style={{marginLeft: "4px"}}
-                                    >
-                                        History
-                                    </ResetBt>
-                                )}
-                                {isPlaygroundMode() && (
+                                {isPlayground && (
                                     <ResetBt
                                         onClick={() => setIsKeysOpen(true)}
                                         style={{marginLeft: "4px"}}
@@ -2187,13 +1553,6 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
                     <TerminalView onExit={() => setMode("chat")} isAdmin={isAdmin} />
                 ) : (
                 <>
-                <ChatHistory
-                    isOpen={isHistoryOpen}
-                    onClose={() => setIsHistoryOpen(false)}
-                    onSelectHistory={handleSelectHistory}
-                    sceneID={sceneID || ""}
-                />
-
                 {/* Session Loading Overlay */}
                 {isLoadingSession && (
                     <ConnectionStatusContainer>
@@ -2314,38 +1673,6 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
                     </ConnectionStatusContainer>
                 )}
 
-                {showContent && projectTasks.length > 0 && (
-                    <ProjectTasksPanel>
-                        <ProjectTasksTitle>Project Tasks</ProjectTasksTitle>
-                        <ProjectTaskList>
-                            {projectTasks.slice(0, 6).map(task => (
-                                <ProjectTaskItem
-                                    key={task.ID}
-                                    $status={task.Status}
-                                    title={task.Description || task.Title}
-                                >
-                                    <span>{task.Title}</span>
-                                    <ProjectTaskMeta>{task.Status.replace("_", " ")}</ProjectTaskMeta>
-                                </ProjectTaskItem>
-                            ))}
-                        </ProjectTaskList>
-                    </ProjectTasksPanel>
-                )}
-
-                {showContent && isWorkspaceMode && (
-                    <>
-                        <CopilotActivityFeed rows={activityRows} />
-
-                        <CopilotVersionTimeline
-                            app={app}
-                            previewSession={copilotPreview.session}
-                            isPreviewActive={copilotPreview.isPreviewActive}
-                            currentUserId={dbUser?.id ?? null}
-                        />
-
-                    </>
-                )}
-
                 {showContent && (
                     <AiMessages ref={messagesRef}>
                         {aiMessages?.map(message => {
@@ -2354,6 +1681,12 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
                                 message.type === "interactive" &&
                                 message.interactiveResult &&
                                 acpClientRef.current?.checkPendingInteractiveResult(message.interactiveResult.id);
+
+                            const isLatestMessage = aiMessages.length > 0 && aiMessages[aiMessages.length - 1]?.id === message.id;
+                            const openProcessDetails =
+                                message.type === "thought" &&
+                                copilotState === AI_COPILOT_STATE.PROCESSING &&
+                                isLatestMessage;
 
                             return (
                                 <div
@@ -2375,6 +1708,17 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
                                             isPending={isPending}
                                             selectedObjects={selectedObjects}
                                         />
+                                    ) : message.type === "thought" ? (
+                                        <details
+                                            className="copilot-process-details"
+                                            data-testid="copilot-process-details"
+                                            open={openProcessDetails || undefined}
+                                        >
+                                            <summary>Thinking and workflow</summary>
+                                            <div className="copilot-process-body">
+                                                <MarkdownRenderer content={message.content} />
+                                            </div>
+                                        </details>
                                     ) : (
                                         <>
                                             <MarkdownRenderer
@@ -2399,26 +1743,6 @@ export const AiCopilot = ({isOpen, setIsOpen, pinnedCodeEditorWidth, onResize, o
                                 </div>
                             );
                         })}
-
-                        {isWorkspaceMode && showPreviewConfirmation && (
-                            <CopilotConfirmationCard
-                                summary={previewSummary}
-                                affectedSystems={previewAffectedSystems}
-                                validationResults={validationResults}
-                                onAccept={() => void handleAcceptPreview()}
-                                onKeepTesting={handleKeepTestingPreview}
-                                onRevise={handleRevisePreview}
-                                onReject={() => void handleRejectPreview()}
-                                acceptDisabled={acceptingPreview || validationFailed}
-                                acceptTitle={
-                                    validationFailed
-                                        ? "Resolve validation failures before creating a version."
-                                        : acceptingPreview
-                                          ? "Creating version..."
-                                          : "Create a new version from this temporary preview."
-                                }
-                            />
-                        )}
 
                         {permissionRequest && (
                             <PermissionContainer>

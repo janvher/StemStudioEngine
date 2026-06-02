@@ -95,6 +95,19 @@ export class HttpAIBackend implements AIBackend {
     async clearProviderKey(provider: AIProvider): Promise<void> {
         await this.options.keyStore?.delete(provider);
         this.capabilitiesCache = undefined;
+        try {
+            const url = this.resolveUrl(CONFIGURE_KEYS_PATH);
+            await fetch(url, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                credentials: "include",
+                body: JSON.stringify({provider, key: ""}),
+            });
+        } catch {
+            // Local deletion is still authoritative for direct BYOK-header
+            // requests. The configure endpoint exists only in OSS, so keep
+            // clear idempotent when the server is unavailable or integrated.
+        }
     }
 
     private async dispatch(path: string, options: AIRequestOptions): Promise<Response> {

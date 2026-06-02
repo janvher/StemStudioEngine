@@ -1,6 +1,14 @@
-import {useCallback} from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import styled from "styled-components";
 
+import {
+    COPILOT_KEYS_CHANGED_EVENT,
+    COPILOT_MODEL_OPTIONS,
+    getCopilotModelSelectionSync,
+    resolveCopilotChatKeys,
+    setCopilotModelSelection,
+} from "../../../../copilot";
+import type {CopilotChatKey, CopilotChatProvider} from "../../../../copilot";
 import {BYOKKeysPanel} from "../CreateDashboard/SettingsPage/BYOKKeysPanel/BYOKKeysPanel";
 
 /**
@@ -53,7 +61,74 @@ const CloseButton = styled.button`
     }
 `;
 
+const ModelSection = styled.div`
+    margin-bottom: 16px;
+    padding: 12px;
+    border: 1px solid #2c323d;
+    border-radius: 8px;
+    background: #181b22;
+`;
+
+const ModelLabel = styled.label`
+    display: grid;
+    gap: 8px;
+    color: #d8dee8;
+    font-size: 13px;
+    font-weight: 600;
+`;
+
+const ModelSelect = styled.select`
+    width: 100%;
+    background: #10131a;
+    border: 1px solid #394150;
+    border-radius: 6px;
+    color: #d8dee8;
+    padding: 8px 10px;
+`;
+
+const providerLabels: Record<CopilotChatProvider, string> = {
+    anthropic: "Anthropic",
+    openai: "OpenAI",
+    gemini: "Gemini",
+};
+
 export const AiKeysModal = ({onClose}: {onClose: () => void}) => {
+    const [chatKeys, setChatKeys] = useState<CopilotChatKey[]>([]);
+    const [selection, setSelection] = useState(getCopilotModelSelectionSync);
+
+    const refreshChatKeys = useCallback(async () => {
+        const keys = await resolveCopilotChatKeys();
+        setChatKeys(keys);
+        setSelection(getCopilotModelSelectionSync());
+    }, []);
+
+    useEffect(() => {
+        void refreshChatKeys();
+        window.addEventListener(COPILOT_KEYS_CHANGED_EVENT, refreshChatKeys);
+        return () => window.removeEventListener(COPILOT_KEYS_CHANGED_EVENT, refreshChatKeys);
+    }, [refreshChatKeys]);
+
+    const modelOptions = useMemo(
+        () => chatKeys.flatMap(key =>
+            COPILOT_MODEL_OPTIONS[key.provider].map(option => ({
+                provider: key.provider,
+                model: option.model,
+                label: `${providerLabels[key.provider]} — ${option.label}`,
+            })),
+        ),
+        [chatKeys],
+    );
+
+    const selectedValue = selection ? `${selection.provider}:${selection.model}` : "";
+
+    const handleModelChange = useCallback((value: string) => {
+        const [provider, ...modelParts] = value.split(":");
+        const model = modelParts.join(":");
+        if (!provider || !model) return;
+        setCopilotModelSelection(provider as CopilotChatProvider, model);
+        setSelection({provider: provider as CopilotChatProvider, model});
+    }, []);
+
     const handleOverlayClick = useCallback(
         (e: React.MouseEvent) => {
             if (e.target === e.currentTarget) onClose();
@@ -69,7 +144,31 @@ export const AiKeysModal = ({onClose}: {onClose: () => void}) => {
                         Close
                     </CloseButton>
                 </CloseRow>
-                <BYOKKeysPanel />
+                {chatKeys.length > 1 ? (
+                    <ModelSection>
+                        <ModelLabel>
+                            Copilot model
+                            <ModelSelect
+                                aria-label="Copilot model"
+                                value={selectedValue}
+                                onChange={event => handleModelChange(event.target.value)}
+                            >
+                                <option value="" disabled>
+                                    Choose model
+                                </option>
+                                {modelOptions.map(option => (
+                                    <option
+                                        key={`${option.provider}:${option.model}`}
+                                        value={`${option.provider}:${option.model}`}
+                                    >
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </ModelSelect>
+                        </ModelLabel>
+                    </ModelSection>
+                ) : null}
+                <BYOKKeysPanel statusMode="local" />
             </Dialog>
         </Overlay>
     );

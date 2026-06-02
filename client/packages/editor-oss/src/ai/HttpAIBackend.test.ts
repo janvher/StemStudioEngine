@@ -84,6 +84,22 @@ describe("HttpAIBackend.setProviderKey", () => {
         const ok = await backend.setProviderKey("anthropic", "sk-test");
         expect(ok).toBe(false);
     });
+
+    it("clears the client key and posts an empty key to reset the server BYOK session", async () => {
+        await keyStore.set("anthropic", "sk-test");
+        const backend = new HttpAIBackend({keyStore});
+
+        await backend.clearProviderKey("anthropic");
+
+        expect(await keyStore.get("anthropic")).toBeUndefined();
+        expect(fetchSpy).toHaveBeenCalledWith(
+            `${ORIGIN}/api/AI/ConfigureKeys`,
+            expect.objectContaining({
+                method: "POST",
+                body: JSON.stringify({provider: "anthropic", key: ""}),
+            }),
+        );
+    });
 });
 
 describe("HttpAIBackend.request BYOK header forwarding", () => {

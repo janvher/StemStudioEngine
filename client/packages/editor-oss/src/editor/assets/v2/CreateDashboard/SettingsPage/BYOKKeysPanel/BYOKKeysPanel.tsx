@@ -40,16 +40,22 @@ const ORDERED_PROVIDERS: AIProvider[] = [
     "tripo",
 ];
 
-const sourceText = (source: string): string => {
+type BYOKKeysPanelProps = {
+    statusMode?: "backend" | "local";
+};
+
+const sourceText = (source: string, statusMode: BYOKKeysPanelProps["statusMode"]): string => {
+    if (statusMode === "local") return source === "local" ? "saved in this browser" : "";
     if (source === "env") return "from server environment";
     if (source === "byok-session") return "saved in this session";
     return "";
 };
 
-export const BYOKKeysPanel = () => {
+export const BYOKKeysPanel = ({statusMode = "backend"}: BYOKKeysPanelProps) => {
     const backend = useMemo(() => getAIBackend(), []);
     const byokStore = useMemo(() => getBYOKKeyStore(), []);
     const [caps, setCaps] = useState<AICapabilities | undefined>(undefined);
+    const [localReady, setLocalReady] = useState<Partial<Record<AIProvider, boolean>>>({});
     const [drafts, setDrafts] = useState<Record<string, string>>({});
     const [busyProvider, setBusyProvider] = useState<AIProvider | undefined>(undefined);
     const [error, setError] = useState<string | undefined>(undefined);
@@ -64,12 +70,20 @@ export const BYOKKeysPanel = () => {
 
     const refresh = useCallback(async () => {
         try {
+            if (statusMode === "local") {
+                const keys = await byokStore?.all();
+                setCaps(undefined);
+                setLocalReady(Object.fromEntries(
+                    ORDERED_PROVIDERS.map(provider => [provider, Boolean(keys?.[provider]?.trim())]),
+                ) as Partial<Record<AIProvider, boolean>>);
+                return;
+            }
             const result = await backend.capabilities(true);
             setCaps(result);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to load AI capabilities");
         }
-    }, [backend]);
+    }, [backend, byokStore, statusMode]);
 
     useEffect(() => {
         void refresh();
@@ -134,6 +148,7 @@ export const BYOKKeysPanel = () => {
         if (!confirmed) return;
         setPassphraseBusy(true);
         try {
+            await Promise.all(ORDERED_PROVIDERS.map(provider => backend.clearProviderKey(provider)));
             await byokStore.resetPassphrase();
             setHasPassphrase(false);
             setUnlocked(true);
@@ -145,7 +160,7 @@ export const BYOKKeysPanel = () => {
         } finally {
             setPassphraseBusy(false);
         }
-    }, [byokStore, refresh]);
+    }, [backend, byokStore, refresh]);
 
     const handleSave = useCallback(
         async (provider: AIProvider) => {
@@ -291,7 +306,10 @@ export const BYOKKeysPanel = () => {
             <Table>
                 {ORDERED_PROVIDERS.map(provider => {
                     const status = caps?.providers?.[provider];
-                    const isReady = status?.status === "ready";
+                    const isReady = statusMode === "local"
+                        ? Boolean(localReady[provider])
+                        : status?.status === "ready";
+                    const isEnvReady = statusMode === "backend" && status?.source === "env";
                     const draft = drafts[provider] ?? "";
                     const busy = busyProvider === provider;
                     return (
@@ -301,7 +319,9 @@ export const BYOKKeysPanel = () => {
                                 <StatusBadge $tone={isReady ? "ready" : "missing"}>
                                     {isReady ? "ready" : "missing"}
                                 </StatusBadge>
-                                <SourceText>{sourceText(status?.source ?? "")}</SourceText>
+                                <SourceText>
+                                    {sourceText(statusMode === "local" && isReady ? "local" : status?.source ?? "", statusMode)}
+                                </SourceText>
                             </Label>
                             <ActionsRow>
                                 <KeyInput
@@ -309,18 +329,18 @@ export const BYOKKeysPanel = () => {
                                     placeholder={
                                         keysTableDisabled
                                             ? "🔒 unlock above"
-                                            : isReady && status?.source === "env"
+                                            : isEnvReady
                                                 ? "—"
                                                 : "paste key"
                                     }
                                     value={draft}
-                                    disabled={status?.source === "env" || busy || keysTableDisabled}
+                                    disabled={isEnvReady || busy || keysTableDisabled}
                                     onChange={e => setDrafts(prev => ({...prev, [provider]: e.target.value}))}
                                 />
                                 <SmallButton
                                     type="button"
                                     onClick={() => void handleSave(provider)}
-                                    disabled={!draft || busy || status?.source === "env" || keysTableDisabled}
+                                    disabled={!draft || busy || isEnvReady || keysTableDisabled}
                                 >
                                     Save
                                 </SmallButton>
@@ -328,7 +348,7 @@ export const BYOKKeysPanel = () => {
                                     type="button"
                                     $variant="ghost"
                                     onClick={() => void handleClear(provider)}
-                                    disabled={!isReady || status?.source === "env" || busy || keysTableDisabled}
+                                    disabled={!isReady || isEnvReady || busy || keysTableDisabled}
                                 >
                                     Clear
                                 </SmallButton>

@@ -6,6 +6,7 @@ import {AppRouter} from "./AppRouter";
 import AppGlobalContextProvider from "./context/AppGlobalContext";
 import AuthorizationContextProvider from "./context/AuthorizationContext";
 import HomepageContextProvider from "./context/HomepageContext";
+import {OssAssetRegistryProvider} from "./context/OssAssetRegistryContext";
 import {SceneRevisionsModalRenderer} from "./editor/assets/v2/SceneRevisionsModalRenderer/SceneRevisionsModalRenderer";
 import {queryClient} from "./queryClient";
 import {AppUpdateManager} from "./update/AppUpdateManager";
@@ -33,25 +34,27 @@ export const PublicAppContainer = () => {
             <CSPMetaTag customPolicies={customCSPPolicies} />
             <AuthorizationContextProvider>
                 <QueryClientProvider client={queryClient}>
-                    <AppGlobalContextProvider>
-                        <HomepageContextProvider>
-                            <AppUpdateManager />
-                            <OfflineIndicator />
-                            <AppRouter />
-                            <SceneRevisionsModalRenderer />
-                            <div
-                                ref={toastContainerRef}
-                                className="my-toaster"
-                            >
-                                <Toaster
-                                    position="bottom-right"
-                                    theme="dark"
-                                    container={toastContainerRef as any}
-                                />
-                                <LogLevelMismatchToast />
-                            </div>
-                        </HomepageContextProvider>
-                    </AppGlobalContextProvider>
+                    <OssAssetRegistryProvider>
+                        <AppGlobalContextProvider>
+                            <HomepageContextProvider>
+                                <AppUpdateManager />
+                                <OfflineIndicator />
+                                <AppRouter />
+                                <SceneRevisionsModalRenderer />
+                                <div
+                                    ref={toastContainerRef}
+                                    className="my-toaster"
+                                >
+                                    <Toaster
+                                        position="bottom-right"
+                                        theme="dark"
+                                        container={toastContainerRef as any}
+                                    />
+                                    <LogLevelMismatchToast />
+                                </div>
+                            </HomepageContextProvider>
+                        </AppGlobalContextProvider>
+                    </OssAssetRegistryProvider>
                 </QueryClientProvider>
             </AuthorizationContextProvider>
         </>

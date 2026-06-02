@@ -12,6 +12,7 @@ import {LibrariesContext} from "./LibrariesContext";
 import {LightingContext} from "./LightingContext";
 import {ModelAnimationCombinerContext} from "./ModelAnimationCombinerContext";
 import {ModelsTabContext} from "./ModelsTabContext";
+import {OssAssetRegistryContext} from "./OssAssetRegistryContext";
 import {ProjectStateContext} from "./ProjectStateContext";
 import {PublishingContext} from "./PublishingContext";
 import {UIStateContext} from "./UIStateContext";
@@ -48,6 +49,7 @@ export const useAppGlobalContext = () => React.useContext(AppGlobalContext);
 export const useAssetsTabContext = () => React.useContext(AssetsTabContext);
 export const useModelsTabContext = () => React.useContext(ModelsTabContext);
 export const useLibrariesContext = () => React.useContext(LibrariesContext);
+export const useOssAssetRegistryContext = () => React.useContext(OssAssetRegistryContext);
 // Split context hooks for optimized re-renders
 // Use these instead of useAppGlobalContext when you only need specific state
 export const useUIStateContext = () => React.useContext(UIStateContext);

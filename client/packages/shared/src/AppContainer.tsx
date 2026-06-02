@@ -14,6 +14,7 @@ import AuthorizationContextProvider from "./context/AuthorizationContext";
 import {BatchLodGenerationContextProvider} from "./context/BatchLodGenerationContext";
 import HomepageContextProvider from "./context/HomepageContext";
 import HUDContextProvider from "./context/HUDContext";
+import {OssAssetRegistryProvider} from "./context/OssAssetRegistryContext";
 import ProjectStateContextProvider from "./context/ProjectStateContext";
 import PublishingContextProvider from "./context/PublishingContext";
 import {SceneAssetResolutionProvider} from "./context/SceneAssetResolutionContext";
@@ -61,6 +62,7 @@ export const AppContainer = () => {
                     <SceneAssetResolutionProvider>
                         <BatchLodGenerationContextProvider>
                             <HUDContextProvider>
+                                <OssAssetRegistryProvider>
                                     <AssetsTabContextProvider>
                                         <UIStateContextProvider>
                                             <ProjectStateContextProvider>
@@ -90,6 +92,7 @@ export const AppContainer = () => {
                                             </ProjectStateContextProvider>
                                         </UIStateContextProvider>
                                     </AssetsTabContextProvider>
+                                </OssAssetRegistryProvider>
                             </HUDContextProvider>
                         </BatchLodGenerationContextProvider>
                     </SceneAssetResolutionProvider>

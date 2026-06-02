@@ -1,5 +1,14 @@
 const proxyApi = process.env.REACT_APP_PROXY_API || "https://stemproxy.develop.erth.xyz";
 
+export const DIRECT_AI_PROVIDER_CONNECT_SOURCES = [
+    "https://api.openai.com",
+    "https://api.openai.com/*",
+    "https://api.anthropic.com",
+    "https://api.anthropic.com/*",
+    "https://generativelanguage.googleapis.com",
+    "https://generativelanguage.googleapis.com/*",
+];
+
 // Define the base type for CSP directives
 type CSPDirective =
     | "default-src"
@@ -40,6 +49,7 @@ const CSPMetaTag = ({customPolicies = {}}) => {
             "data:",
             "https://esm.sh",
             "https://*.googleapis.com",
+            ...DIRECT_AI_PROVIDER_CONNECT_SOURCES,
             "https://*.google-analytics.com",
             "https://unpkg.com",
             "https://cdn.discordapp.com",
@@ -158,6 +168,7 @@ export const customCSPPolicies = {
         "http://localhost:3000/",
         "http://localhost:3000/*",
         "https://*.googleapis.com",
+        ...DIRECT_AI_PROVIDER_CONNECT_SOURCES,
         "https://*.google-analytics.com",
         "https://unpkg.com",
         "https://cdn.discordapp.com",

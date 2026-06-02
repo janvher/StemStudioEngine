@@ -525,6 +525,8 @@ export type UpsertSceneRevisionCaptureRequest = {
 };
 
 export const listSceneRevisionCaptures = async (sceneId: string): Promise<SceneRevisionCapture[]> => {
+    if (IS_OSS) return [];
+
     const response = await Ajax.get({
         url: backendUrlFromPath(`/api/scene/${sceneId}/revision-captures`),
         msgBodyType: "json",
@@ -542,6 +544,18 @@ export const upsertSceneRevisionCapture = async (
     revisionId: string,
     request: UpsertSceneRevisionCaptureRequest,
 ): Promise<SceneRevisionCapture> => {
+    if (IS_OSS) {
+        const timestamp = new Date().toISOString();
+        return {
+            id: `oss-capture-${revisionId}`,
+            sceneId,
+            revisionId,
+            ...request,
+            createTime: timestamp,
+            updateTime: timestamp,
+        };
+    }
+
     const response = await Ajax.put({
         url: backendUrlFromPath(`/api/scene/${sceneId}/revision/${revisionId}/capture`),
         data: JSON.stringify(request),

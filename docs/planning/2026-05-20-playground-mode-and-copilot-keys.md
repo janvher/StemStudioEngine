@@ -49,14 +49,17 @@ see the next section.
 
 In playground mode the editor registers `DirectCopilotProvider`
 (`editor-oss/src/copilot/DirectCopilotProvider.ts`), an `ICopilotProvider`
-that streams a plain conversation straight from the visitor's chosen provider:
+that calls the visitor's chosen provider directly from the browser:
 
-- Anthropic (`/v1/messages`, `anthropic-dangerous-direct-browser-access`) or
-  any OpenAI-compatible `/v1/chat/completions` endpoint.
+- Anthropic (`/v1/messages`, `anthropic-dangerous-direct-browser-access`),
+  OpenAI/Codex (`/v1/responses`), or Gemini (`generateContent`).
 - The key comes from the existing BYOK store (IndexedDB, optional passphrase
   encryption). Nothing is proxied through the Go `ai-server`.
-- It is a *conversational* copilot only — no scene-mutation tool calls (that
-  remains the integrated agent's job).
+- It asks the provider for a constrained JSON response containing StemScript,
+  rejects file/import/export/external-asset commands, parses the script with
+  the existing Script Tool parser, then applies each command through
+  `CommandsExecutor`/`CommandsRegistry` so the actions happen live in the
+  playground scene.
 
 Key gating:
 
@@ -110,7 +113,7 @@ Key gating:
 - [x] `AppGlobalContext.tsx`: pass `isPlayground` and `hasCopilotKeys`.
 - [x] New `AiKeysModal.tsx` + "Keys" header button in `AiCopilot.tsx`
       (playground only).
-- [x] New `DirectCopilotProvider` — browser-direct streaming copilot.
+- [x] New `DirectCopilotProvider` — browser-direct StemScript copilot.
 - [x] New `playgroundCopilotKeys.ts` — sync key marker + key resolution.
 - [x] New `registerPlaygroundCopilot.ts`; wired from OSS bootstrap branch.
 - [x] `BYOKKeysPanel.tsx`: refresh the key marker on save/clear/reset.
