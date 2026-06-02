@@ -139,6 +139,9 @@ If all three print a version, you're ready for [Quick start](#quick-start).
 ## Documentation
 
 - [Architecture overview](./docs/architecture.md) — how the editor, AI server, and multiplayer sidecar fit together.
+- [Built-in behaviors](./docs/built-in-behaviors.md) — the behavior model, the full catalog, and how to attach or author one.
+- [Lambdas (ECS layer)](./docs/lambdas.md) — batched, dependency-scheduled systems over many objects, with examples.
+- [Import packs](./docs/import-packs.md) — curated reusable script modules (`noise`, `prng`, `uikit-dual-mode`) and the `@import` workflow.
 - [BYOK setup](./docs/byok.md) — connect your AI provider keys.
 - [Multiplayer guide](./docs/multiplayer.md) — local sidecar and self-hosted deployment.
 - [Exporting a game](./docs/exporting-a-game.md) — package a Player-only static site.

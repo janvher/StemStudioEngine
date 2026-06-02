@@ -111,6 +111,22 @@ describe("playgroundStemscriptPlan", () => {
         expect(() => validateInspectionStemscript("behavior attach Player behaviorId=character")).toThrow(/not allowed in inspection/);
     });
 
+    it("allows `list lights` and any engine read-only command in inspection", () => {
+        // Regression: `list lights` previously aborted the whole request because
+        // it was absent from a narrow hardcoded allowlist. It now resolves to a
+        // real read-only command (get_scene_objects) and is permitted.
+        const result = validateInspectionStemscript(
+            ["list lights", "get light DirectionalLight", "get render settings"].join("\n"),
+        );
+        expect(result.executableCommands).toBe(3);
+        expect(result.script).toContain("list lights");
+
+        // Read-only-prefixed commands the playground globally disallows (external
+        // search, library, project tasks) stay rejected even in inspection.
+        expect(() => validateInspectionStemscript("search_external_assets")).toThrow(/not allowed in inspection/);
+        expect(() => validateInspectionStemscript("list_project_tasks")).toThrow(/not allowed in inspection/);
+    });
+
     it("rejects file and external-asset commands in playground mode", () => {
         expect(() => validateGeneratedStemscript("import model Tree filepath=models/tree.glb")).toThrow(/not allowed/);
         expect(() => validateGeneratedStemscript("generate model prompt=\"make a spaceship\"")).toThrow(/not allowed/);

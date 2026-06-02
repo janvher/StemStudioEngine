@@ -110,6 +110,9 @@ export const ALIAS_MAP: Record<string, AliasMapping> = {
 
     // Scene queries
     "list objects": {command: "get_scene_objects"},
+    // Lights are scene objects; enumerate them via the scene tree, then read
+    // one with `get light <Target>` (-> get_light_settings).
+    "list lights": {command: "get_scene_objects"},
     "list assets": {command: "list_scene_assets"},
     "list imports": {command: "list_scene_assets", staticParams: {type: "imports"}},
     "list files": {command: "list_scene_assets", staticParams: {type: "files"}},

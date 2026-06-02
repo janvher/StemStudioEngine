@@ -7,9 +7,12 @@ import type {DocEntry} from "../content/docs-nav";
 // Build-time raw imports keep docs in the static bundle (no fetch at runtime).
 // Vite's `?raw` query returns the file as a string.
 import architectureMd from "../../../../../docs/architecture.md?raw";
+import builtInBehaviorsMd from "../../../../../docs/built-in-behaviors.md?raw";
 import byokMd from "../../../../../docs/byok.md?raw";
 import exportingMd from "../../../../../docs/exporting-a-game.md?raw";
 import gameObjectAndGameManagerApiMd from "../../../../../docs/gameobject-and-game-manager-api.md?raw";
+import importPacksMd from "../../../../../docs/import-packs.md?raw";
+import lambdasMd from "../../../../../docs/lambdas.md?raw";
 import multiplayerMd from "../../../../../docs/multiplayer.md?raw";
 import runtimeApiMd from "../../../../../docs/runtime-api.md?raw";
 import serverSideStorageMd from "../../../../../docs/server-side-storage.md?raw";
@@ -19,9 +22,12 @@ import contributingMd from "../../../../../CONTRIBUTING.md?raw";
 
 const SOURCES: Record<string, string> = {
     "repo-docs:architecture.md": architectureMd,
+    "repo-docs:built-in-behaviors.md": builtInBehaviorsMd,
     "repo-docs:byok.md": byokMd,
     "repo-docs:exporting-a-game.md": exportingMd,
     "repo-docs:gameobject-and-game-manager-api.md": gameObjectAndGameManagerApiMd,
+    "repo-docs:import-packs.md": importPacksMd,
+    "repo-docs:lambdas.md": lambdasMd,
     "repo-docs:multiplayer.md": multiplayerMd,
     "repo-docs:runtime-api.md": runtimeApiMd,
     "repo-docs:server-side-storage.md": serverSideStorageMd,

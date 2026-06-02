@@ -1,3 +1,4 @@
+import {isReadOnlyCommand} from "../agent/script-tool/checkScript";
 import {ScriptExecutor} from "../agent/script-tool/ScriptExecutor";
 
 export interface PlaygroundStemscriptPlan {
@@ -32,29 +33,12 @@ const DISALLOWED_COMMANDS = new Set([
     "add_model_to_scene",
     "set_external_texture",
 ]);
-const READ_ONLY_COMMANDS = new Set([
-    "get_scene_objects",
-    "get_object",
-    "get_object_settings",
-    "get_material_settings",
-    "get_behavior_settings",
-    "get_selected_object",
-    "get_player",
-    "list_scene_assets",
-    "get_scene_asset",
-    "list_behaviors",
-    "get_behavior",
-    "list_lambdas",
-    "get_lambda",
-    "get_physics_settings",
-    "get_light_settings",
-    "get_vfx",
-    "list_prefabs",
-    "get_prefab",
-    "get_camera_settings",
-    "get_editor_settings",
-    "get_scene_setting",
-]);
+// Inspection allows any command the engine classifies as read-only
+// (get_/list_/search_ + player/select via isReadOnlyCommand), so the copilot
+// can inspect the full scene and every asset type — except commands the
+// playground globally disallows (external search, library, project tasks).
+const isAllowedInspectionCommand = (command: string): boolean =>
+    isReadOnlyCommand(command) && !DISALLOWED_COMMANDS.has(command);
 
 const stripCodeFence = (value: string): string => {
     const trimmed = value.trim();
@@ -159,7 +143,7 @@ export function validateGeneratedStemscript(script: string): ValidatedStemscript
 }
 
 export function validateInspectionStemscript(script: string): ValidatedStemscript {
-    return validateStemscript(script, command => !READ_ONLY_COMMANDS.has(command), "inspection");
+    return validateStemscript(script, command => !isAllowedInspectionCommand(command), "inspection");
 }
 
 function validateStemscript(

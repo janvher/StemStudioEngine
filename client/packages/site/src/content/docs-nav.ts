@@ -26,6 +26,14 @@ export const DOC_SECTIONS: DocSection[] = [
         ],
     },
     {
+        label: "Scripting",
+        entries: [
+            {slug: "built-in-behaviors", title: "Built-in behaviors", source: "repo-docs", file: "built-in-behaviors.md"},
+            {slug: "lambdas", title: "Lambdas (ECS)", source: "repo-docs", file: "lambdas.md"},
+            {slug: "import-packs", title: "Import packs", source: "repo-docs", file: "import-packs.md"},
+        ],
+    },
+    {
         label: "APIs",
         entries: [
             {slug: "runtime-api", title: "Runtime API", source: "repo-docs", file: "runtime-api.md"},

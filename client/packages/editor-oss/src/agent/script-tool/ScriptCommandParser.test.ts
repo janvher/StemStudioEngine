@@ -311,6 +311,13 @@ describe("ScriptCommandParser.parse", () => {
             expect(result.params.filter).toBe("box");
         });
 
+        it("parses list lights to a read-only scene query", () => {
+            // Lights are scene objects; `list lights` aliases to get_scene_objects
+            // so the copilot can enumerate them during inspection.
+            const result = ScriptCommandParser.parse("list lights");
+            expect(result.command).toBe("get_scene_objects");
+        });
+
         it("parses get with target", () => {
             const result = ScriptCommandParser.parse("get MyBox");
             expect(result.command).toBe("get_object");

@@ -1,7 +1,21 @@
 import {describe, expect, it, vi} from "vitest";
 
-import {deriveCheckPlan, deriveCheckProbes, runScriptCheck} from "./checkScript";
+import {deriveCheckPlan, deriveCheckProbes, isReadOnlyCommand, runScriptCheck} from "./checkScript";
 import {ScriptExecutor} from "./ScriptExecutor";
+
+describe("isReadOnlyCommand", () => {
+    it("classifies get_/list_/search_ prefixes and player/select as read-only", () => {
+        for (const cmd of ["get_scene_objects", "get_light_settings", "list_behaviors", "list_lambdas", "search_external_assets", "player", "select"]) {
+            expect(isReadOnlyCommand(cmd), cmd).toBe(true);
+        }
+    });
+
+    it("classifies mutating commands as not read-only", () => {
+        for (const cmd of ["modify_object", "create_primitive", "set_light_properties", "delete_object", "attach_behavior", "import", "save"]) {
+            expect(isReadOnlyCommand(cmd), cmd).toBe(false);
+        }
+    });
+});
 
 describe("checkScript probe derivation", () => {
     it("derives an object getter probe for primitive creation", () => {
