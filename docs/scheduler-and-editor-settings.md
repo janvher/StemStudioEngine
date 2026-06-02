@@ -214,20 +214,3 @@ interfaces behind that version-control model.
    visual quality.
 7. Save behavior, lambda, and import assets through the editor or designer so
    revisions and dependencies stay pinned correctly.
-
----
-
-## Verification
-
-Scheduler and settings changes should run both unit tests and a live Playwright
-pass:
-
-```bash
-bun run typecheck
-bun run test
-node scripts/playwright/oss-smoke.mjs
-node scripts/playwright/capture-scheduler-docs.mjs
-```
-
-The screenshot capture script expects the editor dev server on
-`http://localhost:5173` unless `PLAYWRIGHT_BASE_URL` is set.
