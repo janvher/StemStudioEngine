@@ -92,6 +92,87 @@ From inside a behavior:
 
 ---
 
+## Inter-behavior communication
+
+Use the narrowest communication path that matches the job:
+
+| Pattern | Use it for |
+|---|---|
+| Targeted `onEvent()` messages | One object telling behaviors on another object to react. This is the preferred behavior-to-behavior path. |
+| `this.erth.behaviors.find*()` | Reading or requesting changes from a known behavior. |
+| `this.erth.events.on()` | Engine-wide topics such as auth, score/lives, UI, or built-in gameplay events. Do not use it for ordinary behavior-to-behavior dispatch. |
+
+### Targeted messages
+
+Receiver:
+
+```js
+this.onEvent = function (msg, data) {
+    if (msg !== "door.open") return;
+    this._open = true;
+    this._openedBy = data?.sourceName || "";
+};
+```
+
+Sender:
+
+```js
+this.triggerDoor = function (doorObject) {
+    this.game.behaviorManager.sendEventToObjectBehaviors(
+        doorObject,
+        "door.open",
+        {source: this.target.uuid, sourceName: this.target.name}
+    );
+};
+```
+
+`sendEventToObjectBehaviors(target, msg, data, exceptIds?)` delivers the event
+to every behavior attached to `target`. Use `exceptIds` when a behavior should
+not receive its own event.
+
+### Finding and changing behaviors
+
+The `erth.behaviors` helper returns safe foreign-behavior views:
+
+```js
+this.onStart = function () {
+    this._health = this.erth.behaviors.find(this.target, "health");
+};
+
+this.damage = function (amount) {
+    if (!this._health) return;
+    const current = Number(this.erth.behaviors.getAttribute(this._health, "hp") ?? 0);
+    this.erth.behaviors.requestChange(this._health, "hp", Math.max(0, current - amount));
+};
+```
+
+Use `find(target, id)` for a behavior on a specific object,
+`findOnObject(target)` to list everything on an object, and `findAll(id)` to
+query the scene by behavior id.
+
+### Engine-wide events
+
+Engine events are subscriptions, so always clean them up:
+
+```js
+this.onStart = function () {
+    this._offScore = this.erth.events.on("game.score", (_topic, amount) => {
+        this.target.userData.lastScore = amount;
+    });
+};
+
+this.dispose = function () {
+    this._offScore?.();
+    this._offScore = null;
+};
+```
+
+Use this for engine topics and built-in systems. For custom gameplay messages
+between objects, prefer targeted `onEvent()` dispatch so lifetimes stay local to
+the target object.
+
+---
+
 ## Attaching a built-in behavior (step by step)
 
 1. **Select an object** in the scene tree (e.g. a coin mesh).

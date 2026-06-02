@@ -65,8 +65,10 @@ the system data-driven and schedulable:
 - **`readComponents` / `writeComponents`** — the scheduler's dependency
   declaration. If lambda A *writes* `vx` and lambda B *reads* `vx`, the
   scheduler runs A before B. Lambdas with no write→read conflict run in the
-  same **wave** and may execute in parallel. Omit these and everything runs
-  serially (conservative fallback).
+  same **wave** and can be treated as independent. The current runtime visits
+  wave members sequentially on the main thread; the wave boundary is the
+  dependency contract. Omit these and everything falls back to a conservative
+  schema-based ordering.
 
 The archetype query (`src/lambdas/LambdaQueryRegistry.ts`) keeps a bitmask per
 object so "all objects with [velocity AND gravity]" is an O(1) lookup. Waves
@@ -103,6 +105,19 @@ running long), then syncs matrices/instanced meshes after your callback. The
 `dt` passed to your callback is `deltaTime × throttleMultiplier` so time-based
 math still catches up after skipped frames — use `dt`, not the outer
 `deltaTime`, for movement.
+
+### Cooperative scheduling notes
+
+`processObjects()` is the editor-author path for cooperative scheduling. It
+checks the live frame deadline, applies culling/throttle multipliers, and stops
+before the frame is exhausted.
+
+Source-authored lambdas can go deeper by overriding `applySliced()` or
+`SoALambdaBase.updateSoASliced()` and yielding between chunks. Plain
+editor-authored lambda `update()` functions are not resumed by the scheduler if
+they return a generator. For long editor-authored work, split the job across
+frames with explicit state, or send pure computation to a worker and apply the
+result on the main thread.
 
 ### Example: the rotation lambda (the whole thing)
 
@@ -211,15 +226,81 @@ All under `src/lambdas/packs/`:
    across all objects on that lambda.)
 5. Choose **Auto Apply**:
    - **On** — the scheduler runs the lambda over this object every frame.
-   - **Off** — the object is registered but idle; you call
-     `lambdaInstance.apply(deltaTime)` from your own behavior/lambda code when
-     you want it to run.
+   - **Off** — the component stays on the object, but Play mode does not
+     auto-register it. A trigger, behavior, or another lambda can register it
+     and call `lambdaInstance.apply(deltaTime)` when it should run.
 6. **Press Play.** The scheduler builds dependency waves and drives every
    auto-apply lambda. With `gravity` attached, the object falls (or floats, if
    `useGravity` is false) per its `mass`/`drag`.
 
 Attaching writes a component entry into `object.userData.lambdaComponents[]`;
 the manager registers the object with the lambda instance on load.
+
+---
+
+## Global, scene, and object-attached lambdas
+
+There are two user-facing ways to instantiate lambdas, plus one runtime API
+path:
+
+| Path | Stored where | Runtime behavior |
+|---|---|---|
+| **Assets -> Lambdas -> Add to Project** | `scene.userData.projectLambdaInstances[]` | Creates one enabled project/global instance for the lambda type when Play mode starts. It can hold shared attributes, receive events, and register objects later. |
+| **Object -> Lambdas -> Add Lambda** | `scene.userData.lambdaInstances[]` plus `object.userData.lambdaComponents[]` | Creates or reuses a scene-level instance for that lambda type, then attaches this object with per-object component data. |
+| Runtime code | `game.lambdaManager.createInstance(lambdaId, options)` | Advanced path used by built-ins such as Trigger or collaboration sync when an instance must be created during play. |
+
+On Play, `GameManager.createLambdaInstancesFromScene()` merges project-level and
+scene-level instance lists. Project-level entries win when both lists contain
+the same lambda type. It then creates enabled instances and traverses the scene
+to register object components with `autoApply: true`.
+
+Object-attached lambdas are the normal path for batched work: every registered
+object contributes one component-data row to a shared instance. Global/project
+lambdas are useful when the system needs shared state, events, or delayed
+registration before it owns any objects.
+
+### Registering objects from behavior code
+
+Behavior code can query and register lambda instances through `this.erth`:
+
+```js
+this.onStart = function () {
+    const [gravity] = this.erth.lambdas.getInstancesByType("gravity");
+    if (!gravity) return;
+
+    this.erth.lambdas.registerObject(gravity.uuid, this.target, {
+        mass: 1,
+        drag: 0.1,
+        useGravity: true
+    });
+};
+
+this.onStop = function () {
+    const [gravity] = this.erth.lambdas.getInstancesByType("gravity");
+    if (gravity) this.erth.lambdas.deregisterObject(gravity.uuid, this.target);
+};
+```
+
+Use this for objects created during play or for components with Auto Apply off.
+If the lambda is already attached in the object UI with Auto Apply on, avoid
+registering it again from code.
+
+### Events and manual apply
+
+The Trigger behavior can apply, activate/deactivate, set component fields, or
+send events to lambda instances. Lambda code receives those through
+`onEvent(msg, data)`.
+
+For components that should run only on demand, keep Auto Apply off and use a
+trigger or behavior to:
+
+1. Register the object with the instance.
+2. Update any component data needed for that action.
+3. Call `lambdaInstance.apply(deltaTime)` once, or keep the component active
+   until another event deregisters it.
+
+Do not call `apply()` on always-on auto-apply lambdas as part of your normal
+frame loop; the scheduler already owns those updates.
 
 ---
 

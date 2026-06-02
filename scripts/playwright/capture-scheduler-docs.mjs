@@ -52,11 +52,34 @@ async function dismissTutorialModal() {
     }
 }
 
-async function openRenderingPanel() {
+async function openProjectTab() {
     await page.locator('[data-testid="leftpanel-tab-project"]').first().click({timeout: 5000, force: true});
     await page.waitForTimeout(500);
-    await page.locator('.ProjectTab').locator('text=Rendering & Performance').first().click({timeout: 5000, force: true});
-    await page.waitForSelector('text=Quality Presets', {timeout: 8000});
+    await page.waitForSelector('.ProjectTab', {timeout: 5000});
+}
+
+async function openProjectPanel(label, waitForText) {
+    await openProjectTab();
+    await page.locator('.ProjectTab').locator(`text=${label}`).first().click({timeout: 5000, force: true});
+    await page.waitForSelector(`text=${waitForText}`, {timeout: 8000});
+}
+
+async function openRenderingPanel() {
+    await openProjectPanel("Rendering & Performance", "Quality Presets");
+}
+
+async function screenshotViewport(filename) {
+    await page.mouse.move(80, 80).catch(() => {});
+    await page.waitForTimeout(500);
+    await page.screenshot({
+        path: resolve(outDir, filename),
+    });
+    console.log(`captured docs/assets/${filename}`);
+}
+
+async function screenshotProjectPanel(label, waitForText, filename) {
+    await openProjectPanel(label, waitForText);
+    await screenshotRightPanel(filename);
 }
 
 async function screenshotRightPanel(filename) {
@@ -69,27 +92,15 @@ async function screenshotRightPanel(filename) {
     console.log(`captured docs/assets/${filename}`);
 }
 
-async function clickPresetClose() {
-    const viewport = page.viewportSize() || {width: 1440, height: 1000};
-    await page.mouse.click(viewport.width - 42, 255).catch(() => {});
-    await page.keyboard.press("Escape").catch(() => {});
-    await page.waitForTimeout(300);
+async function captureWhereToFindSettings() {
+    await openProjectTab();
+    await screenshotViewport("editor-project-tab-map.png");
+    await screenshotProjectPanel("Project Settings", "Project Details", "project-settings-overview.png");
 }
 
-async function scrollPanel(deltaY) {
-    const viewport = page.viewportSize() || {width: 1440, height: 1000};
-    await page.mouse.move(viewport.width - 220, 500);
-    await page.mouse.wheel(0, deltaY);
-    await page.waitForTimeout(700);
-}
-
-try {
-    await page.goto(`${baseUrl}/create/project`, {waitUntil: "domcontentloaded", timeout: 30000});
-    await page.waitForLoadState("networkidle", {timeout: 15000}).catch(() => {});
-    await dismissBootstrapModal();
-    await page.waitForTimeout(10000);
-    await dismissTutorialModal();
-    await openRenderingPanel();
+async function captureRenderingPanel() {
+    await page.locator('.ProjectTab').locator('text=Rendering & Performance').first().click({timeout: 5000, force: true});
+    await page.waitForSelector('text=Quality Presets', {timeout: 8000});
 
     await screenshotRightPanel("scheduler-settings-overview.png");
 
@@ -112,6 +123,32 @@ try {
         await page.waitForTimeout(500);
     }
     await screenshotRightPanel("scheduler-lambda-explorer.png");
+}
+
+async function scrollPanel(deltaY) {
+    const viewport = page.viewportSize() || {width: 1440, height: 1000};
+    await page.mouse.move(viewport.width - 220, 500);
+    await page.mouse.wheel(0, deltaY);
+    await page.waitForTimeout(700);
+}
+
+async function clickPresetClose() {
+    const viewport = page.viewportSize() || {width: 1440, height: 1000};
+    await page.mouse.click(viewport.width - 42, 255).catch(() => {});
+    await page.keyboard.press("Escape").catch(() => {});
+    await page.waitForTimeout(300);
+}
+
+try {
+    await page.goto(`${baseUrl}/create/project`, {waitUntil: "domcontentloaded", timeout: 30000});
+    await page.waitForLoadState("networkidle", {timeout: 15000}).catch(() => {});
+    await dismissBootstrapModal();
+    await page.waitForTimeout(10000);
+    await dismissTutorialModal();
+    await captureWhereToFindSettings();
+    await captureRenderingPanel();
+    await screenshotProjectPanel("Default Scene", "Ambient Lighting", "default-scene-settings.png");
+    await screenshotProjectPanel("Directional Light", "Shadow Parameters", "directional-light-settings.png");
 } finally {
     await browser.close();
 }

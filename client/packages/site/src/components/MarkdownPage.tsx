@@ -20,6 +20,10 @@ import serverSideStorageMd from "../../../../../docs/server-side-storage.md?raw"
 import uikitApiMd from "../../../../../docs/uikit-api.md?raw";
 import readmeMd from "../../../../../README.md?raw";
 import contributingMd from "../../../../../CONTRIBUTING.md?raw";
+import defaultSceneSettingsImg from "../../../../../docs/assets/default-scene-settings.png";
+import directionalLightSettingsImg from "../../../../../docs/assets/directional-light-settings.png";
+import editorProjectTabMapImg from "../../../../../docs/assets/editor-project-tab-map.png";
+import projectSettingsOverviewImg from "../../../../../docs/assets/project-settings-overview.png";
 import schedulerBehaviorPerformanceImg from "../../../../../docs/assets/scheduler-behavior-performance.png";
 import schedulerControlsImg from "../../../../../docs/assets/scheduler-controls.png";
 import schedulerLambdaExplorerImg from "../../../../../docs/assets/scheduler-lambda-explorer.png";
@@ -44,6 +48,10 @@ const SOURCES: Record<string, string> = {
 };
 
 const IMAGE_SOURCES: Record<string, string> = {
+    "docs/assets/default-scene-settings.png": defaultSceneSettingsImg,
+    "docs/assets/directional-light-settings.png": directionalLightSettingsImg,
+    "docs/assets/editor-project-tab-map.png": editorProjectTabMapImg,
+    "docs/assets/project-settings-overview.png": projectSettingsOverviewImg,
     "docs/assets/scheduler-behavior-performance.png": schedulerBehaviorPerformanceImg,
     "docs/assets/scheduler-controls.png": schedulerControlsImg,
     "docs/assets/scheduler-lambda-explorer.png": schedulerLambdaExplorerImg,

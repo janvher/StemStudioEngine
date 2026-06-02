@@ -80,7 +80,7 @@ try {
     await page.waitForURL(/\/docs\/scheduler-and-editor-settings/, {timeout: 5000});
     await page.waitForSelector('.docs-content h1:has-text("Scheduler and Editor Performance Settings")', {timeout: 6000});
     const schedulerImages = await page.locator(".docs-content img").count();
-    assert("scheduler page renders screenshots", schedulerImages >= 3, `<img> count=${schedulerImages}`);
+    assert("scheduler page renders screenshots", schedulerImages >= 9, `<img> count=${schedulerImages}`);
 
     // BYOK page — confirm at least one heading rendered + GitHub-rewritten link
     await page.locator('.docs-sidebar a:has-text("BYOK")').first().click();
