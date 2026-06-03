@@ -1,10 +1,20 @@
-# Playground StemScript
+# Stem Script
 
-StemScript is the command format used by the Script Tool terminal, scene
-exports, and the browser-direct playground copilot. A `.stemscript` file is a
-plain-text list of commands that can build or modify a StemStudio scene:
-create primitives, import assets, attach behaviors, configure cameras and
-lighting, set physics, and export a replayable bundle.
+Stem Script is the editor DSL for describing scene changes in StemStudio. It is
+not a general-purpose scripting language. Each line resolves to an immutable
+command intent: a command name plus normalized parameters. That intent crosses
+the editor/engine boundary through `CommandsRegistry` and then executes in the
+engine through a registered handler.
+
+That command boundary is the important part. Copilot, the Script Tool terminal,
+scene export, scene import, and validation all speak the same command contract.
+The handler may mutate the scene, import an asset, or configure runtime state,
+but the Stem Script line itself is a stable request that can be inspected,
+validated, replayed, saved, reviewed, and diffed.
+
+A `.stemscript` file is a plain-text sequence of those editor commands. It can
+build or modify a scene: create primitives, import assets, attach behaviors,
+configure cameras and lighting, set physics, and export a replayable bundle.
 
 Existing example games in this format live in
 [Stem-Studio/Games-StemScript](https://github.com/Stem-Studio/Games-StemScript).
@@ -13,10 +23,10 @@ Use that repository when you want complete game folders with a root
 
 ---
 
-## Put the playground in StemScript mode
+## Put StemStudio in Stem Script mode
 
 The public playground opens the editor at `/dashboard?mode=playground`. From
-there you can use StemScript in three ways:
+there:
 
 1. Open **Playground** from the public site, or open the editor route with
    `?mode=playground`.
@@ -29,7 +39,7 @@ there you can use StemScript in three ways:
 5. Use `exit` to leave Script Tool mode and return to Copilot chat.
 
 The Script Tool is available to project owners/admin users. In playground
-copilot chat, the AI can also return StemScript directly; the editor validates
+copilot chat, the AI can also return Stem Script directly; the editor validates
 and applies those commands through the same command registry.
 
 On the dashboard, the **Import stemscript folder** banner is the fastest path
@@ -43,7 +53,7 @@ store.
 
 ## File shape and syntax
 
-StemScript is line-oriented:
+Stem Script is line-oriented. Each non-comment line becomes one command intent:
 
 ```stemscript
 # Comments start with #
@@ -70,9 +80,41 @@ Rules to remember:
 | Objects and arrays | Config blocks use JSON-like values, for example `config={shape:"box",mass:0}` or `phrases=["tree","forest"]`. |
 | Shorthand and raw commands | Shorthand such as `add box` maps to registry commands such as `create_primitive`. Advanced scripts can call supported raw registry names directly. |
 
+The parser does not run arbitrary JavaScript. It tokenizes the line, resolves
+aliases such as `add box` or `physics set`, normalizes parameters, and sends the
+resulting command object to the editor command registry. This keeps AI output,
+manual terminal input, imports, and exported bundles on the same engine-facing
+API.
+
 Run `help` inside the Script Tool for the live command list. Run
 `help <command>` or `help <category>` for parameter details, for example
 `help add`, `help behavior`, `help scene`, or `help import`.
+
+---
+
+## Command boundary model
+
+Stem Script has four layers:
+
+| Layer | Role |
+|---|---|
+| DSL text | The user-facing language: `add box name=Crate position=0,1,0`. |
+| Parsed command intent | An immutable command name and parameter payload, such as `create_primitive` with `{type:"box", name:"Crate", position:{x:0,y:1,z:0}}`. |
+| Command registry | The engine-facing contract that declares supported commands, parameter definitions, and handlers. |
+| Engine handler | The implementation that performs the mutation: add an object, update material state, import an asset, attach a behavior, or read scene state. |
+
+This gives Stem Script two useful properties:
+
+| Property | Why it matters |
+|---|---|
+| Replayability | The same command file can be executed by the terminal, import flow, export replay, or browser-direct copilot. |
+| Reviewability | A command intent is narrower than arbitrary code, so generated changes can be inspected before or after they cross into the engine. |
+| Compatibility | Shorthand syntax can evolve while raw registry command names preserve a stable engine boundary. |
+| Validation | Read-only getters and admin check/test commands can derive probes from mutation commands and compare the scene after execution. |
+
+Think of Stem Script as the authoring protocol for the editor. Behavior code and
+lambda code still use JavaScript for runtime logic, but Stem Script is the DSL
+for declaring editor operations and asset/project reconstruction steps.
 
 ---
 
@@ -159,7 +201,7 @@ emitting those commands for automatic execution.
 
 ## Practical patterns
 
-Use StemScript for repeatable scene construction:
+Use Stem Script for repeatable scene construction:
 
 | Goal | Pattern |
 |---|---|

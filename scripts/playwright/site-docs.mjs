@@ -75,20 +75,20 @@ try {
     const archUrl = page.url();
     assert("URL is /docs/architecture", /\/docs\/architecture$/.test(archUrl), archUrl);
 
-    // Playground StemScript page documents the terminal/script surface.
-    await page.locator('.docs-sidebar a:has-text("Playground StemScript")').first().click();
-    await page.waitForURL(/\/docs\/playground-stemscript/, {timeout: 5000});
-    await page.waitForSelector('.docs-content h1:has-text("Playground StemScript")', {timeout: 6000});
-    const stemscriptText = await page.locator(".docs-content").innerText();
+    // Stem Script page documents the terminal/script surface.
+    await page.locator('.docs-sidebar a:has-text("Stem Script")').first().click();
+    await page.waitForURL(/\/docs\/stem-script/, {timeout: 5000});
+    await page.waitForSelector('.docs-content h1:has-text("Stem Script")', {timeout: 6000});
+    const stemScriptText = await page.locator(".docs-content").innerText();
     assert(
-        "StemScript page links existing game examples",
-        /Games-StemScript/.test(stemscriptText),
-        stemscriptText.slice(0, 180),
+        "Stem Script page links existing game examples",
+        /Games-StemScript/.test(stemScriptText),
+        stemScriptText.slice(0, 180),
     );
     assert(
-        "StemScript page documents script mode",
-        /\/script/.test(stemscriptText) && /Script Tool/.test(stemscriptText),
-        stemscriptText.slice(0, 220),
+        "Stem Script page documents script mode",
+        /\/script/.test(stemScriptText) && /Script Tool/.test(stemScriptText),
+        stemScriptText.slice(0, 220),
     );
 
     // Scheduler/settings page added for editor performance controls.

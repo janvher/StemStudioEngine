@@ -140,7 +140,7 @@ If all three print a version, you're ready for [Quick start](#quick-start).
 
 - [Architecture overview](./docs/architecture.md) — how the editor, AI server, and multiplayer sidecar fit together.
 - [Scheduler & editor settings](./docs/scheduler-and-editor-settings.md) — frame scheduler architecture, quality presets, performance controls, and profiling tools.
-- [Playground StemScript](./docs/playground-stemscript.md) — run and import `.stemscript` games, use Script Tool mode, and see the command surface.
+- [Stem Script](./docs/stem-script.md) — the editor DSL, command-contract boundary, Script Tool mode, and `.stemscript` game imports.
 - [Built-in behaviors](./docs/built-in-behaviors.md) — the behavior model, the full catalog, and how to attach or author one.
 - [Lambdas (ECS layer)](./docs/lambdas.md) — batched, dependency-scheduled systems over many objects, with examples.
 - [Import packs](./docs/import-packs.md) — curated reusable script modules (`noise`, `prng`, `uikit-dual-mode`) and the `@import` workflow.
@@ -149,7 +149,7 @@ If all three print a version, you're ready for [Quick start](#quick-start).
 - [Exporting a game](./docs/exporting-a-game.md) — package a Player-only static site.
 - [Contributing](./CONTRIBUTING.md) — development workflow and PR guidelines.
 
-Existing games in StemScript format live in
+Existing games in Stem Script format live in
 [Stem-Studio/Games-StemScript](https://github.com/Stem-Studio/Games-StemScript).
 Deeper engine docs (behaviors lifecycle, lambdas/ECS, physics, scheduler,
 rendering) live under `docs/` in this repo.

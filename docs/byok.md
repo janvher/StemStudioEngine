@@ -73,13 +73,13 @@ The AI server is a thin proxy. It does not modify prompts or responses (apart fr
 
 In playground mode, the Copilot panel uses the browser-direct path instead:
 the selected Anthropic, OpenAI/Codex, or Gemini key is read from the local BYOK
-store, the browser calls the provider directly, and the returned StemScript is
-applied through the in-editor command registry. The playground copilot rejects
-file/import/export commands so generation stays live in the browser instead of
-creating filesystem bundles.
+store, the browser calls the provider directly, and the returned Stem Script is
+parsed into immutable command intents and applied through the in-editor command
+registry. The playground copilot rejects file/import/export commands so
+generation stays live in the browser instead of creating filesystem bundles.
 
-See [Playground StemScript](./playground-stemscript.md) for the Script Tool
-workflow, command categories, and links to existing StemScript-format games.
+See [Stem Script](./stem-script.md) for the Script Tool workflow, command
+categories, and links to existing Stem Script game folders.
 
 ## Key storage details
 
