@@ -78,6 +78,9 @@ applied through the in-editor command registry. The playground copilot rejects
 file/import/export commands so generation stays live in the browser instead of
 creating filesystem bundles.
 
+See [Playground StemScript](./playground-stemscript.md) for the Script Tool
+workflow, command categories, and links to existing StemScript-format games.
+
 ## Key storage details
 
 **Server side:** keys exist only in process memory. Restarting `ai-server` clears them. Env-var keys are re-read on next start; BYOK keys are re-submitted by the editor on the next request.
