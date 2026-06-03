@@ -11,6 +11,7 @@ this.erth.ai
 this.erth.asset
 this.erth.camera
 this.erth.object
+this.erth.viewport
 this.erth.scene
 this.erth.store
 this.erth.behaviors
@@ -102,6 +103,19 @@ this.onStart = async function () {
 ```ts
 this.update = function () {
   this.erth.camera.lookAt(0, 1, 0);
+};
+```
+
+`erth.viewport` exposes the current visible runtime rect after Stem Studio host chrome is accounted for. It is the right source for DOM overlays, screen-space markers, or custom UI camera alignment that must avoid the player nav or registered host overlays such as the player watermark.
+
+```ts
+const safe = this.erth.viewport.getSafeArea();
+// { left, top, right, bottom, width, height, insetLeft, insetTop, insetRight, insetBottom }
+
+this.onStart = function () {
+  const safe = this.erth.viewport.getSafeArea();
+  this.hud.style.left = `${safe.left + safe.width / 2}px`;
+  this.hud.style.bottom = `${safe.insetBottom + 16}px`;
 };
 ```
 

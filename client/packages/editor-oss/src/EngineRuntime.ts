@@ -83,6 +83,7 @@ import type {RamPanelManager} from "./utils/RamPanelManager";
 import {SceneLoadProfiler} from "./utils/SceneLoadProfiler";
 import {findObjectsInRectangle} from "./utils/SelectionUtils";
 import Storage from "./utils/Storage";
+import {getViewportSafeArea, type ViewportSafeArea} from "./utils/viewportSafeArea";
 
 // TODO: Move RectAreaLightTexturesLib initialization to appropriate place
 RectAreaLightNode.setLTC(RectAreaLightTexturesLib.init());
@@ -110,6 +111,7 @@ export const BILLBOARD_BEHAVIOR_ID = "billboard";
 export const CHARACTER_BEHAVIOR_ID = "character";
 export const ENEMY_BEHAVIOR_ID = "enemy";
 export const NPC_BEHAVIOR_ID = "npc";
+export type {ViewportSafeArea} from "./utils/viewportSafeArea";
 
 // Application have a lot of responsibilities, which can lead to high complexity and low maintainability.
 // Consider splitting responsibilities to different classes or modules (e.g., SceneManager, ModeManager, etc.)
@@ -117,6 +119,8 @@ export class EngineRuntime extends AppRuntime implements RuntimeContext {
     static isSandboxViewer() {
         return window.location.pathname.indexOf("/sandbox/") !== -1;
     }
+
+    private viewportSafeAreaElements = new Map<string, HTMLElement>();
 
     // Make sure that we have clear interfaces instead of using field directly to assign values
     // This will help reduce complexity and improve maintainability
@@ -215,6 +219,19 @@ export class EngineRuntime extends AppRuntime implements RuntimeContext {
     }
     get playerEvent(): PlayerEvent | null {
         return this.playerSession?.playerEvent ?? null;
+    }
+
+    getViewportSafeArea(): ViewportSafeArea {
+        return getViewportSafeArea(this.viewport, Array.from(this.viewportSafeAreaElements.values()));
+    }
+
+    registerViewportSafeAreaElement(id: string, element: HTMLElement | null): void {
+        if (!id) return;
+        if (element) {
+            this.viewportSafeAreaElements.set(id, element);
+            return;
+        }
+        this.viewportSafeAreaElements.delete(id);
     }
     get aiWorldControl(): AiWorldControl | null {
         return this.playerSession?.aiWorldControl ?? null;
