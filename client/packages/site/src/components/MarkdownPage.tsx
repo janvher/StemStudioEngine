@@ -14,6 +14,7 @@ import gameObjectAndGameManagerApiMd from "../../../../../docs/gameobject-and-ga
 import importPacksMd from "../../../../../docs/import-packs.md?raw";
 import lambdasMd from "../../../../../docs/lambdas.md?raw";
 import multiplayerMd from "../../../../../docs/multiplayer.md?raw";
+import stemScriptMd from "../../../../../docs/stem-script.md?raw";
 import runtimeApiMd from "../../../../../docs/runtime-api.md?raw";
 import schedulerAndEditorSettingsMd from "../../../../../docs/scheduler-and-editor-settings.md?raw";
 import serverSideStorageMd from "../../../../../docs/server-side-storage.md?raw";
@@ -39,6 +40,7 @@ const SOURCES: Record<string, string> = {
     "repo-docs:import-packs.md": importPacksMd,
     "repo-docs:lambdas.md": lambdasMd,
     "repo-docs:multiplayer.md": multiplayerMd,
+    "repo-docs:stem-script.md": stemScriptMd,
     "repo-docs:runtime-api.md": runtimeApiMd,
     "repo-docs:scheduler-and-editor-settings.md": schedulerAndEditorSettingsMd,
     "repo-docs:server-side-storage.md": serverSideStorageMd,
