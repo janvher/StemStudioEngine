@@ -65,6 +65,24 @@ interface StemStore {
     readonly size: number;
 }
 
+interface StemViewportSafeArea {
+    left: number;
+    top: number;
+    right: number;
+    bottom: number;
+    width: number;
+    height: number;
+    insetLeft: number;
+    insetTop: number;
+    insetRight: number;
+    insetBottom: number;
+}
+
+interface StemViewport {
+    /** Safe runtime viewport bounds in window coordinates. */
+    getSafeArea(): StemViewportSafeArea;
+}
+
 /**
  * Erth interface providing access to game subsystems.
  * Access via this.erth in behavior scripts.
@@ -85,6 +103,9 @@ interface StemEngineInterface {
      * if (this.erth.store.has("playerScore")) { ... }
      */
     store: StemStore;
+
+    /** Measured visible runtime viewport for overlay-safe DOM and screen-space UI. */
+    viewport: StemViewport;
 
     /** Asset subsystem for loading images, audio, video, and models from the asset library */
     asset: {
@@ -360,6 +381,9 @@ interface GameManager {
     isWinner(): boolean;
     /** Check if game is started */
     isGameStarted(): boolean;
+
+    /** Safe runtime viewport bounds in window coordinates. */
+    getViewportSafeArea(): StemViewportSafeArea;
 
     /** Add object to scene */
     addObject(object: THREE.Object3D, parent?: THREE.Object3D): Promise<void>;

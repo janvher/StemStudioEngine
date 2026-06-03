@@ -23,6 +23,10 @@ import EngineRuntime from "@stem/editor-oss/EngineRuntime";
 import { createForeignLambdaView } from "../../lambdas/Lambda";
 import GameManager from "../game/GameManager";
 
+const createViewportInterface = (game: GameManager) => ({
+    getSafeArea: () => game.getViewportSafeArea(),
+});
+
 const createLambdasInterface = (game: GameManager): StemLambdas => {
     return {
         getInstance: (instanceId: string) => {
@@ -66,6 +70,7 @@ export const createStemEngineInterface = (game: GameManager, globalStore: Global
         team: createTeamInterface(),
         pool: createPoolInterface(),
         object: createObjectInterface(game),
+        viewport: createViewportInterface(game),
         scene: createSceneInterface(game),
         store: createStoreInterface(globalStore),
         lambdas: createLambdasInterface(game),
@@ -92,6 +97,7 @@ export const createEditorErthInterface = (engine: EngineRuntime): StemEngineInte
         ai: { generate: () => notAvailable('ai') } as any,
         camera: { setTarget: () => notAvailable('camera'), getPosition: () => notAvailable('camera') } as any,
         object: { create: () => notAvailable('object'), destroy: () => notAvailable('object') } as any,
+        viewport: { getSafeArea: () => engine.getViewportSafeArea() },
         scene: { getObjects: () => notAvailable('scene') } as any,
         lambdas: { getInstance: () => notAvailable('lambdas') } as any,
         behaviors: { find: () => notAvailable('behaviors') } as any,

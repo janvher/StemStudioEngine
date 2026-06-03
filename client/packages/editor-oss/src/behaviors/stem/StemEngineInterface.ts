@@ -16,6 +16,15 @@ import { StemStore } from './store/StemStore';
 import { StemTeam } from './team/StemTeam';
 import { StemTween } from './tween/StemTween';
 import type { Lambda } from '../../lambdas/Lambda';
+import type {ViewportSafeArea} from '../../utils/viewportSafeArea';
+
+export interface StemViewport {
+    /**
+     * Safe viewport rect in window coordinates.
+     * Useful for DOM overlays or UI projection that must avoid host chrome.
+     */
+    getSafeArea(): ViewportSafeArea;
+}
 
 /**
  * Lambda ECS system access for behaviors.
@@ -133,6 +142,8 @@ export interface StemEngineInterface {
     camera: StemCamera;
     /** 3D object creation from Three.js objects. */
     object: StemObject;
+    /** Measured visible runtime viewport for overlay-safe DOM and screen-space UI. */
+    viewport: StemViewport;
     /** Scene graph manipulation (adding objects). */
     scene: StemScene;
     /**

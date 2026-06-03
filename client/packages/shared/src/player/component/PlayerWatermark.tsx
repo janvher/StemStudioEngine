@@ -1,4 +1,8 @@
+import {useEffect, useRef} from "react";
 import styled from "styled-components";
+
+import type EngineRuntime from "../../EngineRuntime";
+import global from "../../global";
 
 const Bottom = styled.nav`
     position: fixed;
@@ -23,8 +27,21 @@ const Wordmark = styled.div`
     }
 `;
 
-export const PlayerWatermark = () => (
-    <Bottom>
-        <Wordmark>Stem Studio</Wordmark>
-    </Bottom>
-);
+export const PlayerWatermark = () => {
+    const rootRef = useRef<HTMLElement | null>(null);
+
+    useEffect(() => {
+        const app = global.app as EngineRuntime | undefined;
+        app?.registerViewportSafeAreaElement("player-watermark", rootRef.current);
+
+        return () => {
+            app?.registerViewportSafeAreaElement("player-watermark", null);
+        };
+    }, []);
+
+    return (
+        <Bottom ref={rootRef}>
+            <Wordmark>Stem Studio</Wordmark>
+        </Bottom>
+    );
+};

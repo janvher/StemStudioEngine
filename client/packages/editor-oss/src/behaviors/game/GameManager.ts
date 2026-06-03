@@ -90,6 +90,7 @@ import AIConversationManager from "../packs/aiNpc/AiConversationManager";
 import {IMultiplayerState} from "../state/IMultiplayerState";
 import UIKitPointerEvents from "../uikit/UIKitPointerEvents";
 import {isLegacyBehaviorId} from "../util";
+import type {ViewportSafeArea} from "../../utils/viewportSafeArea";
 
 export interface IControl {
     attachPlayerObject(player: Object3D, characterOptions: CharacterOptionsInterface): Promise<void>;
@@ -203,6 +204,10 @@ class GameManager {
         if (renderer) {
             this.objectPicker?.updateRenderer(renderer);
         }
+    }
+
+    public getViewportSafeArea(): ViewportSafeArea {
+        return this.engine.getViewportSafeArea();
     }
 
     /**
