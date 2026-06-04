@@ -1,8 +1,0 @@
-<svg width="16" height="17" viewBox="0 0 16 17" fill="none" xmlns="http://www.w3.org/2000/svg">
-<defs>
-<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-<feDropShadow dx="0" dy="1" stdDeviation="1" flood-color="#000" flood-opacity="0.4"/>
-</filter>
-</defs>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M12.416 3.87604C12.7607 4.10581 12.8538 4.57146 12.624 4.9161L7.62404 12.4161C7.4994 12.6031 7.2975 12.7243 7.0739 12.7464C6.8503 12.7686 6.62855 12.6893 6.46967 12.5304L3.46967 9.53041C3.17678 9.23752 3.17678 8.76264 3.46967 8.46975C3.76256 8.17686 4.23744 8.17686 4.53033 8.46975L6.88343 10.8229L11.376 4.08405C11.6057 3.73941 12.0714 3.64628 12.416 3.87604Z" fill="#4a0b8c" stroke="#4a0b8c" stroke-width="0.75" filter="url(#shadow)"/>
-</svg>

@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { AdditiveBlending, NormalBlending } from "three";
 import { ParticleSystem } from "three.quarks";
 
-import { Item } from "src/editor/assets/v2/common/BasicCombobox/BasicCombobox";
+import { Item } from "@stem/editor-oss/editor/assets/v2/common/BasicCombobox/BasicCombobox";
 
 import { blendingOptions, booleanOptions } from "./ParticleRendererSection";
 import { SelectRow } from "../../../common/SelectRow";

@@ -7,7 +7,7 @@ import AppGlobalContextProvider from "./context/AppGlobalContext";
 import AuthorizationContextProvider from "./context/AuthorizationContext";
 import HomepageContextProvider from "./context/HomepageContext";
 import {OssAssetRegistryProvider} from "./context/OssAssetRegistryContext";
-import {SceneRevisionsModalRenderer} from "./editor/assets/v2/SceneRevisionsModalRenderer/SceneRevisionsModalRenderer";
+import {SceneRevisionsModalRenderer} from "@stem/editor-oss/editor/assets/v2/SceneRevisionsModalRenderer/SceneRevisionsModalRenderer";
 import {queryClient} from "./queryClient";
 import {AppUpdateManager} from "./update/AppUpdateManager";
 import {OfflineIndicator} from "./update/OfflineIndicator";

@@ -15,7 +15,7 @@ import AppGlobalContextProvider from "./context/AppGlobalContext";
 import AuthorizationContextProvider from "./context/AuthorizationContext";
 import HomepageContextProvider from "./context/HomepageContext";
 import {OssAssetRegistryProvider} from "./context/OssAssetRegistryContext";
-import {OSSBootstrapModal} from "./editor/assets/v2/OSSBootstrapModal/OSSBootstrapModal";
+import {OSSBootstrapModal} from "@stem/editor-oss/editor/assets/v2/OSSBootstrapModal/OSSBootstrapModal";
 import {ensureProjectStoreRehydrated, isOSSBootstrapped} from "./persistence";
 import {applyPlaygroundModeAttribute} from "./playgroundMode";
 import "./playgroundMode.css";

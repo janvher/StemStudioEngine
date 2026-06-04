@@ -1,7 +1,7 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import type {Object3D} from "three";
 
-import type {FileData} from "src/editor/assets/v2/types/file";
+import type {FileData} from "@stem/editor-oss/editor/assets/v2/types/file";
 
 import type {IGameMapping} from "@stem/network/api/gameMapping";
 import {PAGES} from "../editor/assets/v2/CreateDashboard/constants";
