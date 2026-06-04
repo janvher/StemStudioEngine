@@ -40,6 +40,7 @@ import {patchPassNode} from "./postprocessing/patchPassNode";
 import {patchShadowNode} from "./postprocessing/patchShadowNode";
 import {outline} from "./postprocessing/SharedDepthOutlineNode";
 import {disposeSparkComposite, ensureSparkComposite} from "./SparkCompositeBridge";
+import {createSparkSceneLightingBridge} from "./SparkLightingBridge";
 // TODO(@stem/editor-oss migration): these subsystems still live in
 // @web-shared. They will move into editor-oss in a follow-up sub-step; the
 // @web-shared alias is allowed during the migration window.
@@ -171,6 +172,7 @@ class EffectRenderer extends BaseRenderer {
         this.height = 0;
         this.pixelRatio = 1;
         this.sparkComposite = null;
+        this.sparkLighting = null;
     }
 
     /**
@@ -209,6 +211,8 @@ class EffectRenderer extends BaseRenderer {
         // Initialize cached canvas size synchronously before the first render
         const canvas = this.renderer && this.renderer.domElement ? this.renderer.domElement : renderer?.domElement;
         this.sparkComposite = ensureSparkComposite(scene, renderer, helperRoot || scene);
+        this.sparkLighting?.dispose();
+        this.sparkLighting = createSparkSceneLightingBridge(scene);
         try {
             const splatSettings = this.scene?.userData?.rendering?.splat || {};
             if (typeof this.sparkComposite?.setSparkOptions === "function") {
@@ -1449,6 +1453,8 @@ class EffectRenderer extends BaseRenderer {
      * Render
      */
     render() {
+        this.sparkLighting?.update();
+
         if (!this.ready || !this.renderPipeline) {
             // If background is set, we need to clear buffers manually
             if (this.scene.background) {
@@ -1652,6 +1658,8 @@ class EffectRenderer extends BaseRenderer {
 
         this.scene = null;
         this.camera = null;
+        this.sparkLighting?.dispose();
+        this.sparkLighting = null;
         disposeSparkComposite(this.sparkComposite);
         this.sparkComposite = null;
         this.renderer = null;

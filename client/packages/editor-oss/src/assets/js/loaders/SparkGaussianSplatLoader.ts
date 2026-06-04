@@ -49,7 +49,7 @@ class SparkGaussianSplatLoader extends BaseLoader {
     async load(url: string, options?: SparkGaussianSplatLoaderOptions): Promise<Object3D> {
         const resolvedUrl = this.resolveUrl(url);
         const packedSplats = await this.getPackedSplats(resolvedUrl, options);
-        const mesh = new SplatMesh({ packedSplats });
+        const mesh = new SplatMesh({ packedSplats, editable: true });
         await mesh.initialized;
 
         mesh.userData.type = 'GaussianSplat';
