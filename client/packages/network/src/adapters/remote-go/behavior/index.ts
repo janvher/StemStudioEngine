@@ -7,7 +7,7 @@ import {
     resolveAssetRevisionId,
     type ReadonlyAssetResolutionContext,
 } from "@web-shared/asset-management/AssetResolutionContext";
-import {isSceneBehaviorsMigrated} from "@web-shared/editor/behaviors/LegacyBehaviorMigration";
+import {isSceneBehaviorsMigrated} from "@stem/editor-oss/editor/behaviors/LegacyBehaviorMigration";
 import global from "@web-shared/global";
 import type {LambdaConfig} from "@web-shared/lambdas/Lambda";
 import Ajax from "@web-shared/utils/Ajax";

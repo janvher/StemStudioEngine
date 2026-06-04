@@ -19,7 +19,7 @@ import ProjectStateContextProvider from "./context/ProjectStateContext";
 import PublishingContextProvider from "./context/PublishingContext";
 import {SceneAssetResolutionProvider} from "./context/SceneAssetResolutionContext";
 import UIStateContextProvider from "./context/UIStateContext";
-import {SceneRevisionsModalRenderer} from "./editor/assets/v2/SceneRevisionsModalRenderer/SceneRevisionsModalRenderer";
+import {SceneRevisionsModalRenderer} from "@stem/editor-oss/editor/assets/v2/SceneRevisionsModalRenderer/SceneRevisionsModalRenderer";
 import {queryClient} from "./queryClient";
 import {LoadingAnimation} from "./ui/progress/LoadingAnimation";
 import {IS_OSS} from "./buildMode";

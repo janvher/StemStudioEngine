@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 import {resolveAssetId, resolveAssetRevisionId} from "@web-shared/asset-management/AssetResolutionContext";
-import {fetchAssetImageDerivative} from "@web-shared/editor/asset-management/hooks/assets";
+import {fetchAssetImageDerivative} from "@stem/editor-oss/editor/asset-management/hooks/assets";
 import {DetectDevice} from "@web-shared/utils/DetectDevice";
 import BaseSerializer from "../BaseSerializer";
 

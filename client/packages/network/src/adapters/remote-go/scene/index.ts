@@ -9,12 +9,12 @@ import {
     getActiveCopilotPreviewPersistence,
     isCopilotPreviewSceneSaveBlocked,
 } from "@web-shared/agent/copilotPreviewPersistence";
-import {SceneAssetSource} from "@web-shared/editor/asset-management/AssetSource";
-import {emitScenePublishStateUpdated} from "@web-shared/editor/asset-management/hooks/publish";
-import {PLACEHOLDER_PREFIX} from "@web-shared/editor/assets/v2/CreateDashboard/GameOverview/placeholderThumbnails";
-import {FileData} from "@web-shared/editor/assets/v2/types/file";
-import type Editor from "@web-shared/editor/Editor";
-import {saveStemEditor} from "@web-shared/editor/stem-editor/saveStemEditor";
+import {SceneAssetSource} from "@stem/editor-oss/editor/asset-management/AssetSource";
+import {emitScenePublishStateUpdated} from "@stem/editor-oss/editor/asset-management/hooks/publish";
+import {PLACEHOLDER_PREFIX} from "@stem/editor-oss/editor/assets/v2/CreateDashboard/GameOverview/placeholderThumbnails";
+import {FileData} from "@stem/editor-oss/editor/assets/v2/types/file";
+import type Editor from "@stem/editor-oss/editor/Editor";
+import {saveStemEditor} from "@stem/editor-oss/editor/stem-editor/saveStemEditor";
 import global from "@web-shared/global";
 import {OSS_LOCAL_USER_ID} from "@web-shared/ossUser";
 import Converter from "@web-shared/serialization/Converter";

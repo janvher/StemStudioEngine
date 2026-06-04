@@ -2,7 +2,7 @@ import * as THREE from "three";
 import {CSS3DObject, CSS3DSprite} from "three/examples/jsm/renderers/CSS3DRenderer.js";
 
 import {getAssetResolutionContext} from "@web-shared/asset-management/AssetResolutionContext";
-import {applyMaterialSettingsToObject} from "@web-shared/editor/assets/v2/materials/materialUtils";
+import {applyMaterialSettingsToObject} from "@stem/editor-oss/editor/assets/v2/materials/materialUtils";
 import global from "@web-shared/global";
 import {PhysicsUtil} from "@web-shared/physics/PhysicsUtil";
 import BaseSerializer from "../BaseSerializer";

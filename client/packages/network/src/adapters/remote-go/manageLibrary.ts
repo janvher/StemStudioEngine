@@ -1,4 +1,4 @@
-import {TABS} from "@web-shared/editor/assets/v2/AssetsLibrary/types";
+import {TABS} from "@stem/editor-oss/editor/assets/v2/AssetsLibrary/types";
 import {showToast} from "@web-shared/showToast";
 import Ajax from "@web-shared/utils/Ajax";
 import {backendUrlFromPath} from "@web-shared/utils/UrlUtils";

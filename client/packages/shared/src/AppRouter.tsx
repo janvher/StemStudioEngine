@@ -8,7 +8,7 @@ import {RouteErrorBoundary} from "./RouteErrorBoundary";
 import {ROUTES} from "./routes";
 
 const CreateDashboard = lazy(() =>
-    import("./editor/assets/v2/CreateDashboard/CreateDashboard").then(m => ({default: m.CreateDashboard})),
+    import("@stem/editor-oss/editor/assets/v2/CreateDashboard/CreateDashboard").then(m => ({default: m.CreateDashboard})),
 );
 const About = lazy(() => import("./v2/pages/About/About").then(m => ({default: m.About})));
 const ContactUs = lazy(() => import("./v2/pages/ContactUs/ContactUs").then(m => ({default: m.ContactUs})));
