@@ -15,6 +15,8 @@ const CESIUM_PUBLIC_PATH = "/cesium";
 const CESIUM_BUILD_DIR = resolve(__dirname, "node_modules/cesium/Build/Cesium");
 const CESIUM_OUTPUT_DIR = resolve(__dirname, "build/public/cesium");
 const WEB_BUILD_PUBLIC_DIR = resolve(__dirname, "build/public");
+const reactRefreshInclude = /\.[jt]sx$/;
+const reactRefreshExclude = [/\/node_modules\//, /\.worker\.[tj]sx?$/];
 const MIME_TYPES: Record<string, string> = {
   ".css": "text/css; charset=utf-8",
   ".gif": "image/gif",
@@ -578,7 +580,7 @@ export default async ({ mode }) => {
       nodePolyfillsWithoutDeprecatedEsbuild(),
       imagetools(),
       glsl(),
-      react(),
+      react({ include: reactRefreshInclude, exclude: reactRefreshExclude }),
       raw({
         fileRegex: /.(txt|fs|vs)$/,
       }),

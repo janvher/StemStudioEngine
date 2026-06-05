@@ -7,9 +7,23 @@
 
 import * as THREE from "three";
 
-class VolumePointLightHelper extends THREE.PointLightHelper {
+class VolumePointLightHelper extends THREE.LineSegments {
     constructor(light, sphereSize, color) {
-        super(light, sphereSize, color);
+        const helperGeometry = new THREE.EdgesGeometry(
+            new THREE.SphereGeometry( sphereSize, 4, 2 ),
+        );
+        const helperMaterial = new THREE.LineBasicMaterial({
+            fog: false,
+            toneMapped: false,
+        });
+
+        super(helperGeometry, helperMaterial);
+
+        this.light = light;
+        this.color = color;
+        this.type = "PointLightHelper";
+        this.matrix = this.light.matrixWorld;
+        this.matrixAutoUpdate = false;
 
         var geometry = new THREE.SphereGeometry(2, 4, 2);
         var material = new THREE.MeshBasicMaterial({
@@ -20,6 +34,8 @@ class VolumePointLightHelper extends THREE.PointLightHelper {
         this.picker = new THREE.Mesh(geometry, material);
         this.picker.name = "picker";
         this.add(this.picker);
+
+        this.update();
     }
 
     raycast(raycaster, intersects) {
@@ -40,7 +56,18 @@ class VolumePointLightHelper extends THREE.PointLightHelper {
         }
         delete this.picker;
 
-        super.dispose();
+        this.geometry.dispose();
+        this.material.dispose();
+    }
+
+    update() {
+        this.light.updateWorldMatrix(true, false);
+
+        if (this.color !== undefined) {
+            this.material.color.set(this.color);
+        } else {
+            this.material.color.copy(this.light.color);
+        }
     }
 }
 

@@ -1374,7 +1374,7 @@ export class EngineRuntime extends AppRuntime implements RuntimeContext {
     }
 
     private createWebGPURenderer(overrideForceWebGL?: boolean): WebGPURenderer {
-        const forceWebGL = overrideForceWebGL ?? (this.editor?.scene?.userData?.rendering?.forceWebGL || false);
+        const forceWebGL = !true;
         const useTransparentCanvas = !!(
             this.editor?.scene?.userData?.cesium?.enabled || this.scene?.userData?.cesium?.enabled
         );

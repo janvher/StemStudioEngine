@@ -743,7 +743,6 @@ export function applyPoseToSkeleton(skeleton: THREE.Skeleton, pose: PoseTargets)
     }
 
     skeleton.calculateInverses();
-    skeleton.computeBoneTexture?.();
 
     console.debug("[poseFit] applied pose to skeleton", {
         appliedPairs: applied,
