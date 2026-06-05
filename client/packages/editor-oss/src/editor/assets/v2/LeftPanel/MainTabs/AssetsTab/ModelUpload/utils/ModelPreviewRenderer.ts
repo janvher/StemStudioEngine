@@ -29,6 +29,10 @@ import { getObjectBoundingBox, isGaussianSplatObject } from '@stem/editor-oss/mo
 import { disposeSparkComposite, ensureSparkComposite } from '../../../../../../../../render/SparkCompositeBridge';
 import { positionCameraForModel } from "../../../../../utils/positionCameraForModel";
 
+const PREVIEW_AMBIENT_INTENSITY = 1.8;
+const PREVIEW_DIRECTIONAL_INTENSITY = 0.6;
+const PREVIEW_ENVIRONMENT_INTENSITY = 0.45;
+
 export class ModelPreviewRenderer {
     renderer: WebGPURenderer;
     scene: Scene;
@@ -71,11 +75,11 @@ export class ModelPreviewRenderer {
 
         this.scene = new Scene();
         this.scene.name = "ModelPreviewScene";
-        const light = new AmbientLight(0xffffff, 5);
+        const light = new AmbientLight(0xffffff, PREVIEW_AMBIENT_INTENSITY);
         light.name = "AutoLight";
         this.scene.add(light);
 
-        this.directionalLight = new DirectionalLight(0xffffff, 0.8);
+        this.directionalLight = new DirectionalLight(0xffffff, PREVIEW_DIRECTIONAL_INTENSITY);
         this.directionalLight.position.set(5, 10, 7.5);
         this.scene.add(this.directionalLight);
 
@@ -84,7 +88,7 @@ export class ModelPreviewRenderer {
             (loadedTexture: Texture) => {
                 loadedTexture.mapping = EquirectangularReflectionMapping;
                 this.scene.environment = loadedTexture;
-                this.scene.environmentIntensity = 1.0;
+                this.scene.environmentIntensity = PREVIEW_ENVIRONMENT_INTENSITY;
             },
             undefined,
             (error: unknown) => {
@@ -152,7 +156,7 @@ export class ModelPreviewRenderer {
             depthMaterial,
         };
 
-        this.sparkComposite = ensureSparkComposite(this.scene, this.renderer);
+        this.sparkComposite = null;
     }
 
     async init() {
@@ -180,6 +184,12 @@ export class ModelPreviewRenderer {
         this.scene.add(this.model);
         this.model.updateMatrixWorld(true);
         this.isGaussianSplatModel = isGaussianSplatObject(this.model);
+        if (this.isGaussianSplatModel) {
+            this.sparkComposite = ensureSparkComposite(this.scene, this.renderer);
+        } else if (this.sparkComposite) {
+            disposeSparkComposite(this.sparkComposite);
+            this.sparkComposite = null;
+        }
         this.cameraWarmupFramesRemaining = this.isGaussianSplatModel ? 45 : 0;
 
         positionCameraForModel(this.model, this.camera, this.controls);
@@ -309,6 +319,7 @@ export class ModelPreviewRenderer {
             this.model = undefined;
         }
         disposeSparkComposite(this.sparkComposite);
+        this.sparkComposite = null;
         this.renderer.dispose();
         this.scene.clear();
         this.controls.dispose();

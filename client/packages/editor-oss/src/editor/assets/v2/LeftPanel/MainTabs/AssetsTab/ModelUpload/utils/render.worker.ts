@@ -1,7 +1,3 @@
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-
-import { ModelPreviewRenderer } from './ModelPreviewRenderer';
-
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -60,7 +56,7 @@ function dispatchEventPolyfill(target: any, event: any) {
         const targetListeners = eventRegistry.get(obj);
         // Ensure array exists before spreading
         const listenersList = targetListeners ? targetListeners[event.type] : undefined;
-        
+
         if (listenersList) {
             const listeners = [...listenersList];
             for (const l of listeners) {
@@ -79,54 +75,91 @@ function dispatchEventPolyfill(target: any, event: any) {
 // Polyfills for Worker Environment
 self.window = self;
 
-// Patch self/window addEventListener
-const originalAdd = self.addEventListener;
-const originalRemove = self.removeEventListener;
+function createFakeElement(ownerDocument?: any) {
+    const el = {
+        style: {},
+        nodeType: 1,
+        ownerDocument,
+        setAttribute: () => { },
+        append: (..._nodes: any[]) => _nodes.at(-1),
+        appendChild: <T>(node: T) => node,
+        removeChild: <T>(child: T) => child,
+        addEventListener: (type: string, listener: any) => addListener(el, type, listener),
+        removeEventListener: (type: string, listener: any) => removeListener(el, type, listener),
+        querySelector: () => null,
+        querySelectorAll: () => [],
+    } as unknown as any;
+    return el;
+}
 
 self.addEventListener = (type: string, listener: any, options?: any) => {
+    void options;
     addListener(self, type, listener);
 };
 self.removeEventListener = (type: string, listener: any, options?: any) => {
+    void options;
     removeListener(self, type, listener);
 };
 
-self.document = {
-    createElement: (_name: string) => {
-        void _name;
-        // Return a dummy element that supports events
-        const el = {
-            style: {},
-            nodeType: 1,
-            setAttribute: () => { },
-            addEventListener: (t: string, l: any) => addListener(el, t, l),
-            removeEventListener: (t: string, l: any) => removeListener(el, t, l),
-        } as unknown as any;
-        return el;
-    },
-    createElementNS: (_ns: string, _name: string) => {
-        void _ns;
-        void _name;
-        const el = {
-            style: {},
-            nodeType: 1,
-            setAttribute: () => { },
-            addEventListener: (t: string, l: any) => addListener(el, t, l),
-            removeEventListener: (t: string, l: any) => removeListener(el, t, l),
-        } as unknown as any;
-        return el;
-    },
-    body: {
-        appendChild: <T extends Node>(node: T) => node,
-        removeChild: <T extends Node>(child: T) => child,
-    } as unknown as any,
-    documentElement: {
-        style: {} as unknown as any,
-    } as unknown as any,
-    addEventListener: (type: string, listener: any) => addListener(self.document, type, listener),
-    removeEventListener: (type: string, listener: any) => removeListener(self.document, type, listener),
-} as unknown as any;
+self.document = {} as unknown as any;
+self.document.createElement = (_name: string) => {
+    void _name;
+    return createFakeElement(self.document);
+};
+self.document.createElementNS = (_ns: string, _name: string) => {
+    void _ns;
+    void _name;
+    return createFakeElement(self.document);
+};
+self.document.querySelector = () => null;
+self.document.querySelectorAll = () => [];
+self.document.body = createFakeElement(self.document);
+self.document.head = createFakeElement(self.document);
+self.document.documentElement = createFakeElement(self.document);
+self.document.addEventListener = (type: string, listener: any) => addListener(self.document, type, listener);
+self.document.removeEventListener = (type: string, listener: any) => removeListener(self.document, type, listener);
 
-let renderer: ModelPreviewRenderer | undefined;
+let renderer: any;
+let rendererReady = false;
+let pendingModelPayload: ArrayBuffer | undefined;
+
+async function updateModelPayload(payload: ArrayBuffer) {
+    if (!renderer) return;
+
+    const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
+    const loader = new GLTFLoader();
+
+    try {
+        loader.parse(
+            payload,
+            '',
+            (gltf) => {
+                renderer?.updateModel(gltf.scene);
+            },
+            (error) => {
+                const payloadType = payload ? payload.constructor?.name ?? typeof payload : typeof payload;
+                const sizeInfo =
+                    payload instanceof ArrayBuffer
+                        ? `, byteLength=${payload.byteLength}`
+                        : '';
+                console.error(
+                    `Worker: Failed to parse GLB (payloadType=${payloadType}${sizeInfo})`,
+                    error,
+                );
+            },
+        );
+    } catch (err) {
+        const payloadType = payload ? payload.constructor?.name ?? typeof payload : typeof payload;
+        const sizeInfo =
+            payload instanceof ArrayBuffer
+                ? `, byteLength=${payload.byteLength}`
+                : '';
+        console.error(
+            `Worker: Failed to parse model (payloadType=${payloadType}${sizeInfo})`,
+            err,
+        );
+    }
+}
 
 self.onmessage = async (e: MessageEvent) => {
     const { type, payload } = e.data;
@@ -183,56 +216,39 @@ self.onmessage = async (e: MessageEvent) => {
             }
 
             // Hook into our event system
-            offscreenCanvas.addEventListener = (type: string, listener: any) => {
-                addListener(offscreenCanvas, type, listener);
+            offscreenCanvas.addEventListener = (eventType: string, listener: any) => {
+                addListener(offscreenCanvas, eventType, listener);
             };
-            offscreenCanvas.removeEventListener = (type: string, listener: any) => {
-                removeListener(offscreenCanvas, type, listener);
+            offscreenCanvas.removeEventListener = (eventType: string, listener: any) => {
+                removeListener(offscreenCanvas, eventType, listener);
             };
             (offscreenCanvas as any).dispatchEvent = (event: any) => {
                 return dispatchEventPolyfill(offscreenCanvas, event);
             };
 
+            const { ModelPreviewRenderer } = await import('./ModelPreviewRenderer');
+            rendererReady = false;
             renderer = new ModelPreviewRenderer(canvas, width as number, height as number, pixelRatio as number);
             await renderer.init();
+            rendererReady = true;
+
+            if (pendingModelPayload) {
+                const modelPayload = pendingModelPayload;
+                pendingModelPayload = undefined;
+                await updateModelPayload(modelPayload);
+            }
             break;
         }
 
         case 'updateModel': {
-            if (!renderer) return;
-
-            const loader = new GLTFLoader();
-            try {
-                // We use the full payload now, relying on patched ImageLoader
-                loader.parse(
-                    payload as ArrayBuffer, // ArrayBuffer
-                    '',      // path
-                    (gltf) => {
-                        renderer?.updateModel(gltf.scene);
-                    },
-                    (error) => {
-                         const payloadType = payload ? payload.constructor?.name ?? typeof payload : typeof payload;
-                         const sizeInfo =
-                             payload instanceof ArrayBuffer
-                                 ? `, byteLength=${payload.byteLength}`
-                                 : '';
-                         console.error(
-                             `Worker: Failed to parse GLB (payloadType=${payloadType}${sizeInfo})`,
-                             error,
-                         );
-                    },
-                );
-            } catch (err) {
-                const payloadType = payload ? payload.constructor?.name ?? typeof payload : typeof payload;
-                const sizeInfo =
-                    payload instanceof ArrayBuffer
-                        ? `, byteLength=${payload.byteLength}`
-                        : '';
-                console.error(
-                    `Worker: Failed to parse model (payloadType=${payloadType}${sizeInfo})`,
-                    err,
-                );
+            if (!rendererReady) {
+                if (payload instanceof ArrayBuffer) {
+                    pendingModelPayload = payload;
+                }
+                return;
             }
+
+            await updateModelPayload(payload as ArrayBuffer);
             break;
         }
 
@@ -246,19 +262,21 @@ self.onmessage = async (e: MessageEvent) => {
         case 'dispose': {
             renderer?.dispose();
             renderer = undefined;
+            rendererReady = false;
+            pendingModelPayload = undefined;
             break;
         }
 
         case 'event': {
             if (!renderer) return;
             const { eventCopy } = payload;
-            
-            eventCopy.preventDefault = () => {};
+
+            eventCopy.preventDefault = () => { };
             eventCopy.stopPropagation = () => { eventCopy.cancelBubble = true; };
-            
+
             // Fix target to be the canvas
-            eventCopy.target = renderer.renderer.domElement; 
-            
+            eventCopy.target = renderer.renderer.domElement;
+
             // Dispatch with bubbling
             (renderer.renderer.domElement as any).dispatchEvent(eventCopy);
             break;

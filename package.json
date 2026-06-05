@@ -213,5 +213,8 @@
     "vite-plugin-node-polyfills": "^0.25.0",
     "vite-raw-plugin": "^1.0.2",
     "vitest": "^4.1.6"
+  },
+  "patchedDependencies": {
+    "@querielo/spark@2.0.0": "patches/@querielo%2Fspark@2.0.0.patch"
   }
 }

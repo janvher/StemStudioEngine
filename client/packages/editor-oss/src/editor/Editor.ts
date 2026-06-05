@@ -3458,7 +3458,12 @@ class Editor {
 
     getSelectionBoundaryObject(obj: THREE.Object3D): THREE.Object3D {
         const billboardRoot = this.getBillboardSelectionRoot(obj);
-        return billboardRoot || obj;
+        if (billboardRoot) {
+            return billboardRoot;
+        }
+
+        const skinnedMeshRoot = this.getSkinnedMeshSelectionRoot(obj);
+        return skinnedMeshRoot || obj;
     }
 
     getBillboardSelectionRoot(obj: THREE.Object3D): THREE.Object3D | null {
@@ -3472,6 +3477,35 @@ class Editor {
         }
 
         return null;
+    }
+
+    getSkinnedMeshSelectionRoot(obj: THREE.Object3D): THREE.Object3D | null {
+        const skinnedMesh = (obj as THREE.SkinnedMesh).isSkinnedMesh ? obj as THREE.SkinnedMesh : null;
+        const skeletonRoot = skinnedMesh?.skeleton?.bones[0];
+
+        if (!skinnedMesh || !skeletonRoot) {
+            return null;
+        }
+
+        const skeletonAncestors = new Set<THREE.Object3D>();
+        let current: THREE.Object3D | null = skeletonRoot;
+
+        while (current) {
+            skeletonAncestors.add(current);
+            current = current.parent;
+        }
+
+        current = skinnedMesh.parent;
+        while (current && current.type !== "Scene") {
+            if (skeletonAncestors.has(current)) {
+                return current;
+            }
+            current = current.parent;
+        }
+
+        return skinnedMesh.parent && skinnedMesh.parent.type !== "Scene"
+            ? skinnedMesh.parent
+            : null;
     }
 
     // Clear selection helper
