@@ -17,8 +17,8 @@
     build emits four SPA shells — index.html (public site), shell.html
     (app shell), editor.html, play.html — so this script classifies the
     requested path the same way _redirects does, fetches the matching
-    shell, and swaps it in WITHOUT changing the URL. The SPA router then
-    takes over against the real pathname.
+    shell, and rewrites the live document with it WITHOUT changing the
+    URL. The SPA router then takes over against the real pathname.
 
     Keep the prefix lists below in sync with client/public/_redirects.
   -->
@@ -63,20 +63,16 @@
           return res.text();
         })
         .then(function (html) {
-          var doc = new DOMParser().parseFromString(html, "text/html");
-          document.documentElement.replaceWith(doc.documentElement);
-          // Nodes inserted via replaceWith/innerHTML do not execute their
-          // scripts — re-create each <script> so the bundle actually runs.
-          var scripts = document.querySelectorAll("script");
-          for (var i = 0; i < scripts.length; i++) {
-            var old = scripts[i];
-            var fresh = document.createElement("script");
-            for (var a = 0; a < old.attributes.length; a++) {
-              fresh.setAttribute(old.attributes[a].name, old.attributes[a].value);
-            }
-            fresh.text = old.textContent;
-            old.parentNode.replaceChild(fresh, old);
-          }
+          // Reparse the whole live document with the shell's markup.
+          // document.open()/write()/close() reruns the parser natively, so
+          // every <script> (including `type="module"` bundle entrypoints)
+          // executes — unlike DOMParser + replaceWith, which leaves an
+          // inert tree and, on the top-level documentElement, can collapse
+          // the document outright. The URL is preserved, so each shell's
+          // entry still reads the real window.location.pathname.
+          document.open();
+          document.write(html);
+          document.close();
         })
         .catch(function () {
           // Last-resort: hard-navigate to the site root.
